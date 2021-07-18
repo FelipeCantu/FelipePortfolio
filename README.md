@@ -1,5 +1,5 @@
 # Felipe Cantu Portfolio
 
-![Website](./image/Capture.png)
+![Website](/image/Capture.png)
 
 
