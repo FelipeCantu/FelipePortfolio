@@ -15,8 +15,7 @@ const Nav = styled.nav `
     top: 0;
     left: 0;
     right: 0;
-    heigth: 70px;
-    background-color: #bbb;
+    heigth: 60px;
 `
 
 const Logo = styled.a `
