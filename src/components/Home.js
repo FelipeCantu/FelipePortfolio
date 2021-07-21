@@ -10,6 +10,7 @@ const Home = () => {
 
 
 const Main = styled.div`
+    background: #bbb;    
 img {
     display: absolute;
     height: 100%;
