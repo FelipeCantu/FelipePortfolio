@@ -13,7 +13,7 @@ const Main = styled.div`
     background: #bbb;    
 img {
     display: absolute;
-    height: 100%;
+    height: 100vh;
     width: 100%;
     padding: 0;
     margin: 0;
