@@ -40,3 +40,4 @@ const StyledTypography = styled(Typography)`
 `
 
 export default Navbar
+
