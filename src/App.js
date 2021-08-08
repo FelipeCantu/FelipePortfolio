@@ -1,14 +1,12 @@
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import Header from './components/Header';
+import React from 'react';
+import Navbar from './components/Navbar/Navbar';
 import Home from './components/Home';
 
 function App() {
   return (
     <div className="App">
-      <Router>
-        <Header />
-        <Home />
-      </Router>
+      <Navbar />
+      <Home />
     </div>
   );
 }
