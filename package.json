@@ -1,7 +1,6 @@
 {
   "name": "felipe-portfolio",
   "version": "0.1.0",
-  "homepage": "https://felipeportfolio.github.io/FelipePortfolio",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.12.2",
@@ -20,8 +19,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "deploy": "npm run build && gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
