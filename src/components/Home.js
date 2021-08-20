@@ -19,5 +19,9 @@ img {
     margin: 0;
     background-size: cover;
 }
+@media (max-width: 400px) {
+    height: 50vh;
+    z-index: 2;
+  }
 `
 export default Home;

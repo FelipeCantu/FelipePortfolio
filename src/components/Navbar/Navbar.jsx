@@ -23,6 +23,10 @@ const Nav = styled.nav`
   display: flex;
   background: rgba(128,128,128,0.5);
   justify-content: space-between;
+  padding-left: 200px;
+  @media (max-width: 1250px) {
+    padding-left: 10px;
+  }
   img {
       width: 60px;
       @media (max-width: 400px) {
@@ -43,8 +47,9 @@ const StyledTypography = styled(Typography)`
         font-size: 1.5em;
         color: #fff;
         @media (max-width: 768px) {
-            font-size: 100%;
-            padding-top: 16px;      
+            // background-color: green;
+            font-size: 20px; 
+            margin-top: 3px;  
           }
           @media (max-width: 400px) {
             // background-color: black;  
