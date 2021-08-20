@@ -8,8 +8,8 @@ const Navbar = () => {
         <Nav>
             <img src="/images/logo.png" alt="Logo" />
             <StyledTypography variant='caption'>
-                    Felipe Cantu Jr
-                </StyledTypography>
+                Felipe Cantu Jr
+            </StyledTypography>
             <Menu />
         </Nav>
     )
@@ -25,6 +25,12 @@ const Nav = styled.nav`
   justify-content: space-between;
   img {
       width: 60px;
+      @media (max-width: 400px) {
+        // background-color: yellow;
+        width: 50px;
+        height: 50px;
+        margin-top: 10px;
+      }
   }
 `
 const StyledTypography = styled(Typography)`
@@ -36,6 +42,15 @@ const StyledTypography = styled(Typography)`
         padding-left: 75px;
         font-size: 1.5em;
         color: #fff;
+        @media (max-width: 768px) {
+            font-size: 100%;
+            padding-top: 16px;      
+          }
+          @media (max-width: 400px) {
+            // background-color: black;  
+            padding-left: 60px; 
+            margin-top: 4px;   
+          }
     }
 `
 
