@@ -13,7 +13,7 @@ const Sidebar = ({ open }) => {
         <li><StyledLink to="/">Home</StyledLink></li>
         <li><StyledLink to="/blogs">Blogs</StyledLink></li>
         <li><StyledLink to="/projects">Project</StyledLink></li>
-        <li><StyledLink to="/contact">Contact</StyledLink></li>
+        <li><StyledLink to="/contact"><Button>Contact</Button></StyledLink></li>
       </Ul>
     </Router>
   )
@@ -24,6 +24,7 @@ const Ul = styled.ul`
   display: flex;
   flex-flow: row nowrap;
   margin-right: 200px;
+  z-index: 8;
   li {
     color: #fff;
     padding: 18px 10px;
@@ -42,16 +43,35 @@ const Ul = styled.ul`
     width: 300px;
     padding-top: 3.5rem;
     transition: transform 0.3s ease-in-out;
-    li {
-      color: #fff;
-    }
   }
 `;
 
 const StyledLink = styled(Link)`
   color: #fff;
   text-decoration: none;
-  
+  font-family: Arial, Helvetica, 
+    sans-serif;
+  :hover {
+    color: black;
+  }
+`;
+
+const Button = styled.button`
+  background-color: #0077b5;
+  padding: 6px 10px 6px 10px;
+  border-radius: 10%;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  margin-top: -2px;
+  @media (max-width: 768px) {
+    background-color: none;
+    padding: 0;
+    font-size: 1rem;
+  }
+  :hover {
+    color: black;
+  }
 `;
 
 export default Sidebar

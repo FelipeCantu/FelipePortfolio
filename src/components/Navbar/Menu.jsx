@@ -24,7 +24,7 @@ height: 2rem;
 position: fixed;
 top: 15px;
 right: 20px;
-z-index: 1;
+z-index: 9;
 display: none;
 @media (max-width: 768px) {
   display: flex;
