@@ -29,7 +29,7 @@ img {
     z-index: -1;
 }
 @media (max-width: 400px) {
-    height: 50vh;
+    height: 100vh;
     z-index: 2;
   }
 `
@@ -84,9 +84,9 @@ const Container = styled.div`
   }
   li {
       // background: blue;
-      grid-area: 7 / 7 / 8 / 8;
-      margin-top: -60px;
-      padding-right: -100px;
+      grid-area: 6 / 7 / 8 / 8;
+      margin-left: -50px;
+      text-align: right;
       :hover {
         color: #bbb;
       }

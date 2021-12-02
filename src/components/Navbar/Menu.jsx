@@ -21,9 +21,9 @@ const Menu = () => {
 const StyledMenu = styled.div`
 width: 2rem;
 height: 2rem;
-position: fixed;
-top: 15px;
-right: 20px;
+position: relative;
+top: 10px;
+right: 10px;
 z-index: 9;
 display: none;
 @media (max-width: 768px) {
