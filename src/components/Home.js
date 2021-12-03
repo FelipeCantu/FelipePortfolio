@@ -73,6 +73,9 @@ const Container = styled.div`
     text-align: center;
     padding-bottom: 20px;
     // background: red;
+    @media (max-width: 1274px) {
+      font-size: 1.5rem;
+    }
   }
   p {
     grid-area: 4 / 4 / 7 / 8;
@@ -128,6 +131,10 @@ const Container = styled.div`
     }
     h1 {
       grid-area: 4 / 2 / 5 / 4;
+      @media (max-width: 474px) {
+        // font-size: 1.5rem;
+        padding-bottom: 10px;
+      }
       // background:  yellow;
     }
     p {
@@ -140,6 +147,13 @@ const Container = styled.div`
       grid-area: 7 / 3 / 8 / 4;
       margin-top: -50px;
       padding-left: 50px;
+      @media (max-width: 474px) {
+        // background: purple;
+        position: fixed;
+        bottom: 0;
+        left: 56%;
+        padding-bottom: 30px;
+      }
     }
 `
 
