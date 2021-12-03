@@ -140,6 +140,9 @@ const Container = styled.div`
     p {
       grid-area: 5 / 2 / 8 / 4;
       // background: red;
+      @media (max-width: 450px) {
+        font-size: .9rem;
+      }
     }
     li {
       // background: blue;
@@ -155,6 +158,7 @@ const Container = styled.div`
         padding-bottom: 30px;
       }
     }
+  }
 `
 
 
