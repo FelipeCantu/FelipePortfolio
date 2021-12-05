@@ -1,5 +1,5 @@
 import styled from "styled-components";
-
+import { FaGithub,  FaLinkedin, FaInstagram  } from "react-icons/fa";
 
 const Home = () => {
   return (
@@ -12,6 +12,13 @@ const Home = () => {
           <p>Full Stack Developer Motivated tech enthusiast and problem solver with a background in computer tech. Experience with project team building and critical thinking. </p>
           <li><a href="">Learn More</a></li>
         </Container>
+        <Icons>
+          <h1>
+            <a href="#"><FaGithub /></a>
+            <a href="#"><FaLinkedin /></a>
+            <a href="#"><FaInstagram /></a>
+          </h1>
+        </Icons>
       </Wapper>
     </Main>
   )
@@ -34,7 +41,7 @@ img {
   }
 `
 
-const Wapper = styled.div `
+const Wapper = styled.div`
   background: rgba(60, 60, 60, 0.7);
   z-index: 10;
   width: 100%;
@@ -157,7 +164,24 @@ const Container = styled.div`
         left: 56%;
         padding-bottom: 30px;
       }
+      @media (max-width: 675px) {
+        font-size: .75rem;
+      }
     }
+  }
+`
+
+const Icons = styled.div`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding-right: 100px;
+  a {
+    color: white;
+    padding: 0 5px 0 5px;
+  }
+  a:hover {
+    color: #0077b5;
   }
 `
 
