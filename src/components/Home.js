@@ -159,10 +159,8 @@ const Container = styled.div`
       padding-left: 50px;
       @media (max-width: 474px) {
         // background: purple;
-        position: fixed;
-        bottom: 0;
-        left: 56%;
-        padding-bottom: 35%;
+        position: relative;
+        padding: 15px 0;
       }
       @media (max-width: 675px) {
         font-size: .75rem;
