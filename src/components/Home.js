@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { FaGithub,  FaLinkedin, FaInstagram  } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaInstagram } from "react-icons/fa";
 
 const Home = () => {
   return (
@@ -97,9 +97,6 @@ const Container = styled.div`
       grid-area: 6 / 7 / 8 / 8;
       margin-left: -50px;
       text-align: right;
-      :hover {
-        color: #bbb;
-      }
       @media (max-width: 1220px) {
         margin-top: 25px;
       }
@@ -107,6 +104,9 @@ const Container = styled.div`
         a{
             text-decoration: none;
             color: #fff;
+        }
+        a:hover {
+          color: black;
         }
   }
   @media (min-width: 1655px) {
@@ -162,10 +162,15 @@ const Container = styled.div`
         position: fixed;
         bottom: 0;
         left: 56%;
-        padding-bottom: 30px;
+        padding-bottom: 35%;
       }
       @media (max-width: 675px) {
         font-size: .75rem;
+      }
+      @media (max-width: 450px) {
+        // background: blue;
+        font-size: .5rem;
+        
       }
     }
   }
@@ -182,6 +187,12 @@ const Icons = styled.div`
   }
   a:hover {
     color: #0077b5;
+  }
+  @media (max-width: 765px) {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding-left: 20px;
   }
 `
 
