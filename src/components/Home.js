@@ -14,13 +14,14 @@ const Home = () => {
         </Container>
         <Icons>
           <h1>
-            <a href="#"><FaGithub /></a>
-            <a href="#"><FaLinkedin /></a>
-            <a href="#"><FaInstagram /></a>
+            <a href="https://github.com/FelipeCantu" target="_blank"><FaGithub /></a>
+            <a href="https://www.linkedin.com/in/felipe-cantu-jr/" target="_blank"><FaLinkedin /></a>
+            <a href="https://www.instagram.com/son_of_robot_/" target="_blank"><FaInstagram /></a>
           </h1>
         </Icons>
       </Wapper>
     </Main>
+    
   )
 }
 
