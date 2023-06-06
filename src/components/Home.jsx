@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { FaGithub, FaLinkedin, FaInstagram } from "react-icons/fa";
 
-const Home = () => {
+function Home() {
   return (
     <Main>
       <img src="images/mainbg.jpg" />

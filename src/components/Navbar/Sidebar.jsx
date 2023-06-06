@@ -1,21 +1,19 @@
 import React from 'react';
 import styled from 'styled-components';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import Home from '../Home';
-import Blogs from '../Blog';
-import Projects from '../Projects';
-import Contact from '../Contact';
+import { Link } from 'react-router-dom';
 
 const Sidebar = ({ open }) => {
   return (
-    <Router>
-      <Ul open={open}>
-        <li><StyledLink to="/">Home</StyledLink></li>
-        <li><StyledLink to="/blogs">Blogs</StyledLink></li>
-        <li><StyledLink to="/projects">Project</StyledLink></li>
-        <li><StyledLink to="/contact"><Button>Contact</Button></StyledLink></li>
-      </Ul>
-    </Router>
+    <div>
+      <nav>
+        <Ul open={open}>
+          <li><StyledLink to="/Home">Home</StyledLink></li>
+          <li><StyledLink to="/Blog">Blogs</StyledLink></li>
+          <li><StyledLink to="/Project">Project</StyledLink></li>
+          <li><StyledLink to="/Contact"><Button>Contact</Button></StyledLink></li>
+        </Ul>
+      </nav>
+    </div>
   )
 }
 
