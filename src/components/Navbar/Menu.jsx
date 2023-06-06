@@ -21,7 +21,7 @@ const Menu = () => {
 const StyledMenu = styled.div`
 width: 2rem;
 height: 2rem;
-position: relative;
+position: absolute;
 top: 10px;
 right: 10px;
 z-index: 9;
