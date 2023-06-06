@@ -4,29 +4,28 @@ import Home from './components/Home';
 import Blog from './components/Blog'
 import Portfolio from './components/Portfolio'
 import Contact from './components/Contact';
-import { BrowserRouter as Router, Route, BrowserRouter } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Redirect, BrowserRouter } from 'react-router-dom'
 
 function App() {
   return (
     <BrowserRouter>
-       <Router>
+      <Router>
         <Navbar />
-           <Route path='/Home' exact>
-            <Home />
-           </Route>
-           <Route path='/Blog' exact>
-            <Blog />
-           </Route>
-           <Route path='/Blog' exact>
-            <Blog />
-           </Route>
-           <Route path='/Portfolio' exact>
-            <Portfolio />
-           </Route>
-           <Route path='/Contact' exact>
-            <Contact /> 
-           </Route>
-        </Router>
+          <Redirect to="/Home" />
+          <Route path="/Home" component={Home} />
+        <Route path='/Blog'>
+          <Blog />
+        </Route>
+        <Route path='/Blog'>
+          <Blog />
+        </Route>
+        <Route path='/Portfolio'>
+          <Portfolio />
+        </Route>
+        <Route path='/Contact'>
+          <Contact />
+        </Route>
+      </Router>
     </BrowserRouter>
   );
 }
