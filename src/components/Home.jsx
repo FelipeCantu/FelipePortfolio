@@ -39,6 +39,7 @@ img {
 @media (max-width: 400px) {
     height: 100vh;
     z-index: 2;
+    
   }
 `
 
