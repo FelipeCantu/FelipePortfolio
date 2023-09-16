@@ -9,7 +9,7 @@ const Sidebar = ({ open }) => {
         <Ul open={open}>
           <li><StyledLink to="/Home">Home</StyledLink></li>
           <li><StyledLink to="/Blog">Blogs</StyledLink></li>
-          <li><StyledLink to="/Project">Project</StyledLink></li>
+          <li><StyledLink to="/Portfolio">Portfolio</StyledLink></li>
           <li><StyledLink to="/Contact"><Button>Contact</Button></StyledLink></li>
         </Ul>
       </nav>

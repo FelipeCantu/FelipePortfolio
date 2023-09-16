@@ -2,17 +2,20 @@ import React from 'react';
 import Menu from './Menu';
 import styled from 'styled-components';
 import { Typography } from '@material-ui/core';
+import { Link } from 'react-router-dom'
 
 const Navbar = () => {
-    return (
-        <Nav>
-            <img src="/images/logo.png" alt="Logo" />
-            <StyledTypography variant='caption'>
-                Felipe Cantu Jr
-            </StyledTypography>
-            <Menu />
-        </Nav>
-    )
+  return (
+    <Nav>
+      <Link to='/Home'>
+        <img src="/images/logo.png" alt="Logo" />
+        <StyledTypography variant='caption'>
+          Felipe Cantu Jr
+        </StyledTypography>
+      </Link>
+      <Menu />
+    </Nav>
+  )
 }
 
 const Nav = styled.nav`
@@ -43,7 +46,7 @@ const StyledTypography = styled(Typography)`
         font-family: Roboto;
         display: inline-block;
         padding-top: 10px;
-        padding-left: 75px;
+        padding-left: 20px;
         font-size: 1.5em;
         color: #fff;
         @media (max-width: 768px) {
