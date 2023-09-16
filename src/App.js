@@ -48,6 +48,9 @@ const Overflow = styled.div `
   overflow: auto;
   position: absolute;
   z-index: -1;
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `
 
 export default App;

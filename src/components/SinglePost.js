@@ -98,6 +98,11 @@ const Single = styled.div`
   h1 {
     font-size: 40px;
   }
+  @media (max-width: 768px) {
+    img {
+      width: 100%;
+    }
+  }
 `;
 
 const AuthorCard = styled.div`
