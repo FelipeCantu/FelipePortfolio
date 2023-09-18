@@ -40,19 +40,30 @@ export const Form = () => {
 };
 
 const FormData = styled.div`  
+    // background: blue;
+    margin-top: 100px;
     form {
         display: grid;
         align-items: center;
         justify-content: center;
     }
+    input {
+        width: 300px;
+        margin-bottom: 10px;
+        height: 25px;
+    }
+    textarea {
+        height: 50px;
+    }
 `
 
 const StyledButton = styled.button`
-  background-color: ${({ isClicked }) => (isClicked ? 'green' : 'gray')};
+  background-color: ${({ isClicked }) => (isClicked ? 'green' : '#0077b5')};
   color: white;
   padding: 10px 20px;
   cursor: pointer;
   border: none;
+  margin-top: 10px;
 `;
 
 export default Form

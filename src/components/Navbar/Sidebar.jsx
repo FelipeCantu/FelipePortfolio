@@ -56,8 +56,8 @@ const StyledLink = styled(Link)`
 
 const Button = styled.button`
   background-color: #0077b5;
-  padding: 6px 10px 6px 10px;
-  border-radius: 10%;
+  padding: 6px 13px 6px 13px;
+  border-radius: 10px;
   border: none;
   color: #fff;
   font-size: 1rem;
