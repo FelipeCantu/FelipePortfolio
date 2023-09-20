@@ -27,6 +27,7 @@ const Nav = styled.nav`
   background: rgba(128,128,128,0.5);
   justify-content: space-between;
   padding-left: 200px;
+  z-index: 10;
   @media (max-width: 1250px) {
     padding-left: 10px;
   }

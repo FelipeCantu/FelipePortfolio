@@ -42,11 +42,12 @@ function App() {
   );
 }
 
-const Overflow = styled.div `
+const Overflow = styled.div`
   padding-top: 100px;
   height: 100vh;
   overflow: auto;
   position: absolute;
+  width: 100%;
   z-index: -1;
   @media (max-width: 768px) {
     width: 100%;

@@ -39,21 +39,25 @@ export const Form = () => {
     );
 };
 
-const FormData = styled.div`  
-    // background: blue;
-    margin-top: 100px;
+const FormData = styled.div`
+    width: 80%;
+    margin: 100px auto;
     form {
         display: grid;
-        align-items: center;
-        justify-content: center;
     }
     input {
-        width: 300px;
+        width: 100%;
         margin-bottom: 10px;
         height: 25px;
     }
     textarea {
-        height: 50px;
+        height: 100px;
+    }
+    @media (max-width: 1126px) {
+        // background: green;
+        margin: auto;
+        height: 100%;
+        padding-top: 20px;
     }
 `
 
@@ -64,6 +68,9 @@ const StyledButton = styled.button`
   cursor: pointer;
   border: none;
   margin-top: 10px;
+  @media (max-width: 1126px) {
+    z-index: 12;
+  }
 `;
 
 export default Form

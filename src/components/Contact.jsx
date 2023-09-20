@@ -13,7 +13,6 @@ function Contact() {
           <Section>
             <Content>
               <img src="images/bgblue.jpeg" />
-              <h2></h2>
               <Form />
             </Content>
             <Contacts>
@@ -46,15 +45,15 @@ img {
   position: absolute;
 height: 100vh;
 width: 100%;
-padding: 0;
-margin: 0;
 background-size: cover;
 z-index: -1;
 }
 @media (max-width: 400px) {
   height: 100vh;
-z-index: 2;
-    
+  z-index: 2;    
+  height: 100vh;
+  overflow: auto;
+  height: 1000px;
 }
 `
 
@@ -65,39 +64,45 @@ z-index: 10;
 width: 100%;
 height: 100vh;
 padding-top: -10px;
+overflow: auto;
 `;
 
 const Section = styled.div`
 display: flex;
 position: relative;
-background: black;
 margin: auto;
-padding: auto;
 height: 60%;
-width: 55%;
+width: 60%;
 margin-top: 150px;
-img {
-  width: 500px;
-  height: 500px;
-  padding-right: 50px;
-  }
-  h2 {
-    color: white;
-  }
+background: blue;
+@media (max-width: 1126px) {
+  background: purple;
+  display: grid;
+  height: 100vh;
+}
 `
 
 const Content = styled.div`
-z-index: 3;
-width: 70%
+  background: red;
+  width: 100%;
+  z-index: 3;
+  @media (max-width: 1126px) {
+    height: 300px
+    margin-bottom: 1px;
+  }
 `
 const Contacts = styled.div`
-  // background: blue;
+  z-index: 3;
+  background: black;
   display: flex;
   float: right;
-  width: 490px;
+  width: 60%;
   color: white;
-  margin-left: 100px;
-
+  @media (max-width: 1126px) {
+    width: 100%;
+    height: 450px;
+    margin-bottom: 30px 0;
+  }
 `
 
 const ContactIcons = styled.div`
@@ -124,6 +129,22 @@ const ContactIcons = styled.div`
   }
   display: grid;
   padding: 10px;
+  @media (max-width: 1126px) {
+    width: 100%;
+    h1 {
+      font-size: 25px;
+    }
+    h2 {
+      font-size: 20px;
+      margin: 0 0-30px 0;
+    }
+    p {
+      font-size: 15px;
+    }
+    a {
+      font-size: 15px;
+     }
+  }
 `
 
 const SoicalIcons = styled.div `
@@ -134,7 +155,9 @@ const SoicalIcons = styled.div `
   a {
     margin-right: 5px;
     color: white;
-    
+  }
+  @media (max-width: 1126px) {
+   
   }
 `
 export default Contact;
