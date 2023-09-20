@@ -6,7 +6,6 @@ function Portfolio() {
   return (
     <Port>
       <div>
-        <h2>Projects</h2>
           <Project />
       </div>
     </Port>
@@ -14,7 +13,8 @@ function Portfolio() {
 }
 
 const Port = styled.div `
-  margin-top: 100px;
+  margin-top: 60px;
+
 `
 
 export default Portfolio;

@@ -71,10 +71,9 @@ const Section = styled.div`
 display: flex;
 position: relative;
 margin: auto;
-height: 60%;
-width: 60%;
+width: 75%;
 margin-top: 150px;
-background: blue;
+margin-bottom: 50px;
 @media (max-width: 1126px) {
   background: purple;
   display: grid;
@@ -101,7 +100,9 @@ const Contacts = styled.div`
   @media (max-width: 1126px) {
     width: 100%;
     height: 450px;
-    margin-bottom: 30px 0;
+    // margin-bottom: 30px 0;
+
+
   }
 `
 
@@ -125,7 +126,9 @@ const ContactIcons = styled.div`
     // background: yellow;
     color: white;
     margin: -25px 0 0 0;
-
+    :hover {
+      color: #0077b5;
+    }
   }
   display: grid;
   padding: 10px;
@@ -136,7 +139,6 @@ const ContactIcons = styled.div`
     }
     h2 {
       font-size: 20px;
-      margin: 0 0-30px 0;
     }
     p {
       font-size: 15px;
@@ -155,9 +157,18 @@ const SoicalIcons = styled.div `
   a {
     margin-right: 5px;
     color: white;
+    :hover {
+      color: #0077b5;
+    }
   }
   @media (max-width: 1126px) {
-   
+    // background: purple;
+    margin: auto;
+    // padding: 10px 0 10px 20px;
+    right: 30%;
+   a {
+    font-size: 30px;
+   }
   }
 `
 export default Contact;
