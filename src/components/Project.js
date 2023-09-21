@@ -15,7 +15,13 @@ export default function Project() {
           description,
           projectType,
           link,
-          tags
+          tags,
+          image { 
+            asset -> {
+              _id,
+              url 
+            }
+          }
       }`
             )
             .then((data) => setProjectData(data))
@@ -26,11 +32,16 @@ export default function Project() {
         <Main>
             <main>
                 <Section>
-                <h1>Projects</h1>
+                    <h1>Projects</h1>
                     <section>
                         {projectData &&
                             projectData.map((project, index) => (
-                                <article>
+                                <article key={index}>
+                                    <ProjectImage>
+                                        {project.image && (
+                                            <img src={project.image.asset.url} alt={project.title} />
+                                        )}
+                                    </ProjectImage>
                                     <h3>
                                         <a
                                             href={project.link}
@@ -57,7 +68,6 @@ export default function Project() {
                                         <p>
                                             {project.description}
                                         </p>
-
                                     </div>
                                 </article>
                             ))}
@@ -68,7 +78,7 @@ export default function Project() {
     );
 }
 
-const Main = styled.div `
+const Main = styled.div`
     overflow: auto;
     height: 100vh;
     h1 {
@@ -88,6 +98,7 @@ const Section = styled.div`
             a {
                 color: white;
                 font-size: 25px;
+                text-decoration: none;
             }
             a:hover {
                 color: #0077b5;
@@ -95,3 +106,7 @@ const Section = styled.div`
         }
     }
 `
+const ProjectImage = styled.div`
+    width: 100%;
+    height: 200px;
+    `

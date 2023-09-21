@@ -40,7 +40,8 @@ export const Form = () => {
 };
 
 const FormData = styled.div`
-    width: 80%;
+    width: 70%;
+    height: 100%;
     margin: 100px auto;
     form {
         display: grid;

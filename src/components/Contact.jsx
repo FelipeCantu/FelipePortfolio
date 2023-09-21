@@ -51,9 +51,6 @@ z-index: -1;
 @media (max-width: 400px) {
   height: 100vh;
   z-index: 2;    
-  height: 100vh;
-  overflow: auto;
-  height: 1000px;
 }
 `
 
@@ -75,14 +72,15 @@ width: 75%;
 margin-top: 150px;
 margin-bottom: 50px;
 @media (max-width: 1126px) {
-  background: purple;
+  // background: purple;
   display: grid;
-  height: 100vh;
+  height: 110%;
+  margin-bottom: 150px;
 }
 `
 
 const Content = styled.div`
-  background: red;
+  // background: red;
   width: 100%;
   z-index: 3;
   @media (max-width: 1126px) {
@@ -99,9 +97,7 @@ const Contacts = styled.div`
   color: white;
   @media (max-width: 1126px) {
     width: 100%;
-    height: 450px;
-    // margin-bottom: 30px 0;
-
+    height: 500px;
 
   }
 `
@@ -134,6 +130,7 @@ const ContactIcons = styled.div`
   padding: 10px;
   @media (max-width: 1126px) {
     width: 100%;
+    margin-bottom: 50px;
     h1 {
       font-size: 25px;
     }
@@ -162,9 +159,8 @@ const SoicalIcons = styled.div `
     }
   }
   @media (max-width: 1126px) {
-    // background: purple;
     margin: auto;
-    // padding: 10px 0 10px 20px;
+    padding: 10px;
     right: 30%;
    a {
     font-size: 30px;
