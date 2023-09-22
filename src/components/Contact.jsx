@@ -71,6 +71,7 @@ margin: auto;
 width: 75%;
 margin-top: 150px;
 margin-bottom: 50px;
+color: white;
 @media (max-width: 1126px) {
   // background: purple;
   display: grid;
@@ -159,8 +160,9 @@ const SoicalIcons = styled.div `
     }
   }
   @media (max-width: 1126px) {
+    // background: purple;
     margin: auto;
-    padding: 10px;
+    padding: 0 40px 30px 0;
     right: 30%;
    a {
     font-size: 30px;
