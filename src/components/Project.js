@@ -27,6 +27,7 @@ export default function Project() {
       .then((data) => setProjectData(data))
       .catch(console.error);
   }, []);
+  if (!projectData) return <div>Loading...</div>;
 
   return (
     <Main>
@@ -36,36 +37,29 @@ export default function Project() {
             {projectData &&
               projectData.map((project, index) => (
                 <Card key={index}>
-                  <ProjectImage>
-                    {project.image && (
-                      <img src={project.image.asset.url} alt={project.title} />
-                    )}
-                  </ProjectImage>
-                  <CardContent>
-                    <h3>
-                      <a
-                        href={project.link}
-                        alt={project.title}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {project.title}
-                      </a>
-                    </h3>
-                    <div>
-                      <span>
-                        <strong>Finished on</strong>:{" "}
-                        {new Date(project.date).toLocaleDateString()}
-                      </span>
-                      <span>
-                        <strong>Technologies</strong>: {project.place}
-                      </span>
-                      <span>
-                        <strong>Type</strong>: {project.projectType}
-                      </span>
-                      <p>{project.description}</p>
-                    </div>
-                  </CardContent>
+                  <ProjectLink href={project.link} target="_blank" rel="noopener noreferrer">
+                    <ProjectImage>
+                      {project.image && (
+                        <img src={project.image.asset.url} alt={project.title} />
+                      )}
+                    </ProjectImage>
+                    <CardContent>
+                      <h3>{project.title}</h3>
+                      <div>
+                        <span>
+                          <strong>Finished on</strong>:{" "}
+                          {new Date(project.date).toLocaleDateString()}
+                        </span>
+                        <span>
+                          <strong>Technologies</strong>: {project.place}
+                        </span>
+                        <span>
+                          <strong>Type</strong>: {project.projectType}
+                        </span>
+                        <p>{project.description}</p>
+                      </div>
+                    </CardContent>
+                  </ProjectLink>
                 </Card>
               ))}
           </CardContainer>
@@ -86,8 +80,8 @@ const Main = styled.div`
 `;
 
 const Section = styled.div`
-  background: #5A5A5A;
   padding: 20px 0;
+  padding-bottom: 100px;
 `;
 
 const CardContainer = styled.div`
@@ -108,6 +102,12 @@ const Card = styled.article`
   &:hover {
     transform: translateY(-5px);
   }
+`;
+
+const ProjectLink = styled.a`
+  display: block;
+  text-decoration: none;
+  color: inherit;
 `;
 
 const ProjectImage = styled.div`
@@ -131,11 +131,6 @@ const CardContent = styled.div`
   h3 {
     font-size: 1.5rem;
     margin: 0;
-  }
-
-  a {
-    color: #333;
-    text-decoration: none;
   }
 
   p {

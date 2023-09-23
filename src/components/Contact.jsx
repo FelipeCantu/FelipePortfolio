@@ -73,9 +73,8 @@ margin-top: 150px;
 margin-bottom: 50px;
 color: white;
 @media (max-width: 1126px) {
-  // background: purple;
   display: grid;
-  height: 110%;
+  height: 120%;
   margin-bottom: 150px;
 }
 `

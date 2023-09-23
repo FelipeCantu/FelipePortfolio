@@ -45,6 +45,7 @@ const FormData = styled.div`
     margin: 100px auto;
     form {
         display: grid;
+        width: 100%;
     }
     input {
         width: 100%;
@@ -55,7 +56,6 @@ const FormData = styled.div`
         height: 100px;
     }
     @media (max-width: 1126px) {
-        // background: green;
         margin: auto;
         height: 100%;
         padding-top: 40px;

@@ -5,18 +5,17 @@ import Post from './Post'
 function Blog() {
   return (
     <Body>
-      <div>
-        <h2>Blogs</h2>
          <Post />
-      </div>
     </Body>
   );
 }
 
 const Body = styled.div`
+overflow: auto;
+height: 100vh;
   div {
-    position: relative;
     margin-top: 60px;
+    // background: #5A5A5A;
   }
 `
 

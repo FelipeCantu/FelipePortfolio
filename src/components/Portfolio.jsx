@@ -14,6 +14,7 @@ function Portfolio() {
 
 const Port = styled.div `
   margin-top: 60px;
+
 `
 
 export default Portfolio;
