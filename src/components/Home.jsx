@@ -9,8 +9,7 @@ function Home() {
         <Container>
           <img src="images/avatarpic.png" />
           <h1>Full Stack Web Developer</h1>
-          <p>Full Stack Developer Motivated tech enthusiast and problem solver with a background in computer tech. Experience with project team building and critical thinking. </p>
-          <li><a href="">Learn More</a></li>
+          <p>As a Full Stack Developer, I am a highly motivated tech enthusiast and a skilled problem solver. My journey in the world of technology has been characterized by a strong background in computer technology, which has equipped me with a solid foundation in both front-end and back-end development.</p>
         </Container>
         <Icons>
           <h1>
@@ -62,6 +61,7 @@ const Container = styled.div`
   width: 60%;
   height: 550px;
   margin-top: 150px;
+  // background: green;
   img {
       z-index: 6;
       border-radius: 50%;
@@ -75,7 +75,7 @@ const Container = styled.div`
       }
   }
   h1 {
-    color: #fff;
+    color: white;
     grid-area: 3 / 4 / 4 / 8;
     text-decoration: underline;
     font-size: 2rem;
@@ -97,7 +97,8 @@ const Container = styled.div`
   li {
       // background: blue;
       grid-area: 6 / 7 / 8 / 8;
-      margin-left: -50px;
+      right: 0;
+      bottom: 0;
       text-align: right;
       @media (max-width: 1220px) {
         margin-top: 25px;
