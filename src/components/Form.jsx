@@ -75,5 +75,4 @@ const StyledButton = styled.button`
   }
 `;
 
-export default Form
-
+export default Form;

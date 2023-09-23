@@ -163,6 +163,7 @@ const SoicalIcons = styled.div `
     margin: auto;
     padding: 0 40px 30px 0;
     right: 30%;
+    bottom: 50px;
    a {
     font-size: 30px;
    }
