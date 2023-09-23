@@ -56,12 +56,12 @@ const StyledLink = styled(Link)`
 
 const Button = styled.button`
   background-color: #0077b5;
-  padding: 6px 13px 6px 13px;
+  padding: 6px 15px;
   border-radius: 10px;
   border: none;
   color: #fff;
   font-size: 1rem;
-  margin-top: -2px;
+  margin-top: -5px;
   @media (max-width: 768px) {
     background-color: none;
     padding: 0;
