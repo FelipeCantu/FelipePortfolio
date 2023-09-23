@@ -21,7 +21,7 @@ function Contact() {
                   Contact
                 </h1>
                 <h2><FaMapPin />Address</h2>
-                <p>2727 W Jefferson Blvd, Dallas Tx</p>
+                <p>Located, Dallas Tx</p>
                 <h2><FaPhoneAlt />Phone</h2>
                 <p>817-999-7951</p>
                 <h2><MdEmail />Email</h2>
