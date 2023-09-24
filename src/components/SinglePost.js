@@ -115,6 +115,7 @@ const AuthorCard = styled.div`
   img {
     width: 35px;
     margin-right: 10px;
+    border-radius: 50%;
   }
 `;
 

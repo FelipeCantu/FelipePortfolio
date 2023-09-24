@@ -14,7 +14,7 @@ const Body = styled.div`
 overflow: auto;
 height: 100vh;
   div {
-    margin-top: 60px;
+    margin-top: 50px;
     // background: #5A5A5A;
   }
 `
