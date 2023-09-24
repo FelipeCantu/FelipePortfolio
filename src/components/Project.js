@@ -72,7 +72,7 @@ export default function Project() {
 const Main = styled.div`
   overflow: auto;
   height: 100vh;
-  h1 {
+    h1 {
     color: white;
     text-decoration: underline;
     font-size: 40px;
@@ -82,6 +82,7 @@ const Main = styled.div`
 const Section = styled.div`
   padding: 20px 0;
   padding-bottom: 100px;
+  padding-top: 100px;
 `;
 
 const CardContainer = styled.div`
@@ -94,7 +95,7 @@ const CardContainer = styled.div`
 
 const Card = styled.article`
   margin: 20px;
-  background-color: white;
+//   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -127,12 +128,10 @@ const ProjectImage = styled.div`
 
 const CardContent = styled.div`
   padding: 16px;
-
   h3 {
     font-size: 1.5rem;
     margin: 0;
   }
-
   p {
     margin-top: 8px;
     font-size: 1rem;

@@ -48,7 +48,6 @@ const Overflow = styled.div`
   overflow: auto;
   position: absolute;
   width: 100%;
-  z-index: -1;
   @media (max-width: 768px) {
     width: 100%;
   }
