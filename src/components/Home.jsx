@@ -1,26 +1,33 @@
 import styled from "styled-components";
 import { FaGithub, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { Helmet } from 'react-helmet-async'
 
 function Home() {
   return (
-    <Main>
-      <img src="images/mainbg.jpg" />
-      <Wapper>
-        <Container>
-          <img src="images/avatarpic.png" />
-          <h1>Full Stack Web Developer</h1>
-          <p>As a Full Stack Developer, I am a highly motivated tech enthusiast and a skilled problem solver. My journey in the world of technology has been characterized by a strong background in computer technology, which has equipped me with a solid foundation in both front-end and back-end development.</p>
-        </Container>
-        <Icons>
-          <h1>
-            <a href="https://github.com/FelipeCantu" target="_blank"><FaGithub /></a>
-            <a href="https://www.linkedin.com/in/felipe-cantu-jr/" target="_blank"><FaLinkedin /></a>
-            <a href="https://www.instagram.com/son_of_robot_/" target="_blank"><FaInstagram /></a>
-          </h1>
-        </Icons>
-      </Wapper>
-    </Main>
-    
+    <>
+    <Helmet>
+      <title>Home</title>
+      <meta name="description" content="As a Full Stack Developer, I'm a tech enthusiast with a strong background in computer technology, proficient in front-end and back-end development." />
+      <link rel="cononical" href="/Home" />
+    </Helmet>
+      <Main>
+        <img src="images/mainbg.jpg" />
+        <Wapper>
+          <Container>
+            <img src="images/avatarpic.png" />
+            <h1>Full Stack Web Developer</h1>
+            <p>As a Full Stack Developer, I am a highly motivated tech enthusiast and a skilled problem solver. My journey in the world of technology has been characterized by a strong background in computer technology, which has equipped me with a solid foundation in both front-end and back-end development.</p>
+          </Container>
+          <Icons>
+            <h1>
+              <a href="https://github.com/FelipeCantu" target="_blank"><FaGithub /></a>
+              <a href="https://www.linkedin.com/in/felipe-cantu-jr/" target="_blank"><FaLinkedin /></a>
+              <a href="https://www.instagram.com/son_of_robot_/" target="_blank"><FaInstagram /></a>
+            </h1>
+          </Icons>
+        </Wapper>
+      </Main>
+    </>
   )
 }
 

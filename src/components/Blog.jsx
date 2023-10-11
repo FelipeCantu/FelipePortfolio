@@ -1,12 +1,20 @@
 import React from 'react';
 import styled from "styled-components";
 import Post from './Post'
+import { Helmet } from 'react-helmet-async'
 
 function Blog() {
   return (
-    <Body>
+   <>
+    <Helmet>
+      <title>Blogs</title>
+      <meta name="description" content="Continue reading the most recent daily blog updates." />
+      <link rel="canonical" href="/Blog" />
+    </Helmet>
+     <Body>
          <Post />
     </Body>
+   </>
   );
 }
 

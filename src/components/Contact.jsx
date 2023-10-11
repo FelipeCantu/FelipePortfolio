@@ -3,40 +3,48 @@ import styled from "styled-components";
 import Form from '../components/Form';
 import { FaGithub, FaLinkedin, FaInstagram, FaMapPin, FaPhoneAlt } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md'
+import { Helmet } from 'react-helmet-async'
 
 function Contact() {
   return (
-    <div>
-      <Main>
-        <Wapper>
-          <img src="images/mainbg.jpg" />
-          <Section>
-            <Content>
-              <img src="images/bgblue.jpeg" />
-              <Form />
-            </Content>
-            <Contacts>
-              <ContactIcons>
-                <h1>
-                  Contact
-                </h1>
-                <h2><FaMapPin />Address</h2>
-                <p>Located, Dallas Tx</p>
-                <h2><FaPhoneAlt />Phone</h2>
-                <p>817-999-7951</p>
-                <h2><MdEmail />Email</h2>
-                <a href="mailto: cantujr.felipe@gmail.com">cantujr.felipe@gmail.com</a>
-              </ContactIcons>
-              <SoicalIcons>
-                <a href="https://github.com/FelipeCantu" target="_blank"><FaGithub /></a>
-                <a href="https://www.linkedin.com/in/felipe-cantu-jr/" target="_blank"><FaLinkedin /></a>
-                <a href="https://www.instagram.com/son_of_robot_/" target="_blank"><FaInstagram /></a>
-              </SoicalIcons>
-            </Contacts>
-          </Section>
-        </Wapper>
-      </Main>
-    </div>
+    <>
+    <Helmet>
+      <title>Contact</title>
+      <meta name="description" content="Feel free to get in touch with me here to discuss potential collaboration." />
+      <link rel="cononical" href="/Contact" />
+    </Helmet>
+      <div>
+        <Main>
+          <Wapper>
+            <img src="images/mainbg.jpg" />
+            <Section>
+              <Content>
+                <img src="images/bgblue.jpeg" />
+                <Form />
+              </Content>
+              <Contacts>
+                <ContactIcons>
+                  <h1>
+                    Contact
+                  </h1>
+                  <h2><FaMapPin />Address</h2>
+                  <p>Located, Dallas Tx</p>
+                  <h2><FaPhoneAlt />Phone</h2>
+                  <p>817-999-7951</p>
+                  <h2><MdEmail />Email</h2>
+                  <a href="mailto: cantujr.felipe@gmail.com">cantujr.felipe@gmail.com</a>
+                </ContactIcons>
+                <SoicalIcons>
+                  <a href="https://github.com/FelipeCantu" target="_blank"><FaGithub /></a>
+                  <a href="https://www.linkedin.com/in/felipe-cantu-jr/" target="_blank"><FaLinkedin /></a>
+                  <a href="https://www.instagram.com/son_of_robot_/" target="_blank"><FaInstagram /></a>
+                </SoicalIcons>
+              </Contacts>
+            </Section>
+          </Wapper>
+        </Main>
+      </div>
+    </>
   );
 }
 
@@ -146,7 +154,7 @@ const ContactIcons = styled.div`
   }
 `
 
-const SoicalIcons = styled.div `
+const SoicalIcons = styled.div`
   position: absolute;
   right: 150px;
   bottom: 0;
