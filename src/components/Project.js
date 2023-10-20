@@ -4,11 +4,13 @@ import styled from "styled-components";
 
 export default function Project() {
   const [projectData, setProjectData] = useState(null);
+  const [projectTypeFilter, setProjectTypeFilter] = useState("web");
 
   useEffect(() => {
     sanityClient
       .fetch(
-        `*[_type == "project"]{
+        `*[_type == "project" && 
+        (${projectTypeFilter} == "web" || projectType == $projectTypeFilter)]{
           title,
           date,
           place,
@@ -22,46 +24,60 @@ export default function Project() {
               url 
             }
           }
-      }`
+        }`,
+        {
+          projectTypeFilter,
+        }
       )
       .then((data) => setProjectData(data))
       .catch(console.error);
-  }, []);
+  }, [projectTypeFilter]);
+
   if (!projectData) return <div>Loading...</div>;
 
   return (
     <Main>
       <main>
         <Section>
+          <FilterContainer>
+            <FilterLabel>Filter by Type:</FilterLabel>
+            <FilterSelect
+              value={projectTypeFilter}
+              onChange={(e) => setProjectTypeFilter(e.target.value)}
+            >
+              <option value="web">Web</option>
+              <option value="mobile">Mobile</option>
+              <option value="design">Design</option>
+            </FilterSelect>
+          </FilterContainer>
           <CardContainer>
-            {projectData &&
-              projectData.map((project, index) => (
-                <Card key={index}>
-                  <ProjectLink href={project.link} target="_blank" rel="noopener noreferrer">
-                    <ProjectImage>
-                      {project.image && (
-                        <img src={project.image.asset.url} alt={project.title} />
-                      )}
-                    </ProjectImage>
-                    <CardContent>
-                      <h3>{project.title}</h3>
-                      <div>
-                        <span>
-                          <strong>Finished on</strong>:{" "}
-                          {new Date(project.date).toLocaleDateString()}
-                        </span>
-                        <span>
-                          <strong>Technologies</strong>: {project.place}
-                        </span>
-                        <span>
-                          <strong>Type</strong>: {project.projectType}
-                        </span>
-                        <p>{project.description}</p>
-                      </div>
-                    </CardContent>
-                  </ProjectLink>
-                </Card>
-              ))}
+            {projectData.map((project, index) => (
+              <Card key={index}>
+                <ProjectLink href={project.link} target="_blank" rel="noopener noreferrer">
+                  <ProjectImage>
+                    {project.image && (
+                      <img src={project.image.asset.url} alt={project.title} />
+                    )}
+                  </ProjectImage>
+                  <CardContent>
+                    <h3>{project.title}</h3>
+                    <div>
+                      <span>
+                        <strong>Finished on</strong>:{" "}
+                        {new Date(project.date).toLocaleDateString()}
+                      </span>
+                      <span>
+                        <strong>Technologies</strong>: {project.place}
+                      </span>
+                      <span>
+                        <strong>Type</strong>: {project.projectType}
+                      </span>
+                      <p>{project.description}</p>
+                    </div>
+                  </CardContent>
+                </ProjectLink>
+              </Card>
+            ))}
           </CardContainer>
         </Section>
       </main>
@@ -137,4 +153,19 @@ const CardContent = styled.div`
     font-size: 1rem;
     color: #555;
   }
+`;
+
+
+const FilterContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 20px;
+`;
+
+const FilterLabel = styled.label`
+  margin-right: 10px;
+`;
+
+const FilterSelect = styled.select`
+  padding: 5px;
 `;

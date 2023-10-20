@@ -28,19 +28,11 @@ export default {
         },
       },
       {
-        name: "projectType",
-        title: "Project type",
-        type: "string",
+        name: 'projectType',
+        type: 'string',
+        title: 'Project Type',
         options: {
-          list: [
-            { value: "personal", title: "Personal" },
-            { value: "client", title: "Client" },
-            { value: "school", title: "School" },
-            { value: "clone", title: "Clone"},
-            { value: "games", title: "Games"},
-            { value: "design", title: "Design"},
-            { value: "mobile application", title: "Mobile Application"}
-          ],
+          list: ['web', 'mobile', 'design'],
         },
       },
       {

@@ -8,7 +8,7 @@ function Home() {
     <Helmet>
       <title>Home</title>
       <meta name="description" content="As a Full Stack Developer, I'm a tech enthusiast with a strong background in computer technology, proficient in front-end and back-end development." />
-      <link rel="cononical" href="/Home" />
+      <link rel="canonical" href="/Home" />
     </Helmet>
       <Main>
         <img src="images/mainbg.jpg" />
