@@ -19,15 +19,15 @@ const Navbar = () => {
 }
 
 const Nav = styled.nav`
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 60px;
-  padding: 0 20px;
+  // padding: 0 20px;
   display: flex;
   background: rgba(128,128,128,0.5);
   justify-content: space-between;
   padding-left: 200px;
-  z-index: 10;
+  z-index: 1000;
   @media (max-width: 1250px) {
     padding-left: 10px;
   }

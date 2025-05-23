@@ -1,13 +1,36 @@
-body {
+/* Add this to your global CSS file or index.css */
+
+html, body {
+  height: 100%;
+  width: 100%;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto !important;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  position: relative;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* This ensures content is always scrollable when needed */
+* {
+  box-sizing: border-box;
+}
+
+/* Debug any elements that might be causing overflow issues */
+* {
+  max-width: 100%;
+}
+
+/* Force scrolling on the main container */
+body, html, #root {
+  overflow-y: auto !important;
 }
