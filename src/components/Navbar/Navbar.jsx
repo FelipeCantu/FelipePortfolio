@@ -2,13 +2,14 @@ import React from 'react';
 import Menu from './Menu';
 import styled from 'styled-components';
 import { Typography } from '@material-ui/core';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+
 
 const Navbar = () => {
   return (
     <Nav>
       <Link to='/Home'>
-        <img src="/images/logo.png" alt="Logo" />
+        <img src='images/logo.png' alt="Logo" />
         <StyledTypography variant='caption'>
           Felipe Cantu Jr
         </StyledTypography>
