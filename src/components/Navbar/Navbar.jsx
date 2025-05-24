@@ -9,7 +9,7 @@ const Navbar = () => {
   return (
     <Nav>
       <Link to='/Home'>
-        <img src='images/logo.png' alt="Logo" />
+        <img src='images/mainwlogo.png' alt="Logo" />
         <StyledTypography variant='caption'>
           Felipe Cantu Jr
         </StyledTypography>
