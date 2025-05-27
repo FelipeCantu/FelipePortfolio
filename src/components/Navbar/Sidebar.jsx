@@ -78,7 +78,7 @@ const StyledLink = styled(Link)`
   font-family: Arial, Helvetica, sans-serif;
   
   &:hover {
-    color: black;
+    color: #0097e8;
   }
 `;
 
