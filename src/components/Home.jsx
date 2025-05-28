@@ -343,6 +343,7 @@ const SocialIcons = styled.div`
   position: absolute;
   bottom: 2rem;
   right: 2rem;
+  padding-top: 1rem;
   display: flex;
   gap: 1.5rem;
   z-index: 3;
