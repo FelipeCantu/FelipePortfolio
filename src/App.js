@@ -1,14 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar/Navbar';
 import Home from './components/Home';
-import Blog from './components/Blog'
-import Portfolio from './components/Portfolio'
+import Blog from './components/Blog';
+import Portfolio from './components/Portfolio';
 import Contact from './components/Contact';
-import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Switch, useLocation } from 'react-router-dom';
 import SinglePost from './components/SinglePost';
 import styled, { createGlobalStyle } from 'styled-components';
+import LoadingComponent from './components/LoadingComponent';
 
-// Create a global style to ensure scrolling works
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
     height: 100%;
@@ -24,42 +24,114 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+function AppContent() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const location = useLocation();
+
+  const getLoadingMessage = (pathname) => {
+    const cleanPath = pathname.split('?')[0].replace(/\/$/, '').toLowerCase() || '/';
+    
+    switch (cleanPath) {
+      case '/':
+      case '/home':
+        return {
+          title: 'Loading Home',
+          status: 'Preparing workspace...'
+        };
+      case '/blog':
+        return {
+          title: 'Loading Blog',
+          status: 'Fetching articles...'
+        };
+      case '/portfolio':
+        return {
+          title: 'Loading Portfolio',
+          status: 'Showcasing projects...'
+        };
+      case '/contact':
+        return {
+          title: 'Loading Contact',
+          status: 'Let\'s communicate...'
+        };
+      default:
+        if (cleanPath.startsWith('/post/')) {
+          return {
+            title: 'Loading Article',
+            status: 'Retrieving content...'
+          };
+        }
+        return {
+          title: 'Loading Page',
+          status: 'Preparing content...'
+        };
+    }
+  };
+
+  useEffect(() => {
+    if (isFirstLoad) {
+      setIsFirstLoad(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    setLoadingMessage(getLoadingMessage(location.pathname));
+    
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [location.pathname, isFirstLoad]);
+
+  if (isLoading) {
+    return (
+      <LoadingComponent 
+        loadingText={loadingMessage.title} 
+        statusText={loadingMessage.status} 
+      />
+    );
+  }
+
+  return (
+    <AppWrapper>
+      <Navbar />
+      <MainContent>
+        <Switch>
+          <Route exact path='/' component={Home} />
+          <Route path='/home' component={Home} />
+          <Route path='/blog' component={Blog} />
+          <Route path='/portfolio' render={() => <ScrollableWrapper><Portfolio /></ScrollableWrapper>} />
+          <Route path='/contact' component={Contact} />
+          <Route path='/post/:slug' component={SinglePost} />
+        </Switch>
+      </MainContent>
+    </AppWrapper>
+  );
+}
+
 function App() {
   return (
     <Router>
       <GlobalStyle />
-      <AppWrapper>
-        <Navbar />
-        <MainContent>
-          <Switch>
-            <Route exact path='/' component={Home} />
-            <Route path='/home' component={Home} />
-            <Route path='/blog' component={Blog} />
-            <Route path='/portfolio' render={() => <ScrollableWrapper><Portfolio /></ScrollableWrapper>} />
-            <Route path='/contact' component={Contact} />
-            <Route path='/post/:slug' component={SinglePost} />
-          </Switch>
-        </MainContent>
-      </AppWrapper>
+      <AppContent />
     </Router>
   );
 }
 
-// Basic structure that ensures content flows properly
 const AppWrapper = styled.div`
   min-height: 100%;
   display: flex;
   flex-direction: column;
 `;
 
-// Main content area takes remaining space
 const MainContent = styled.main`
   flex: 1;
   width: 100%;
   position: relative;
 `;
 
-// Special wrapper just for Portfolio to ensure it scrolls
 const ScrollableWrapper = styled.div`
   height: 100%;
   width: 100%;

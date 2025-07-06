@@ -15,24 +15,32 @@ function Portfolio() {
         <link rel="canonical" href="/Portfolio" />
       </Helmet>
       
+      <BackgroundOverlay>
+        <BackgroundPattern />
+      </BackgroundOverlay>
+      
       <ScrollToTopButton />
       
-      <PortfolioHeader>
-        <TitleContainer>
-          <Title variant="h2">
-            My Creative Portfolio
-          </Title>
-          <AccentLine />
-        </TitleContainer>
-        <Subtitle variant="subtitle1">
-          Explore my collection of projects showcasing full-stack development skills with 
-          JavaScript, React, and beautiful Figma designs.
-        </Subtitle>
-      </PortfolioHeader>
-      
-      <ProjectSection>
-        <Project />
-      </ProjectSection>
+      <ContentWrapper>
+        <PortfolioHeader>
+          <HeaderContent>
+            <TitleContainer>
+              <Title variant="h2">
+                My Creative Portfolio
+              </Title>
+              <AccentLine />
+            </TitleContainer>
+            <Subtitle variant="subtitle1">
+              Explore my collection of projects showcasing full-stack development skills with 
+              JavaScript, React, and beautiful Figma designs.
+            </Subtitle>
+          </HeaderContent>
+        </PortfolioHeader>
+        
+        <ProjectSection>
+          <Project />
+        </ProjectSection>
+      </ContentWrapper>
     </PortfolioWrapper>
   );
 }
@@ -71,78 +79,174 @@ const ScrollToTopButton = () => {
   );
 };
 
-// STYLED COMPONENTS - UPDATED TO PUSH CONTENT BELOW NAVBAR
+// Animations
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const gradientShift = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+// STYLED COMPONENTS
 const PortfolioWrapper = styled.div`
-  width: 100%;
-  padding: 100px 0 100px; /* Added top padding to push content down */
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+  position: relative;
   min-height: 100vh;
+  width: 100%;
+  padding-top: 80px; /* Space for navbar */
+`;
+
+const BackgroundOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+`;
+
+const BackgroundPattern = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('images/mainbg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 20, 30, 0.75);
+    backdrop-filter: blur(1px);
+  }
+`;
+
+const ContentWrapper = styled.div`
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
 `;
 
 const PortfolioHeader = styled.header`
-  max-width: 70%;
-  margin: 0 auto 3rem;
   text-align: center;
-  padding-top: 20px; /* Additional padding if needed */
+  padding: 4rem 0 3rem;
+  animation: ${fadeInUp} 0.8s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 2rem 0 2rem;
+  }
+`;
+
+const HeaderContent = styled.div`
+  max-width: 800px;
+  margin: 0 auto;
 `;
 
 const TitleContainer = styled.div`
   position: relative;
   display: inline-block;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 `;
 
 const Title = styled(Typography)`
   && {
-    font-family: 'Montserrat', sans-serif;
+    font-size: 3.5rem;
     font-weight: 800;
-    color: #2c3e50;
-    font-size: 3rem;
-    letter-spacing: -0.5px;
-    margin-top: 20px; /* Added margin to push title down further */
+    color: white;
+    margin: 0;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    letter-spacing: -1px;
+    line-height: 1.1;
     
     @media (max-width: 768px) {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 2rem;
     }
   }
 `;
 
 const AccentLine = styled.div`
   position: absolute;
-  width: 80px;
-  height: 5px;
-  bottom: -12px;
+  bottom: -15px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(90deg, #3498db, #9b59b6);
-  border-radius: 3px;
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4d9de0);
+  background-size: 300% 300%;
+  border-radius: 2px;
+  animation: ${gradientShift} 3s ease infinite;
 `;
 
 const Subtitle = styled(Typography)`
   && {
-    color: #5a6a7a;
-    line-height: 1.7;
-    font-size: 1.3rem;
-    max-width: 800px;
-    margin: 0 auto;
-    font-weight: 400;
-
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 300;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    
     @media (max-width: 768px) {
       font-size: 1.1rem;
-      padding: 0 0.5rem;
+      padding: 0 1rem;
     }
   }
 `;
 
 const ProjectSection = styled.section`
-  max-width: 70%;
-  margin: 0 auto;
-  width: 100%;
-`;
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 3rem;
+  margin-bottom: 4rem;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  animation: ${fadeInUp} 0.8s ease-out 0.2s both;
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
 `;
 
 const ScrollButton = styled.button`
