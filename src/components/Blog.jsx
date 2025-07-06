@@ -71,13 +71,13 @@ const BlogContainer = styled.div`
 `;
 
 const BackgroundOverlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  z-index: 0;
+  z-index: -1;
 `;
 
 const BackgroundPattern = styled.div`
@@ -106,7 +106,7 @@ const BackgroundPattern = styled.div`
 
 const ContentWrapper = styled.div`
   position: relative;
-  z-index: 1;
+  z-index: 10;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;

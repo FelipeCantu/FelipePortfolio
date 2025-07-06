@@ -75,6 +75,11 @@ function AppContent() {
       return;
     }
     
+    // Skip loading component for blog post pages - let SinglePost handle its own loading
+    if (location.pathname.startsWith('/post/')) {
+      return;
+    }
+    
     setIsLoading(true);
     setLoadingMessage(getLoadingMessage(location.pathname));
     

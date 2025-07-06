@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Menu from './Menu';
 import styled, { keyframes } from 'styled-components';
 import { Typography } from '@material-ui/core';
@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom';
 const Navbar = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [logoError, setLogoError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const textRef = useRef(null);
 
   const handleMouseMove = (e) => {
@@ -19,6 +21,77 @@ const Navbar = () => {
     }
   };
 
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setLogoError(false);
+  };
+
+  const handleImageError = () => {
+    console.warn('Logo image failed to load, using fallback');
+    setLogoError(true);
+    setImageLoaded(false);
+  };
+
+  // Preload both images to prevent loading delays
+  useEffect(() => {
+    const preloadImage = (src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          console.log(`✅ Successfully loaded: ${src}`);
+          resolve();
+        };
+        img.onerror = () => {
+          console.error(`❌ Failed to load: ${src}`);
+          reject();
+        };
+        img.src = src;
+      });
+    };
+
+    // Try different possible paths for the logo images
+    const possiblePaths = [
+      // Standard public folder paths
+      { white: '/images/mainwlogo.png', blue: '/images/mainblogo.png' },
+      { white: 'images/mainwlogo.png', blue: 'images/mainblogo.png' },
+      { white: './images/mainwlogo.png', blue: './images/mainblogo.png' },
+      
+      // Alternative naming conventions
+      { white: '/images/logo-white.png', blue: '/images/logo-blue.png' },
+      { white: 'images/logo-white.png', blue: 'images/logo-blue.png' },
+      
+      // Check if you have different file extensions
+      { white: '/images/mainwlogo.jpg', blue: '/images/mainblogo.jpg' },
+      { white: 'images/mainwlogo.jpg', blue: 'images/mainblogo.jpg' },
+    ];
+
+    // Try each path until one works
+    const tryPaths = async () => {
+      for (const paths of possiblePaths) {
+        try {
+          await Promise.all([
+            preloadImage(paths.white),
+            preloadImage(paths.blue)
+          ]);
+          console.log('✅ Found working logo paths:', paths);
+          setImageLoaded(true);
+          setLogoError(false);
+          return;
+        } catch (error) {
+          console.log('❌ Failed paths:', paths);
+          continue;
+        }
+      }
+      
+      // If all paths fail, use fallback
+      console.warn('⚠️ No logo images found, using fallback design');
+      setLogoError(true);
+      setImageLoaded(false);
+    };
+
+    tryPaths();
+  }, []);
+
   return (
     <Nav>
       <LogoContainer>
@@ -27,11 +100,25 @@ const Navbar = () => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <LogoImage 
-            src={isHovered ? 'images/mainblogo.png' : 'images/mainwlogo.png'} 
-            alt="Logo" 
-            $ishovered={isHovered}
-          />
+          {!logoError ? (
+            <LogoImage 
+              src={isHovered ? 'images/mainblogo.png' : 'images/mainwlogo.png'} 
+              alt="Felipe Cantu Jr Logo" 
+              $ishovered={isHovered}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+              style={{
+                opacity: imageLoaded ? 1 : 0,
+                transition: 'all 0.3s ease'
+              }}
+            />
+          ) : (
+            // Fallback logo when images fail to load
+            <LogoFallback $ishovered={isHovered}>
+              <LogoText $ishovered={isHovered}>FC</LogoText>
+            </LogoFallback>
+          )}
+          
           <TextContainer
             ref={textRef}
             onMouseMove={handleMouseMove}
@@ -96,6 +183,7 @@ const LogoLink = styled(Link)`
 
 const LogoImage = styled.img`
   width: 60px;
+  height: 60px;
   animation: ${float} 3s ease-in-out infinite, ${pulse} 2s infinite;
   transition: all 0.3s ease;
   border-radius: 50%;
@@ -103,10 +191,52 @@ const LogoImage = styled.img`
   transform: ${props => props.$ishovered ? 'scale(1.1)' : 'scale(1)'};
   filter: ${props => props.$ishovered ? 'drop-shadow(0 0 8px #1e90ff)' : 'none'};
   margin-left: 4px;
+  object-fit: cover;
+  
   @media (max-width: 400px) {
     width: 50px;
     height: 50px;
     margin-top: 10px;
+  }
+`;
+
+const LogoFallback = styled.div`
+  width: 60px;
+  height: 60px;
+  background: ${props => props.$ishovered ? 
+    'linear-gradient(135deg, #1e90ff, #0097e8)' : 
+    'linear-gradient(135deg, #ffffff, #f8f9fa)'};
+  color: ${props => props.$ishovered ? 'white' : '#1e90ff'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-left: 4px;
+  animation: ${float} 3s ease-in-out infinite, ${pulse} 2s infinite;
+  transition: all 0.3s ease;
+  border: 2px solid ${props => props.$ishovered ? '#1e90ff' : 'rgba(30, 144, 255, 0.3)'};
+  transform: ${props => props.$ishovered ? 'scale(1.1)' : 'scale(1)'};
+  filter: ${props => props.$ishovered ? 'drop-shadow(0 0 8px #1e90ff)' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'};
+  box-shadow: ${props => props.$ishovered ? 
+    '0 0 20px rgba(30, 144, 255, 0.3)' : 
+    '0 2px 8px rgba(0, 0, 0, 0.1)'};
+  
+  @media (max-width: 400px) {
+    width: 50px;
+    height: 50px;
+    margin-top: 10px;
+  }
+`;
+
+const LogoText = styled.span`
+  font-weight: 700;
+  font-size: 20px;
+  font-family: 'Inter', 'Roboto', sans-serif;
+  letter-spacing: -0.5px;
+  text-shadow: ${props => props.$ishovered ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'};
+  
+  @media (max-width: 400px) {
+    font-size: 18px;
   }
 `;
 
@@ -156,7 +286,7 @@ const HoverText = styled(Typography)`
     font-weight: 600;
     font-size: 1.5em;
     letter-spacing: 0.5px;
-    color: #0097e8; /* Your requested cyan color */
+    color: #0097e8;
     margin: 0;
     display: flex;
     align-items: center;
