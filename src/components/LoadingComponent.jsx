@@ -205,10 +205,6 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           font-weight: 300;
           margin-bottom: 1.5rem;
           text-align: center;
-          background: linear-gradient(90deg, #00bfff, white, #f7ab0a);
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
           animation: fadeInOut 2.5s ease-in-out infinite;
         }
         
@@ -234,8 +230,8 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           background: linear-gradient(
             90deg,
             transparent,
-            rgba(0, 191, 255, 0.8),
-            rgba(247, 171, 10, 0.8),
+            rgba(35, 89, 223, 0.8),
+            rgba(35, 89, 223, 0.8),
             transparent
           );
           background-size: 300px 100%;
