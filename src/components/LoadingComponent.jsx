@@ -41,17 +41,17 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
         
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.05); }
+          50% { opacity: 0.8; transform: scale(1.03); }
         }
         
-        @keyframes fadeInOut {
-          0%, 100% { opacity: 0.3; }
+        @keyframes gentleFade {
+          0%, 100% { opacity: 0.7; }
           50% { opacity: 1; }
         }
         
-        @keyframes shimmer {
-          0% { background-position: -300px 0; }
-          100% { background-position: 300px 0; }
+        @keyframes progressSlide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
         }
         
         @keyframes orbitAnimation {
@@ -61,7 +61,18 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
         
         @keyframes backgroundPulse {
           0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
-          50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.05); }
+          50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.03); }
+        }
+        
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         .loading-container {
@@ -74,10 +85,11 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           justify-content: center;
           min-height: 100vh;
           width: 100%;
-          background: rgba(20, 20, 30, 0.95);
+          background: rgba(20, 20, 30, 0.97);
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           overflow: visible;
           z-index: 9999;
+          backdrop-filter: blur(10px);
         }
         
         .background-image {
@@ -86,7 +98,7 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           height: 100%;
           object-fit: cover;
           z-index: -1;
-          opacity: 0.3;
+          opacity: 0.25;
         }
         
         .pulsing-circles {
@@ -110,22 +122,22 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           width: 200px;
           height: 200px;
           border: 2px solid rgba(0, 191, 255, 0.3);
-          animation-duration: 2s;
+          animation-duration: 3s;
         }
         
         .circle-2 {
           width: 300px;
           height: 300px;
-          border: 2px solid rgba(247, 171, 10, 0.2);
-          animation-duration: 3s;
+          border: 2px solid rgba(247, 171, 10, 0.25);
+          animation-duration: 4s;
           animation-delay: 0.5s;
         }
         
         .circle-3 {
           width: 400px;
           height: 400px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          animation-duration: 4s;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          animation-duration: 5s;
           animation-delay: 1s;
         }
         
@@ -135,6 +147,7 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           height: 300px;
           margin-bottom: 3rem;
           z-index: 2;
+          animation: slideInUp 0.5s ease-out;
         }
         
         .logo-container {
@@ -150,7 +163,7 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           width: 100%;
           height: 100%;
           animation: rotate 4s linear infinite, pulse 3s ease-in-out infinite;
-          filter: drop-shadow(0 8px 16px rgba(0, 191, 255, 0.3));
+          filter: drop-shadow(0 8px 16px rgba(0, 191, 255, 0.4));
         }
         
         .logo-image {
@@ -205,7 +218,9 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           font-weight: 300;
           margin-bottom: 1.5rem;
           text-align: center;
-          animation: fadeInOut 2.5s ease-in-out infinite;
+          animation: slideInUp 0.5s ease-out 0.1s both, 
+                     gentleFade 3s ease-in-out infinite 0.6s;
+          text-shadow: 0 2px 10px rgba(0, 191, 255, 0.3);
         }
         
         .progress-container {
@@ -214,6 +229,7 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           align-items: center;
           gap: 1rem;
           margin-bottom: 2rem;
+          animation: slideInUp 0.5s ease-out 0.2s both;
         }
         
         .progress-bar {
@@ -223,27 +239,28 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           border-radius: 3px;
           overflow: hidden;
           border: 1px solid rgba(0, 191, 255, 0.3);
+          position: relative;
         }
         
         .progress-fill {
+          position: absolute;
           height: 100%;
+          width: 50%;
           background: linear-gradient(
             90deg,
             transparent,
-            rgba(35, 89, 223, 0.8),
-            rgba(35, 89, 223, 0.8),
+            rgba(0, 191, 255, 0.8),
             transparent
           );
-          background-size: 300px 100%;
-          animation: shimmer 2s infinite;
+          animation: progressSlide 1.5s ease-in-out infinite;
         }
         
         .status-text {
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.85);
           font-size: 1rem;
           text-align: center;
           margin: 0;
-          animation: fadeInOut 4s ease-in-out infinite;
+          animation: gentleFade 4s ease-in-out infinite;
         }
       `}</style>
     </div>

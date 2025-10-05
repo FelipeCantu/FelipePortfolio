@@ -119,7 +119,7 @@ function Home() {
   );
 }
 
-// Animations (keep existing animations the same)
+// Animations
 const ovalOrbit = keyframes`
   0% { transform: rotate(0deg) translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(0deg); }
   100% { transform: rotate(360deg) translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(-360deg); }
@@ -152,7 +152,66 @@ const rotateReverse = keyframes`
   100% { transform: translate(-50%, -50%) rotate(-360deg); }
 `;
 
-// Styled Components (keep existing styles the same)
+// Entrance animations
+const fadeInScale = keyframes`
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5) rotate(-10deg);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) rotate(0deg);
+  }
+`;
+
+const slideInUp = keyframes`
+  0% { 
+    opacity: 0; 
+    transform: translateY(60px);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateY(0);
+  }
+`;
+
+const slideInRight = keyframes`
+  0% { 
+    opacity: 0; 
+    transform: translateX(-60px);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateX(0);
+  }
+`;
+
+const popIn = keyframes`
+  0% { 
+    opacity: 0; 
+    transform: scale(0) translateY(20px);
+  }
+  50% {
+    transform: scale(1.1) translateY(-5px);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1) translateY(0);
+  }
+`;
+
+const backgroundZoom = keyframes`
+  0% { 
+    transform: scale(1.2);
+    filter: blur(10px);
+  }
+  100% { 
+    transform: scale(1);
+    filter: blur(0px);
+  }
+`;
+
+// Styled Components
 const Main = styled.main`
   position: relative;
   width: 100%;
@@ -166,6 +225,7 @@ const BackgroundImage = styled.img`
   height: 100%;
   object-fit: cover;
   z-index: -1;
+  animation: ${backgroundZoom} 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 `;
 
 const Wrapper = styled.div`
@@ -178,6 +238,12 @@ const Wrapper = styled.div`
   background: rgba(20, 20, 30, 0.85);
   padding: 2rem;
   position: relative;
+  animation: fadeIn 0.8s ease-out;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `;
 
 const PulsingCircles = styled.div`
@@ -298,6 +364,7 @@ const AvatarContainer = styled.div`
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: linear-gradient(135deg, rgba(0,191,255,0.3), rgba(30,144,255,0.1));
   padding: 8px;
+  animation: ${fadeInScale} 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards;
 
   @media (max-width: 768px) {
     width: 180px;
@@ -323,6 +390,7 @@ const TextContent = styled.div`
   max-width: 600px;
   color: white;
   z-index: 1;
+  animation: ${slideInRight} 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;
 `;
 
 const Title = styled.h1`
@@ -332,11 +400,13 @@ const Title = styled.h1`
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s backwards;
 `;
 
 const Description = styled.p`
   font-size: 1.2rem;
   line-height: 1.6;
+  animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s backwards;
 `;
 
 const SocialIcons = styled.div`
@@ -359,6 +429,12 @@ const IconLink = styled.a`
   color: white;
   font-size: 1.8rem;
   transition: all 0.3s ease;
+  animation: ${popIn} 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards;
+  
+  &:nth-child(1) { animation-delay: 1.1s; }
+  &:nth-child(2) { animation-delay: 1.25s; }
+  &:nth-child(3) { animation-delay: 1.4s; }
+  &:nth-child(4) { animation-delay: 1.55s; }
 
   &:hover {
     color: ${({ href }) => 
