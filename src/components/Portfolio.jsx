@@ -107,7 +107,11 @@ const PortfolioWrapper = styled.div`
   position: relative;
   min-height: 100vh;
   width: 100%;
-  padding-top: 80px; /* Space for navbar */
+  padding-top: 80px;
+  
+  @media (max-width: 480px) {
+    padding-top: 70px;
+  }
 `;
 
 const BackgroundOverlay = styled.div`
@@ -154,6 +158,10 @@ const ContentWrapper = styled.div`
   @media (max-width: 768px) {
     padding: 0 1rem;
   }
+  
+  @media (max-width: 480px) {
+    padding: 0 0.8rem;
+  }
 `;
 
 const PortfolioHeader = styled.header`
@@ -163,6 +171,10 @@ const PortfolioHeader = styled.header`
   
   @media (max-width: 768px) {
     padding: 2rem 0 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 1.5rem 0 1.5rem;
   }
 `;
 
@@ -175,6 +187,10 @@ const TitleContainer = styled.div`
   position: relative;
   display: inline-block;
   margin-bottom: 2rem;
+  
+  @media (max-width: 480px) {
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const Title = styled(Typography)`
@@ -192,7 +208,7 @@ const Title = styled(Typography)`
     }
     
     @media (max-width: 480px) {
-      font-size: 2rem;
+      font-size: 1.8rem;
     }
   }
 `;
@@ -208,6 +224,12 @@ const AccentLine = styled.div`
   background-size: 300% 300%;
   border-radius: 2px;
   animation: ${gradientShift} 3s ease infinite;
+  
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 3px;
+    bottom: -10px;
+  }
 `;
 
 const Subtitle = styled(Typography)`
@@ -222,6 +244,11 @@ const Subtitle = styled(Typography)`
     @media (max-width: 768px) {
       font-size: 1.1rem;
       padding: 0 1rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 0.95rem;
+      padding: 0 0.5rem;
     }
   }
 `;
@@ -244,8 +271,9 @@ const ProjectSection = styled.section`
   }
   
   @media (max-width: 480px) {
-    padding: 1.5rem 1rem;
+    padding: 1.2rem 0.8rem;
     border-radius: 12px;
+    margin-bottom: 1.5rem;
   }
 `;
 
@@ -276,6 +304,18 @@ const ScrollButton = styled.button`
     height: 45px;
     bottom: 20px;
     right: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    bottom: 15px;
+    right: 15px;
+    
+    svg {
+      width: 18px;
+      height: 18px;
+    }
   }
 `;
 

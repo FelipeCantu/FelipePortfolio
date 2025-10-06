@@ -28,9 +28,8 @@ export default function Post() {
                 }`
             )
             .then((data) => {
-                console.log('Fetched posts:', data); // Debug log
+                console.log('Fetched posts:', data);
                 
-                // Process the data to add computed fields
                 const processedData = data.map(post => ({
                     ...post,
                     displayDate: post.publishedAt || post._createdAt,
@@ -232,6 +231,10 @@ const SectionHeader = styled.div`
     @media (max-width: 768px) {
         margin-bottom: 2rem;
     }
+    
+    @media (max-width: 480px) {
+        margin-bottom: 1.5rem;
+    }
 `;
 
 const SectionTitle = styled.h2`
@@ -243,12 +246,20 @@ const SectionTitle = styled.h2`
     @media (max-width: 768px) {
         font-size: 2rem;
     }
+    
+    @media (max-width: 480px) {
+        font-size: 1.5rem;
+    }
 `;
 
 const SectionSubtitle = styled.p`
     color: #6b7280;
     font-size: 1rem;
     margin: 0;
+    
+    @media (max-width: 480px) {
+        font-size: 0.85rem;
+    }
 `;
 
 const PostGrid = styled.div`
@@ -257,8 +268,13 @@ const PostGrid = styled.div`
     gap: 2rem;
     
     @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    @media (max-width: 480px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
     }
 `;
 
@@ -275,6 +291,15 @@ const PostCard = styled.article`
         transform: translateY(-8px);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
+    
+    @media (max-width: 480px) {
+        border-radius: 12px;
+        
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+        }
+    }
 `;
 
 const PostLink = styled(Link)`
@@ -289,6 +314,10 @@ const PostImageContainer = styled.div`
     width: 100%;
     height: 220px;
     overflow: hidden;
+    
+    @media (max-width: 480px) {
+        height: 140px;
+    }
 `;
 
 const PostImage = styled.img`
@@ -326,6 +355,10 @@ const PlaceholderImage = styled.div`
 const PlaceholderIcon = styled.div`
     font-size: 3rem;
     opacity: 0.8;
+    
+    @media (max-width: 480px) {
+        font-size: 2rem;
+    }
 `;
 
 const PostOverlay = styled.div`
@@ -370,6 +403,18 @@ const ReadMoreButton = styled.div`
     &:hover svg {
         transform: translateX(3px);
     }
+    
+    @media (max-width: 480px) {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.7rem;
+        border-radius: 15px;
+        gap: 0.3rem;
+        
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
 `;
 
 const PostContent = styled.div`
@@ -377,6 +422,11 @@ const PostContent = styled.div`
     display: flex;
     flex-direction: column;
     height: calc(100% - 220px);
+    
+    @media (max-width: 480px) {
+        padding: 0.8rem;
+        height: calc(100% - 140px);
+    }
 `;
 
 const PostMeta = styled.div`
@@ -384,6 +434,11 @@ const PostMeta = styled.div`
     gap: 1rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
+    
+    @media (max-width: 480px) {
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+    }
 `;
 
 const MetaItem = styled.div`
@@ -395,6 +450,16 @@ const MetaItem = styled.div`
     
     svg {
         color: #667eea;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.65rem;
+        gap: 0.25rem;
+        
+        svg {
+            width: 10px;
+            height: 10px;
+        }
     }
 `;
 
@@ -410,7 +475,14 @@ const PostTitle = styled.h3`
     overflow: hidden;
     
     @media (max-width: 768px) {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+        margin-bottom: 0.7rem;
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
     }
 `;
 
@@ -424,6 +496,16 @@ const PostExcerpt = styled.p`
     -webkit-box-orient: vertical;
     overflow: hidden;
     font-size: 0.95rem;
+    
+    @media (max-width: 768px) {
+        -webkit-line-clamp: 2;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+    }
+    
+    @media (max-width: 480px) {
+        display: none;
+    }
 `;
 
 const ReadMoreLink = styled.div`
@@ -445,6 +527,16 @@ const ReadMoreLink = styled.div`
         
         svg {
             transform: translateX(3px);
+        }
+    }
+    
+    @media (max-width: 480px) {
+        font-size: 0.7rem;
+        gap: 0.3rem;
+        
+        svg {
+            width: 12px;
+            height: 12px;
         }
     }
 `;

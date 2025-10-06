@@ -88,7 +88,6 @@ export default function Project() {
                 {project.projectType}
               </ProjectTypeBadge>
               
-              {/* New slide-up overlay */}
               <ProjectOverlay>
                 <OverlayContent>
                   <ProjectTitle>{project.title}</ProjectTitle>
@@ -143,6 +142,10 @@ export default function Project() {
 const ProjectContainer = styled.div`
   width: 100%;
   padding: 0 20px 100px;
+  
+  @media (max-width: 480px) {
+    padding: 0 10px 60px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -177,7 +180,12 @@ const FilterContainer = styled.div`
   gap: 1.2rem;
 
   @media (max-width: 768px) {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 1.5rem;
+    gap: 0.8rem;
   }
 `;
 
@@ -200,6 +208,10 @@ const FilterLabel = styled.h3`
     background: linear-gradient(90deg, #3498db, #9b59b6);
     border-radius: 2px;
   }
+  
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+  }
 `;
 
 const FilterOptionsContainer = styled.div`
@@ -209,7 +221,7 @@ const FilterOptionsContainer = styled.div`
   gap: 1rem;
   
   @media (max-width: 480px) {
-    gap: 0.6rem;
+    gap: 0.4rem;
   }
 `;
 
@@ -236,8 +248,8 @@ const FilterOption = styled.button`
   }
   
   @media (max-width: 480px) {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.75rem;
   }
 `;
 
@@ -252,8 +264,9 @@ const ProjectGrid = styled.div`
   }
 
   @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    gap: 1.8rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding-bottom: 2rem;
   }
 `;
 
@@ -262,13 +275,22 @@ const ProjectCard = styled.article`
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  height: 400px; /* Fixed height for consistency */
+  height: 400px;
   border: 1px solid rgba(0, 0, 0, 0.03);
   transition: all 0.3s ease;
   
   &:hover {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
     transform: translateY(-5px);
+  }
+  
+  @media (max-width: 480px) {
+    height: 280px;
+    border-radius: 12px;
+    
+    &:hover {
+      transform: translateY(-3px);
+    }
   }
 `;
 
@@ -295,18 +317,23 @@ const ProjectOverlay = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  height: 50%; /* Covers bottom half */
+  height: 50%;
   background: rgba(0, 0, 0, 0.85);
   color: white;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   padding: 1.5rem;
-  transform: translateY(100%); /* Initially hidden below */
+  transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   
   ${ProjectCard}:hover & {
-    transform: translateY(0); /* Slides up on hover */
+    transform: translateY(0);
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.8rem;
+    height: 60%;
   }
 `;
 
@@ -315,6 +342,10 @@ const OverlayContent = styled.div`
   flex-direction: column;
   height: 100%;
   gap: 0.8rem;
+  
+  @media (max-width: 480px) {
+    gap: 0.4rem;
+  }
 `;
 
 const ProjectTitle = styled.h3`
@@ -323,6 +354,11 @@ const ProjectTitle = styled.h3`
   font-size: 1.3rem;
   font-weight: 700;
   line-height: 1.2;
+  
+  @media (max-width: 480px) {
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
 `;
 
 const ProjectMeta = styled.div`
@@ -330,6 +366,11 @@ const ProjectMeta = styled.div`
   flex-direction: column;
   gap: 0.4rem;
   font-size: 0.9rem;
+  
+  @media (max-width: 480px) {
+    gap: 0.2rem;
+    font-size: 0.65rem;
+  }
 `;
 
 const MetaItem = styled.div`
@@ -343,12 +384,22 @@ const MetaLabel = styled.span`
   color: #60a5fa;
   min-width: 80px;
   font-size: 0.85rem;
+  
+  @media (max-width: 480px) {
+    min-width: 50px;
+    font-size: 0.65rem;
+  }
 `;
 
 const MetaValue = styled.span`
   flex: 1;
   line-height: 1.4;
   font-size: 0.85rem;
+  
+  @media (max-width: 480px) {
+    font-size: 0.65rem;
+    line-height: 1.2;
+  }
 `;
 
 const TagContainer = styled.div`
@@ -356,6 +407,10 @@ const TagContainer = styled.div`
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: auto;
+  
+  @media (max-width: 480px) {
+    gap: 0.3rem;
+  }
 `;
 
 const Tag = styled.span`
@@ -366,6 +421,12 @@ const Tag = styled.span`
   font-size: 0.75rem;
   font-weight: 500;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  @media (max-width: 480px) {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.55rem;
+    border-radius: 8px;
+  }
 `;
 
 const IconContainer = styled.div`
@@ -373,6 +434,11 @@ const IconContainer = styled.div`
   gap: 1rem;
   justify-content: center;
   padding-top: 0.5rem;
+  
+  @media (max-width: 480px) {
+    gap: 0.6rem;
+    padding-top: 0.3rem;
+  }
 `;
 
 const IconLink = styled.a`
@@ -389,14 +455,26 @@ const IconLink = styled.a`
     background: rgba(255, 255, 255, 0.2);
     transform: scale(1.1);
   }
+  
+  @media (max-width: 480px) {
+    padding: 0.3rem;
+  }
 `;
 
 const ExternalLinkIcon = styled(FiExternalLink)`
   font-size: 1.2rem;
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const GithubIcon = styled(FaGithub)`
   font-size: 1.2rem;
+  
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const ProjectTypeBadge = styled.span`
@@ -416,4 +494,12 @@ const ProjectTypeBadge = styled.span`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   letter-spacing: 0.4px;
   z-index: 2;
+  
+  @media (max-width: 480px) {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.6rem;
+    border-radius: 15px;
+  }
 `;
