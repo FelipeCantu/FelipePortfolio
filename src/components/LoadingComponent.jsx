@@ -3,265 +3,180 @@ import React from 'react';
 const LoadingComponent = ({ loadingText = "Loading Application", statusText = "Initializing components..." }) => {
   return (
     <div className="loading-container">
-      <img className="background-image" src="images/mainbg.jpg" alt="Loading Background" />
-      
-      <div className="pulsing-circles">
-        <div className="pulse-circle circle-1"></div>
-        <div className="pulse-circle circle-2"></div>
-        <div className="pulse-circle circle-3"></div>
-      </div>
-      
-      <div className="logo-orbit-container">
-        <div className="logo-container">
-          <div className="logo">
+      <div className="mesh-gradient"></div>
+
+      <div className="glass-card">
+        <div className="loader-wrapper">
+          <div className="loading-ring"></div>
+          <div className="logo-inner">
             <img className="logo-image" src="images/mainwlogo.png" alt="Company Logo" />
           </div>
         </div>
-        
-        <div className="orbiting-dot dot-1"></div>
-        <div className="orbiting-dot dot-2"></div>
-        <div className="orbiting-dot dot-3"></div>
-        <div className="orbiting-dot dot-4"></div>
-      </div>
-      
-      <h1 className="loading-text">{loadingText}</h1>
-      
-      <div className="progress-container">
-        <div className="progress-bar">
-          <div className="progress-fill"></div>
+
+        <div className="text-content">
+          <h1 className="loading-text">{loadingText}</h1>
+          <div className="progress-wrapper">
+            <div className="progress-bar">
+              <div className="progress-line"></div>
+            </div>
+            <p className="status-text">{statusText}</p>
+          </div>
         </div>
-        <p className="status-text">{statusText}</p>
       </div>
-      
+
+
       <style jsx>{`
-        @keyframes rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes hueRotate {
+          from { filter: hue-rotate(0deg); }
+          to { filter: hue-rotate(360deg); }
         }
         
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.03); }
+        @keyframes ringRotate {
+          0% { transform: rotate(0deg); border-top-color: #00bfff; }
+          50% { border-top-color: #f7ab0a; }
+          100% { transform: rotate(360deg); border-top-color: #00bfff; }
         }
         
-        @keyframes gentleFade {
-          0%, 100% { opacity: 0.7; }
-          50% { opacity: 1; }
+        @keyframes logoBreathe {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.05); opacity: 1; }
         }
         
-        @keyframes progressSlide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
+        @keyframes progressFlow {
+          0% { left: -100%; }
+          100% { left: 100%; }
         }
         
-        @keyframes orbitAnimation {
-          0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
-          100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        
-        @keyframes backgroundPulse {
-          0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
-          50% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.03); }
-        }
-        
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
+
         .loading-container {
           position: fixed;
-          top: 0;
-          left: 0;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0a0a0f;
+          overflow: hidden;
+          z-index: 9999;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .mesh-gradient {
+          position: absolute;
+          inset: -50%;
+          background: 
+            radial-gradient(circle at 30% 30%, rgba(0, 191, 255, 0.15) 0%, transparent 40%),
+            radial-gradient(circle at 70% 70%, rgba(247, 171, 10, 0.1) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(30, 144, 255, 0.05) 0%, transparent 60%);
+          filter: blur(80px);
+          animation: hueRotate 20s linear infinite;
+          z-index: 1;
+        }
+
+        .glass-card {
+          position: relative;
+          z-index: 2;
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 40px;
+          padding: 4rem;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          width: 100%;
-          background: rgba(20, 20, 30, 0.97);
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          overflow: visible;
-          z-index: 9999;
-          backdrop-filter: blur(10px);
+          gap: 2.5rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
-        .background-image {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          z-index: -1;
-          opacity: 0.25;
-        }
-        
-        .pulsing-circles {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 0;
-        }
-        
-        .pulse-circle {
-          position: absolute;
-          border-radius: 50%;
-          animation: backgroundPulse ease-in-out infinite;
-        }
-        
-        .circle-1 {
-          width: 200px;
-          height: 200px;
-          border: 2px solid rgba(0, 191, 255, 0.3);
-          animation-duration: 3s;
-        }
-        
-        .circle-2 {
-          width: 300px;
-          height: 300px;
-          border: 2px solid rgba(247, 171, 10, 0.25);
-          animation-duration: 4s;
-          animation-delay: 0.5s;
-        }
-        
-        .circle-3 {
-          width: 400px;
-          height: 400px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          animation-duration: 5s;
-          animation-delay: 1s;
-        }
-        
-        .logo-orbit-container {
+
+        .loader-wrapper {
           position: relative;
-          width: 300px;
-          height: 300px;
-          margin-bottom: 3rem;
-          z-index: 2;
-          animation: slideInUp 0.5s ease-out;
+          width: 140px;
+          height: 140px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        
-        .logo-container {
+
+        .loading-ring {
           position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 150px;
-          height: 150px;
+          inset: 0;
+          border: 3px solid rgba(255, 255, 255, 0.05);
+          border-top: 3px solid #00bfff;
+          border-radius: 50%;
+          animation: ringRotate 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
-        
-        .logo {
-          width: 100%;
-          height: 100%;
-          animation: rotate 4s linear infinite, pulse 3s ease-in-out infinite;
-          filter: drop-shadow(0 8px 16px rgba(0, 191, 255, 0.4));
+
+        .logo-inner {
+          width: 70px;
+          height: 70px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: logoBreathe 3s ease-in-out infinite;
         }
-        
+
         .logo-image {
           width: 100%;
           height: 100%;
           object-fit: contain;
+          filter: drop-shadow(0 0 15px rgba(0, 191, 255, 0.3));
         }
-        
-        .orbiting-dot {
-          position: absolute;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          top: 50%;
-          left: 50%;
-          margin-top: -6px;
-          margin-left: -6px;
-          animation: orbitAnimation linear infinite;
-          z-index: 1;
+
+        .text-content {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
         }
-        
-        .dot-1 {
-          background: radial-gradient(circle, #00bfff, #1e90ff);
-          box-shadow: 0 0 15px rgba(0, 191, 255, 0.8);
-          animation-duration: 3s;
-        }
-        
-        .dot-2 {
-          background: radial-gradient(circle, #f7ab0a, #ffbf00);
-          box-shadow: 0 0 15px rgba(247, 171, 10, 0.8);
-          animation-duration: 2.5s;
-          animation-delay: -1s;
-        }
-        
-        .dot-3 {
-          background: radial-gradient(circle, #ffffff, #e0e0e0);
-          box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-          animation-duration: 3.5s;
-          animation-delay: -2s;
-        }
-        
-        .dot-4 {
-          background: radial-gradient(circle, #1e90ff, #0066cc);
-          box-shadow: 0 0 15px rgba(30, 144, 255, 0.8);
-          animation-duration: 2.8s;
-          animation-delay: -0.5s;
-        }
-        
+
         .loading-text {
           color: white;
-          font-size: 2rem;
-          font-weight: 300;
-          margin-bottom: 1.5rem;
-          text-align: center;
-          animation: slideInUp 0.5s ease-out 0.1s both, 
-                     gentleFade 3s ease-in-out infinite 0.6s;
-          text-shadow: 0 2px 10px rgba(0, 191, 255, 0.3);
+          font-size: 1.75rem;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+          margin: 0;
+          background: linear-gradient(to bottom, #fff, rgba(255, 255, 255, 0.7));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
-        
-        .progress-container {
+
+        .progress-wrapper {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          animation: slideInUp 0.5s ease-out 0.2s both;
+          gap: 0.75rem;
         }
-        
+
         .progress-bar {
-          width: 300px;
-          height: 6px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 3px;
+          width: 200px;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
           overflow: hidden;
-          border: 1px solid rgba(0, 191, 255, 0.3);
           position: relative;
         }
-        
-        .progress-fill {
+
+        .progress-line {
           position: absolute;
           height: 100%;
-          width: 50%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(0, 191, 255, 0.8),
-            transparent
-          );
-          animation: progressSlide 1.5s ease-in-out infinite;
+          width: 40%;
+          background: linear-gradient(90deg, transparent, #00bfff, transparent);
+          animation: progressFlow 2s linear infinite;
         }
-        
+
         .status-text {
-          color: rgba(255, 255, 255, 0.85);
-          font-size: 1rem;
-          text-align: center;
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.9rem;
+          font-weight: 400;
           margin: 0;
-          animation: gentleFade 4s ease-in-out infinite;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
         }
+
       `}</style>
     </div>
   );
