@@ -4,6 +4,7 @@ import Home from './components/Home';
 import Blog from './components/Blog';
 import Portfolio from './components/Portfolio';
 import Contact from './components/Contact';
+import GetStarted from './components/GetStarted';
 import { BrowserRouter as Router, Route, Switch, useLocation } from 'react-router-dom';
 import SinglePost from './components/SinglePost';
 import styled, { createGlobalStyle } from 'styled-components';
@@ -54,6 +55,11 @@ function AppContent() {
         return {
           title: 'Loading Contact',
           status: 'Let\'s communicate...'
+        };
+      case '/get-started':
+        return {
+          title: 'Start a Project',
+          status: 'Preparing your intake form...'
         };
       default:
         if (cleanPath.startsWith('/post/')) {
@@ -109,6 +115,7 @@ function AppContent() {
           <Route path='/blog' component={Blog} />
           <Route path='/portfolio' render={() => <ScrollableWrapper><Portfolio /></ScrollableWrapper>} />
           <Route path='/contact' component={Contact} />
+          <Route path='/get-started' component={GetStarted} />
           <Route path='/post/:slug' component={SinglePost} />
         </Switch>
       </MainContent>

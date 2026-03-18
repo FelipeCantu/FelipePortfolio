@@ -204,7 +204,7 @@ const LoadingSpinner = styled.div`
 const EmptyState = styled.div`
     text-align: center;
     padding: 4rem 2rem;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.5);
 `;
 
 const EmptyIcon = styled.div`
@@ -216,7 +216,7 @@ const EmptyTitle = styled.h3`
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
-    color: #374151;
+    color: white;
 `;
 
 const EmptyMessage = styled.p`
@@ -240,7 +240,7 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
     font-size: 2.5rem;
     font-weight: 700;
-    color: #1f2937;
+    color: white;
     margin-bottom: 0.5rem;
     
     @media (max-width: 768px) {
@@ -253,7 +253,7 @@ const SectionTitle = styled.h2`
 `;
 
 const SectionSubtitle = styled.p`
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1rem;
     margin: 0;
     
@@ -279,17 +279,18 @@ const PostGrid = styled.div`
 `;
 
 const PostCard = styled.article`
-    background: white;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     animation: ${fadeInUp} 0.6s ease-out ${props => props.$index * 0.1}s both;
     
     &:hover {
         transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        border-color: rgba(52, 152, 219, 0.3);
     }
     
     @media (max-width: 480px) {
@@ -445,7 +446,7 @@ const MetaItem = styled.div`
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.45);
     font-size: 0.85rem;
     
     svg {
@@ -466,7 +467,7 @@ const MetaItem = styled.div`
 const PostTitle = styled.h3`
     font-size: 1.4rem;
     font-weight: 700;
-    color: #1f2937;
+    color: white;
     margin-bottom: 1rem;
     line-height: 1.3;
     display: -webkit-box;
@@ -487,7 +488,7 @@ const PostTitle = styled.h3`
 `;
 
 const PostExcerpt = styled.p`
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.55);
     line-height: 1.6;
     margin-bottom: 1.5rem;
     flex-grow: 1;

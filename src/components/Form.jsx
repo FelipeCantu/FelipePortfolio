@@ -177,30 +177,31 @@ const FormData = styled.div`
 `;
 
 const StyledButton = styled.button`
-    background: linear-gradient(135deg, #0077b5 0%, #005885 100%);
+    background-color: #3498db;
     color: white;
-    padding: 15px 30px;
+    padding: 12px 30px;
     cursor: pointer;
-    border: none;
+    border: 2px solid #3498db;
     border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     transition: all 0.3s ease;
     margin-top: 10px;
-    
+
     &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #005885 0%, #003d5c 100%);
+        background-color: transparent;
+        color: #3498db;
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 119, 181, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     &:disabled {
-        background: #ccc;
+        opacity: 0.5;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
     }
-    
+
     @media (max-width: 1126px) {
         z-index: 12;
     }

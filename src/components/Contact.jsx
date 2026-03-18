@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 import Form from '../components/Form';
 import { FaGithub, FaLinkedin, FaInstagram, FaMapPin, FaPhoneAlt, FaFacebook } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md';
@@ -58,9 +59,9 @@ function Contact() {
     <>
       <Helmet>
         <title>Contact - Felipe Cantu Jr</title>
-        <meta 
-          name="description" 
-          content="Get in touch with Felipe Cantu Jr to discuss potential collaboration opportunities, projects, and professional inquiries." 
+        <meta
+          name="description"
+          content="Say hello to Felipe Cantu Jr — reach out for general inquiries, questions, or just to connect."
         />
         <link rel="canonical" href="/contact" />
       </Helmet>
@@ -75,10 +76,13 @@ function Contact() {
           <ContentGrid>
             <FormSection>
               <FormHeader>
-                <FormTitle>Let's Work Together</FormTitle>
+                <FormTitle>Say Hello</FormTitle>
                 <FormSubtitle>
-                  Ready to bring your ideas to life? Send me a message and let's discuss your project.
+                  Have a question or just want to connect? Drop me a message and I'll get back to you.
                 </FormSubtitle>
+                <StartProjectNote>
+                  Looking to build something? <StartProjectLink to="/get-started">Start a project →</StartProjectLink>
+                </StartProjectNote>
               </FormHeader>
               <StyledFormWrapper>
                 <Form />
@@ -88,11 +92,11 @@ function Contact() {
             <InfoSection>
               <InfoHeader>
                 <InfoTitle>
-                  Get In Touch
+                  Find Me Here
                   <TitleUnderline />
                 </InfoTitle>
                 <InfoSubtitle>
-                  Feel free to reach out through any of these channels.
+                  Prefer a direct line? Here's where you can reach me.
                 </InfoSubtitle>
               </InfoHeader>
               
@@ -242,68 +246,22 @@ const FormSection = styled.section`
   }
 `;
 
-const StyledFormWrapper = styled.div`
-  /* Global form styles for white text */
-  input,
-  textarea,
-  select {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    &:focus {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-      background: rgba(255, 255, 255, 0.15) !important;
-    }
-  }
+const StartProjectNote = styled.p`
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0.75rem 0 0;
+`;
 
-  /* Label styles */
-  label {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-weight: 500;
-  }
+const StartProjectLink = styled(Link)`
+  color: #3498db;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(52, 152, 219, 0.4);
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
 
-  /* Button styles */
-  button[type="submit"] {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-    color: white !important;
-    border: none !important;
-    padding: 0.75rem 2rem !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    position: relative !important;
-    overflow: hidden !important;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-    
-    &:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4) !important;
-      background: linear-gradient(135deg, #2563eb, #1e40af) !important;
-      
-      &::before {
-        left: 100%;
-      }
-    }
-    
-    &:active {
-      transform: translateY(0) !important;
-    }
+  &:hover {
+    color: #5dade2;
+    text-decoration-color: rgba(52, 152, 219, 0.8);
   }
 `;
 
@@ -342,6 +300,34 @@ const FormSubtitle = styled.p`
 
   @media (min-width: 1024px) {
     font-size: 1.1rem;
+  }
+`;
+
+const StyledFormWrapper = styled.div`
+  input, textarea, select {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    &::placeholder { color: rgba(255, 255, 255, 0.7) !important; }
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+  }
+  label { color: rgba(255, 255, 255, 0.9) !important; font-weight: 500; }
+  button[type="submit"] {
+    background-color: #3498db !important;
+    color: white !important;
+    border: 2px solid #3498db !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    &:hover:not(:disabled) {
+      background-color: transparent !important;
+      color: #3498db !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    }
   }
 `;
 

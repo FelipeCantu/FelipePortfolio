@@ -183,22 +183,21 @@ const BlogSubtitle = styled.p`
 `;
 
 const PostSection = styled.section`
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   border-radius: 20px;
   padding: 3rem;
   margin-bottom: 4rem;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
   animation: ${fadeInUp} 0.8s ease-out 0.2s both;
-  
+
   @media (max-width: 768px) {
     padding: 2rem 1.5rem;
     border-radius: 15px;
     margin-bottom: 2rem;
   }
-  
+
   @media (max-width: 480px) {
     padding: 1.5rem 1rem;
     border-radius: 12px;

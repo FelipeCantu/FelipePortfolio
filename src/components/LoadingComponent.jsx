@@ -3,8 +3,6 @@ import React from 'react';
 const LoadingComponent = ({ loadingText = "Loading Application", statusText = "Initializing components..." }) => {
   return (
     <div className="loading-container">
-      <div className="mesh-gradient"></div>
-
       <div className="glass-card">
         <div className="loader-wrapper">
           <div className="loading-ring"></div>
@@ -26,11 +24,6 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
 
 
       <style jsx>{`
-        @keyframes hueRotate {
-          from { filter: hue-rotate(0deg); }
-          to { filter: hue-rotate(360deg); }
-        }
-        
         @keyframes ringRotate {
           0% { transform: rotate(0deg); border-top-color: #00bfff; }
           50% { border-top-color: #f7ab0a; }
@@ -58,23 +51,16 @@ const LoadingComponent = ({ loadingText = "Loading Application", statusText = "I
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0a0a0f;
+          background-image:
+            linear-gradient(rgba(20, 20, 30, 0.75), rgba(20, 20, 30, 0.75)),
+            url('images/mainbg.jpg');
+          background-size: cover;
+          background-position: center;
           overflow: hidden;
           z-index: 9999;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
-        .mesh-gradient {
-          position: absolute;
-          inset: -50%;
-          background: 
-            radial-gradient(circle at 30% 30%, rgba(0, 191, 255, 0.15) 0%, transparent 40%),
-            radial-gradient(circle at 70% 70%, rgba(247, 171, 10, 0.1) 0%, transparent 40%),
-            radial-gradient(circle at 50% 50%, rgba(30, 144, 255, 0.05) 0%, transparent 60%);
-          filter: blur(80px);
-          animation: hueRotate 20s linear infinite;
-          z-index: 1;
-        }
 
         .glass-card {
           position: relative;

@@ -31,16 +31,15 @@ function Portfolio() {
               <AccentLine />
             </TitleContainer>
             <Subtitle variant="subtitle1">
-              Explore my collection of projects showcasing full-stack development skills with 
+              Explore my collection of projects showcasing full-stack development skills with
               JavaScript, React, and beautiful Figma designs.
             </Subtitle>
           </HeaderContent>
         </PortfolioHeader>
-        
-        <ProjectSection>
-          <Project />
-        </ProjectSection>
       </ContentWrapper>
+      <CarouselSection>
+        <Project />
+      </CarouselSection>
     </PortfolioWrapper>
   );
 }
@@ -108,7 +107,7 @@ const PortfolioWrapper = styled.div`
   min-height: 100vh;
   width: 100%;
   padding-top: 80px;
-  
+
   @media (max-width: 480px) {
     padding-top: 70px;
   }
@@ -253,28 +252,10 @@ const Subtitle = styled(Typography)`
   }
 `;
 
-const ProjectSection = styled.section`
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 3rem;
-  margin-bottom: 4rem;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-  animation: ${fadeInUp} 0.8s ease-out 0.2s both;
-  
-  @media (max-width: 768px) {
-    padding: 2rem 1.5rem;
-    border-radius: 15px;
-    margin-bottom: 2rem;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 1.2rem 0.8rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-  }
+const CarouselSection = styled.section`
+  width: 100%;
+  overflow-x: clip;
+  padding-bottom: 4rem;
 `;
 
 const ScrollButton = styled.button`

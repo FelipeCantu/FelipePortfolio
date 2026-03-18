@@ -10,7 +10,8 @@ const Sidebar = ({ open }) => {
           <li><StyledLink to="/Home">Home</StyledLink></li>
           <li><StyledLink to="/Blog">Blogs</StyledLink></li>
           <li><StyledLink to="/Portfolio">Portfolio</StyledLink></li>
-          <li className="contact-item"><ContactButton to="/Contact">Contact</ContactButton></li>
+          <li><StyledLink to="/Contact">Contact</StyledLink></li>
+          <li className="contact-item"><GetStartedButton to="/get-started">Get Started</GetStartedButton></li>
         </Ul>
       </nav>
     </div>
@@ -47,7 +48,11 @@ const Ul = styled.ul`
 
   @media (max-width: 768px) {
     flex-flow: column nowrap;
-    background-color: #0077b5;
+    background: rgba(10, 15, 30, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
     position: fixed;
     transform: ${({ open }) => open ? 'translateX(0)' : 'translateX(100%)'};
     top: 0;
@@ -76,7 +81,7 @@ const StyledLink = styled(Link)`
   color: #fff;
   text-decoration: none;
   font-family: Arial, Helvetica, sans-serif;
-  
+
   &:hover {
     color: #0097e8;
   }
@@ -93,21 +98,56 @@ const ContactButton = styled(Link)`
   font-family: Arial, Helvetica, sans-serif;
   transition: all 0.3s ease;
   border: 2px solid #0077b5;
-  
+
   &:hover {
     background-color: transparent;
     color: #0077b5;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-  
+
   @media (max-width: 768px) {
     background-color: transparent;
     border: none;
     padding: 0;
     border-radius: 0;
     color: #fff;
-    
+
+    &:hover {
+      background-color: transparent;
+      color: black;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+`;
+
+const GetStartedButton = styled(Link)`
+  display: inline-block;
+  background-color: #f7ab0a;
+  padding: 10px 20px;
+  border-radius: 30px;
+  color: #1a1a1a;
+  font-size: 1rem;
+  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
+  transition: all 0.3s ease;
+  border: 2px solid #f7ab0a;
+
+  &:hover {
+    background-color: transparent;
+    color: #f7ab0a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  @media (max-width: 768px) {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    color: #fff;
+
     &:hover {
       background-color: transparent;
       color: black;
