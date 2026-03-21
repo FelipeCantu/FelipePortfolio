@@ -55,8 +55,8 @@ const MainContainer = styled.main`
   }
 
   @media (min-width: 1024px) {
-    padding: 4rem 2rem;
-    padding-top: 4rem;
+    padding: 2rem;
+    padding-top: calc(60px + 2rem);
   }
 `;
 
@@ -100,33 +100,33 @@ const PageHeader = styled.div`
 `;
 
 const EyebrowLabel = styled.p`
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #3498db;
+  color: var(--color-accent-light, #38bdf8);
   margin: 0 0 0.75rem;
 `;
 
 const PageTitle = styled.h1`
-  font-size: 2rem;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(2rem, 4.5vw, 2.85rem);
   font-weight: 800;
   color: white;
+  letter-spacing: -0.025em;
   margin: 0 0 0.75rem;
-  line-height: 1.15;
-
-  @media (min-width: 640px) {
-    font-size: 2.75rem;
-  }
+  line-height: 1.1;
 `;
 
 const PageSubtitle = styled.p`
-  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  color: rgba(255, 255, 255, 0.60);
   font-size: 1rem;
-  line-height: 1.6;
-  margin: 0;
-  max-width: 520px;
-  margin-inline: auto;
+  font-weight: 300;
+  line-height: 1.75;
+  margin: 0 auto;
+  max-width: 500px;
 `;
 
 const WizardCard = styled.div`

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useHistory } from "react-router-dom";
 import sanityClient from "../sanityClient";
 import styled, { keyframes, css } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiExternalLink, FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import { FaGithub } from "react-icons/fa";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 // ─── ANIMATION VARIANTS ────────────────────────────────────────────────────────
 
@@ -88,15 +88,28 @@ const cardVariants = {
 // ─── BADGE COLOR HELPER ────────────────────────────────────────────────────────
 
 function getBadgeColor(type) {
-  if (type === "web") return "#3498db";
-  if (type === "mobile") return "#9b59b6";
-  return "#2ecc71";
+  const colors = {
+    web: "#3498db",
+    mobile: "#9b59b6",
+    design: "#e67e22",
+    backend: "#e74c3c",
+    fullstack: "#2ecc71",
+    other: "#95a5a6",
+  };
+  return colors[type] || "#2ecc71";
 }
 
 // ─── SINGLE PROJECT CARD ──────────────────────────────────────────────────────
 
 function CarouselCard({ project, position, direction, layoutKey, sideX }) {
   const isCenter = position === "center";
+  const history = useHistory();
+
+  const handleClick = () => {
+    if (isCenter && project.slug?.current) {
+      history.push(`/project/${project.slug.current}`);
+    }
+  };
 
   return (
     <AnimatedCard
@@ -107,6 +120,7 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }) {
       animate="center"
       exit="exit"
       $position={position}
+      onClick={handleClick}
     >
       <CardInner>
         {project.image ? (
@@ -124,8 +138,8 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }) {
             {project.projectType || "project"}
           </TypeBadge>
           <PersistentTitle>{project.title}</PersistentTitle>
-          {project.description && typeof project.description === "string" && (
-            <DescriptionText>{project.description}</DescriptionText>
+          {(project.excerpt || project.description) && (
+            <DescriptionText>{project.excerpt || project.description}</DescriptionText>
           )}
           <MetaRow>
             {project.place && <TechText>{project.place}</TechText>}
@@ -141,30 +155,6 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }) {
               ))}
             </TagRow>
           )}
-          <ActionRow>
-            {project.github && (
-              <ActionLink
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`View ${project.title} on GitHub`}
-              >
-                <FaGithub size={16} />
-                <span>GitHub</span>
-              </ActionLink>
-            )}
-            {project.link && (
-              <VisitSiteLink
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Visit ${project.title} live`}
-              >
-                <FiExternalLink size={13} />
-                <span>Visit Site</span>
-              </VisitSiteLink>
-            )}
-          </ActionRow>
         </SlidePanel>
       </CardInner>
     </AnimatedCard>
@@ -205,14 +195,17 @@ export default function Project() {
     sanityClient
       .fetch(
         `*[_type == "project" &&
-        ($projectTypeFilter == "all" || projectType == $projectTypeFilter)] | order(date desc){
+        ($projectTypeFilter == "all" || projectType == $projectTypeFilter)] | order(featured desc, order asc, date desc){
           title,
+          slug,
           date,
           place,
+          excerpt,
           description,
           projectType,
           link,
-          github,
+          githubLink,
+          "github": github,
           tags,
           image {
             asset -> {
@@ -281,6 +274,13 @@ export default function Project() {
 
   return (
     <ProjectContainer>
+      <PortfolioHeader>
+        <PortfolioTitle>My Portfolio</PortfolioTitle>
+        <PortfolioSubtitle>
+          Full-stack development meets creative design. (React, JavaScript, Figma)
+        </PortfolioSubtitle>
+      </PortfolioHeader>
+
       {/* ── Filters ── */}
       <FilterUI
         projectTypeFilter={projectTypeFilter}
@@ -369,10 +369,12 @@ function FilterUI({ projectTypeFilter, setProjectTypeFilter }) {
       <FilterLabel>Filter Projects:</FilterLabel>
       <FilterOptionsContainer>
         {[
-          { value: "all", label: "All Projects" },
-          { value: "web", label: "Web Development" },
-          { value: "mobile", label: "Mobile Apps" },
-          { value: "design", label: "UI/UX Design" },
+          { value: "all", label: "All" },
+          { value: "web", label: "Web" },
+          { value: "mobile", label: "Mobile" },
+          { value: "design", label: "Design" },
+          { value: "backend", label: "Backend" },
+          { value: "fullstack", label: "Full Stack" },
         ].map(({ value, label }) => (
           <FilterOption
             key={value}
@@ -402,7 +404,39 @@ const glowPulse = keyframes`
 
 const ProjectContainer = styled.div`
   width: 100%;
-  padding: 0 0 100px;
+  /*
+   * Top padding accounts for the fixed 60px navbar.
+   * Reduced breathing room from 2.5rem → 1.5rem now that the
+   * portfolio header is compact — gets the carousel closer to the fold.
+   */
+  padding: calc(var(--navbar-h, 60px) + 1.5rem) 0 4rem;
+`;
+
+/* ── Portfolio page header ── */
+const PortfolioHeader = styled.header`
+  text-align: center;
+  padding: 0 2rem 1.25rem;
+  max-width: 680px;
+  margin: 0 auto;
+`;
+
+const PortfolioTitle = styled.h1`
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 0.5rem;
+`;
+
+const PortfolioSubtitle = styled.p`
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: clamp(0.8rem, 1.2vw, 0.92rem);
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.50);
+  line-height: 1.6;
+  margin: 0;
 `;
 
 // ── Loading ──
@@ -442,43 +476,32 @@ const FilterContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3rem;
-  gap: 1.2rem;
+  /*
+   * Reduced from 2.5rem — filters sit between the compact header
+   * and the carousel; they don't need heavyweight spacing.
+   */
+  margin-bottom: 1.5rem;
+  gap: 0.65rem;
   padding: 0 2rem;
 
-  @media (max-width: 768px) {
-    margin-bottom: 2rem;
-  }
-
   @media (max-width: 480px) {
-    margin-bottom: 1.5rem;
-    gap: 0.8rem;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
   }
 `;
 
 const FilterLabel = styled.h3`
-  font-size: 1.4rem;
-  color: rgba(255, 255, 255, 0.85);
+  /*
+   * Demoted to a small eyebrow label — the portfolio title above already
+   * provides the heading hierarchy. "Filter Projects:" read too heavy.
+   */
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.72rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.40);
   margin: 0;
-  padding-bottom: 0.5rem;
-  position: relative;
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 3px;
-    background: linear-gradient(90deg, #3498db, #9b59b6);
-    border-radius: 2px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 1.1rem;
-  }
 `;
 
 const FilterOptionsContainer = styled.div`
@@ -493,38 +516,40 @@ const FilterOptionsContainer = styled.div`
 `;
 
 const FilterOption = styled.button`
-  padding: 0.65rem 1.4rem;
-  border-radius: 30px;
-  font-size: 0.95rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
+  /* Unified to the single accent blue from CSS vars */
   background-color: ${({ selected }) =>
-    selected ? "rgba(52, 152, 219, 0.9)" : "rgba(255, 255, 255, 0.08)"};
-  color: ${({ selected }) => (selected ? "white" : "rgba(255,255,255,0.65)")};
-  border: 1.5px solid
-    ${({ selected }) =>
-      selected ? "transparent" : "rgba(255, 255, 255, 0.12)"};
+    selected ? "rgba(14, 165, 233, 0.85)" : "rgba(255, 255, 255, 0.07)"};
+  color: ${({ selected }) => (selected ? "white" : "rgba(255,255,255,0.60)")};
+  border: 1.5px solid ${({ selected }) =>
+    selected ? "transparent" : "rgba(255, 255, 255, 0.10)"};
   box-shadow: ${({ selected }) =>
-    selected ? "0 4px 16px rgba(52, 152, 219, 0.35)" : "none"};
+    selected ? "0 4px 16px rgba(14, 165, 233, 0.30)" : "none"};
   backdrop-filter: blur(8px);
 
   &:hover {
     background-color: ${({ selected }) =>
-      selected ? "rgba(52, 152, 219, 0.95)" : "rgba(255, 255, 255, 0.14)"};
+      selected ? "rgba(14, 165, 233, 0.95)" : "rgba(255, 255, 255, 0.12)"};
     border-color: ${({ selected }) =>
-      selected ? "transparent" : "rgba(52, 152, 219, 0.5)"};
+      selected ? "transparent" : "rgba(14, 165, 233, 0.45)"};
     color: white;
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(52, 152, 219, 0.7);
+    outline: 2px solid rgba(14, 165, 233, 0.7);
     outline-offset: 3px;
   }
 
   @media (max-width: 480px) {
-    padding: 0.45rem 0.8rem;
-    font-size: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.78rem;
   }
 `;
 
@@ -534,7 +559,8 @@ const CarouselWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  /* Reduced from 2rem — tighter gap between stage, dots, and counter */
+  gap: 1rem;
   width: 100%;
   overflow-x: clip;
 `;
@@ -547,10 +573,19 @@ const PerspectiveStage = styled.div`
   perspective: 1200px;
   perspective-origin: 50% 50%;
 
-  height: calc(60vw * 9 / 16);
+  /*
+   * Reduced card width from 60vw → 44vw so the carousel reads
+   * as a gallery panel, not a billboard. Max-height prevents the
+   * stage from growing excessively on ultra-wide screens.
+   */
+  height: min(calc(44vw * 9 / 16), 420px);
+
+  @media (max-width: 768px) {
+    height: calc(70vw * 9 / 16);
+  }
 
   @media (max-width: 600px) {
-    height: calc(90vw * 9 / 16);
+    height: calc(88vw * 9 / 16);
   }
 `;
 
@@ -565,30 +600,42 @@ const AnimatedCard = styled(motion.div)`
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 60vw;
-  height: calc(60vw * 9 / 16);
-  margin-left: -30vw;
-  margin-top: calc(-60vw * 9 / 32);
+  /*
+   * Card width stepped down from 60vw → 44vw (capped at 680px)
+   * to match the reduced PerspectiveStage height and keep the
+   * carousel proportional rather than billboard-sized.
+   */
+  width: min(44vw, 680px);
+  height: min(calc(44vw * 9 / 16), 382px);
+  margin-left: calc(min(44vw, 680px) / -2);
+  margin-top: calc(min(calc(44vw * 9 / 16), 382px) / -2);
+
+  @media (max-width: 768px) {
+    width: 70vw;
+    height: calc(70vw * 9 / 16);
+    margin-left: -35vw;
+    margin-top: calc(-70vw * 9 / 32);
+  }
 
   @media (max-width: 600px) {
-    width: 90vw;
-    height: calc(90vw * 9 / 16);
-    margin-left: -45vw;
-    margin-top: calc(-90vw * 9 / 32);
+    width: 88vw;
+    height: calc(88vw * 9 / 16);
+    margin-left: -44vw;
+    margin-top: calc(-88vw * 9 / 32);
   }
 
   will-change: transform, opacity, filter;
   border-radius: 20px;
   overflow: hidden;
   background: #07070f;
-  cursor: ${({ $position }) => ($position === "center" ? "default" : "pointer")};
+  cursor: pointer;
 
-  box-shadow: ${({ $position }) =>
-    $position === "center"
-      ? `0 20px 60px rgba(0,0,0,0.8),
-         0 60px 120px rgba(0,0,0,0.5),
-         0 0 40px rgba(52,152,219,0.15)`
-      : "0 10px 40px rgba(0,0,0,0.5)"};
+  /*
+   * Shadows removed per design revision — card depth is now conveyed
+   * through scale, opacity, and rotateY on the side cards alone.
+   * A hairline border keeps the card edge readable against dark backgrounds.
+   */
+  border: 1px solid rgba(255, 255, 255, 0.07);
 
   @media (max-width: 600px) {
     ${({ $position }) =>
@@ -666,6 +713,11 @@ const SlidePanel = styled.div`
     padding: 2rem 1.1rem 1rem;
     gap: 0.45rem;
   }
+
+  @media (max-width: 600px) {
+    transform: translateY(0);
+    padding: 1.5rem 1rem 1rem;
+  }
 `;
 
 const TypeBadge = styled.span`
@@ -678,14 +730,16 @@ const TypeBadge = styled.span`
 
 const PersistentTitle = styled.p`
   margin: 0;
-  font-size: 1.05rem;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1.1rem;
   font-weight: 700;
   color: white;
   text-shadow: 0 2px 16px rgba(0, 0, 0, 0.9);
   line-height: 1.2;
+  letter-spacing: -0.01em;
 
   @media (max-width: 768px) {
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 `;
 
@@ -702,6 +756,10 @@ const DescriptionText = styled.p`
 
   @media (max-width: 768px) {
     display: none;
+  }
+
+  @media (max-width: 600px) {
+    display: -webkit-box;
   }
 `;
 
@@ -751,86 +809,6 @@ const TagChip = styled.span`
 
 // ── Action buttons ──
 
-const ActionRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-`;
-
-const ActionLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.3rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-decoration: none;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-
-  background: ${({ $primary }) =>
-    $primary ? "#3498db" : "rgba(255, 255, 255, 0.08)"};
-  color: white;
-  border: 1.5px solid
-    ${({ $primary }) =>
-      $primary ? "transparent" : "rgba(255, 255, 255, 0.22)"};
-
-  svg {
-    flex-shrink: 0;
-    opacity: ${({ $primary }) => ($primary ? 1 : 0.75)};
-  }
-
-  &:hover {
-    background: ${({ $primary }) =>
-      $primary ? "#2a88cc" : "rgba(255, 255, 255, 0.14)"};
-    border-color: ${({ $primary }) =>
-      $primary ? "#2a88cc" : "rgba(255, 255, 255, 0.38)"};
-    svg {
-      opacity: 1;
-    }
-  }
-
-  &:active {
-    filter: brightness(0.88);
-  }
-
-  &:focus-visible {
-    outline: 2px solid rgba(52, 152, 219, 0.7);
-    outline-offset: 3px;
-  }
-`;
-
-const VisitSiteLink = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: #3498db;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: rgba(52, 152, 219, 0.45);
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  transition: color 0.2s ease, text-decoration-color 0.2s ease;
-
-  svg {
-    flex-shrink: 0;
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
-  }
-
-  &:hover {
-    color: #5dade2;
-    text-decoration-color: rgba(52, 152, 219, 0.8);
-    svg {
-      opacity: 1;
-    }
-  }
-`;
-
 // ── Navigation arrows ──
 
 const NavButton = styled.button`
@@ -842,27 +820,27 @@ const NavButton = styled.button`
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
-  background: rgba(20, 20, 30, 0.8);
-  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 12, 22, 0.75);
+  backdrop-filter: blur(14px);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.22s ease;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 
   &:hover {
-    background: rgba(52, 152, 219, 0.4);
-    border-color: rgba(52, 152, 219, 0.7);
-    box-shadow: 0 0 24px rgba(52, 152, 219, 0.4);
+    background: rgba(14, 165, 233, 0.35);
+    border-color: rgba(14, 165, 233, 0.65);
+    box-shadow: 0 0 24px rgba(14, 165, 233, 0.35);
     transform: translateY(-50%);
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(52, 152, 219, 0.7);
+    outline: 2px solid rgba(14, 165, 233, 0.7);
     outline-offset: 3px;
   }
 
@@ -896,22 +874,21 @@ const Dot = styled.button`
   padding: 0;
   background: ${({ $active }) =>
     $active
-      ? "linear-gradient(90deg, #3498db, #0097e8)"
-      : "rgba(255,255,255,0.25)"};
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.25s ease;
+      ? "linear-gradient(90deg, var(--color-accent, #0ea5e9), var(--color-accent-light, #38bdf8))"
+      : "rgba(255,255,255,0.22)"};
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease;
   box-shadow: ${({ $active }) =>
-    $active ? "0 0 8px rgba(52,152,219,0.6)" : "none"};
+    $active ? "0 0 8px rgba(14, 165, 233, 0.55)" : "none"};
 
   &:hover {
     background: ${({ $active }) =>
       $active
-        ? "linear-gradient(90deg, #3498db, #0097e8)"
-        : "rgba(255,255,255,0.5)"};
+        ? "linear-gradient(90deg, var(--color-accent, #0ea5e9), var(--color-accent-light, #38bdf8))"
+        : "rgba(255,255,255,0.45)"};
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(52, 152, 219, 0.7);
+    outline: 2px solid rgba(14, 165, 233, 0.7);
     outline-offset: 3px;
   }
 `;

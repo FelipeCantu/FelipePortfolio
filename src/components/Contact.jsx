@@ -78,11 +78,17 @@ function Contact() {
               <FormHeader>
                 <FormTitle>Say Hello</FormTitle>
                 <FormSubtitle>
-                  Have a question or just want to connect? Drop me a message and I'll get back to you.
+                  Have a question or just want to connect? Send me a message and I'll get back to you soon.
                 </FormSubtitle>
-                <StartProjectNote>
-                  Looking to build something? <StartProjectLink to="/get-started">Start a project →</StartProjectLink>
-                </StartProjectNote>
+                <CollabBlock>
+                  <CollabHeading>Let's Collaborate</CollabHeading>
+                  <CollabNote>
+                    Open to working with other developers—if you're building something interesting, I'd love to hear about it.
+                  </CollabNote>
+                  <StartProjectNote>
+                    <StartProjectLink to="/get-started">👉 Start a project</StartProjectLink>
+                  </StartProjectNote>
+                </CollabBlock>
               </FormHeader>
               <StyledFormWrapper>
                 <Form />
@@ -175,8 +181,8 @@ const MainContainer = styled.main`
   }
 
   @media (min-width: 1024px) {
-    padding: 4rem 2rem;
-    padding-top: 4rem; /* Regular padding for desktop */
+    padding: 2rem;
+    padding-top: calc(60px + 2rem);
   }
 `;
 
@@ -246,22 +252,48 @@ const FormSection = styled.section`
   }
 `;
 
+/* ── Collaboration block — groups heading, body, and CTA below the subtitle ── */
+const CollabBlock = styled.div`
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+`;
+
+const CollabHeading = styled.h2`
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.45rem;
+`;
+
+const CollabNote = styled.p`
+  font-size: 0.875rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.65;
+  margin: 0 0 0.75rem;
+`;
+
 const StartProjectNote = styled.p`
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.45);
-  margin: 0.75rem 0 0;
+  margin: 0;
 `;
 
 const StartProjectLink = styled(Link)`
-  color: #3498db;
+  display: inline-block;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accent-light, #38bdf8);
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-color: rgba(52, 152, 219, 0.4);
+  text-decoration-color: rgba(14, 165, 233, 0.4);
   transition: color 0.2s ease, text-decoration-color 0.2s ease;
 
   &:hover {
-    color: #5dade2;
-    text-decoration-color: rgba(52, 152, 219, 0.8);
+    color: white;
+    text-decoration-color: rgba(14, 165, 233, 0.9);
   }
 `;
 
@@ -274,59 +306,61 @@ const FormHeader = styled.div`
 `;
 
 const FormTitle = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 800;
   color: white;
+  letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
-  line-height: 1.2;
-
-  @media (min-width: 640px) {
-    font-size: 2rem;
-  }
-
-  @media (min-width: 1024px) {
-    font-size: 2.25rem;
-  }
+  line-height: 1.1;
 `;
 
 const FormSubtitle = styled.p`
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  line-height: 1.6;
-
-  @media (min-width: 640px) {
-    font-size: 1rem;
-  }
-
-  @media (min-width: 1024px) {
-    font-size: 1.1rem;
-  }
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  line-height: 1.7;
+  font-weight: 300;
 `;
 
 const StyledFormWrapper = styled.div`
   input, textarea, select {
+    font-family: var(--font-body, 'DM Sans', system-ui, sans-serif) !important;
     color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    &::placeholder { color: rgba(255, 255, 255, 0.7) !important; }
+    background: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: var(--radius-sm, 6px) !important;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease !important;
+    &::placeholder { color: rgba(255, 255, 255, 0.35) !important; }
     &:focus {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
-      background: rgba(255, 255, 255, 0.15) !important;
+      border-color: var(--color-accent, #0ea5e9) !important;
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18) !important;
+      background: rgba(255, 255, 255, 0.10) !important;
+      outline: none !important;
     }
   }
-  label { color: rgba(255, 255, 255, 0.9) !important; font-weight: 500; }
+  label {
+    font-family: var(--font-body, 'DM Sans', system-ui, sans-serif) !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-weight: 500 !important;
+    font-size: 0.88rem !important;
+    letter-spacing: 0.02em !important;
+  }
   button[type="submit"] {
-    background-color: #3498db !important;
+    font-family: var(--font-body, 'DM Sans', system-ui, sans-serif) !important;
+    background-color: var(--color-accent, #0ea5e9) !important;
     color: white !important;
-    border: 2px solid #3498db !important;
-    font-weight: 600 !important;
-    transition: all 0.3s ease !important;
+    border: 2px solid var(--color-accent, #0ea5e9) !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em !important;
+    transition: all 0.25s ease !important;
+    border-radius: 9999px !important;
     &:hover:not(:disabled) {
       background-color: transparent !important;
-      color: #3498db !important;
+      color: var(--color-accent-light, #38bdf8) !important;
+      border-color: var(--color-accent, #0ea5e9) !important;
       transform: translateY(-2px) !important;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+      box-shadow: 0 6px 16px rgba(14, 165, 233, 0.22) !important;
     }
   }
 `;
@@ -360,44 +394,33 @@ const InfoHeader = styled.div`
 `;
 
 const InfoTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
   margin-bottom: 0.75rem;
   position: relative;
   padding-bottom: 1rem;
-  line-height: 1.2;
-
-  @media (min-width: 640px) {
-    font-size: 2rem;
-  }
-
-  @media (min-width: 1024px) {
-    font-size: 2.25rem;
-  }
+  line-height: 1.1;
 `;
 
 const TitleUnderline = styled.span`
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 4rem;
-  height: 0.25rem;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  /* Unified accent — matches the single blue defined in CSS vars */
+  width: 3rem;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent, #0ea5e9), var(--color-accent-light, #38bdf8));
   border-radius: 2px;
 `;
 
 const InfoSubtitle = styled.p`
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.9rem;
-  line-height: 1.6;
-
-  @media (min-width: 640px) {
-    font-size: 1rem;
-  }
-
-  @media (min-width: 1024px) {
-    font-size: 1.1rem;
-  }
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  line-height: 1.7;
+  font-weight: 300;
 `;
 
 const ContactDetails = styled.div`
@@ -415,18 +438,15 @@ const ContactCard = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1rem;
-  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md, 12px);
   background: rgba(255, 255, 255, 0.05);
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
 
-  @media (min-width: 640px) {
-    padding: 1.25rem;
-  }
-
+  /* Shimmer sweep on hover */
   &::before {
     content: '';
     position: absolute;
@@ -434,15 +454,16 @@ const ContactCard = styled.div`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.6s ease;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+    transition: left 0.55s ease;
+    pointer-events: none;
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    
+    background: rgba(14, 165, 233, 0.06);
+    border-color: rgba(14, 165, 233, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+
     &::before {
       left: 100%;
     }
@@ -471,13 +492,13 @@ const ContactCardWrapper = styled.div`
 const ContactIcon = styled.div`
   flex-shrink: 0;
   margin-top: 0.125rem;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
 
   svg {
     width: 1.125rem;
     height: 1.125rem;
-    color: #60a5fa;
-    transition: all 0.3s ease;
+    color: var(--color-accent-light, #38bdf8);
+    transition: color 0.3s ease;
 
     @media (min-width: 640px) {
       width: 1.25rem;
@@ -487,9 +508,9 @@ const ContactIcon = styled.div`
 
   ${ContactCard}:hover & {
     transform: scale(1.15) rotate(5deg);
-    
+
     svg {
-      color: #3b82f6;
+      color: var(--color-accent, #0ea5e9);
     }
   }
 `;
@@ -500,20 +521,17 @@ const ContactTextContent = styled.div`
 `;
 
 const ContactLabel = styled.h3`
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #60a5fa;
-  margin-bottom: 0.5rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent-light, #38bdf8);
+  margin-bottom: 0.35rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   transition: color 0.3s ease;
 
-  @media (min-width: 640px) {
-    font-size: 0.875rem;
-  }
-
   ${ContactCard}:hover & {
-    color: #3b82f6;
+    color: var(--color-accent, #0ea5e9);
   }
 `;
 

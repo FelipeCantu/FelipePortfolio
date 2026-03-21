@@ -1,4 +1,5 @@
 import styled, { keyframes } from "styled-components";
+import { Link } from "react-router-dom";
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from "react-icons/fa";
 import { Helmet } from 'react-helmet-async';
 
@@ -96,6 +97,7 @@ function Home() {
               <Description>
                 As a Full Stack Developer, I am a highly motivated tech enthusiast and skilled problem solver with expertise in both front-end and back-end development.
               </Description>
+              <LearnMoreLink to="/about">Learn more &nbsp;→</LearnMoreLink>
             </TextContent>
           </ContentContainer>
           
@@ -226,6 +228,10 @@ const BackgroundImage = styled.img`
   object-fit: cover;
   z-index: -1;
   animation: ${backgroundZoom} 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 const Wrapper = styled.div`
@@ -264,15 +270,24 @@ const PulseCircle = styled.div`
   border: ${props => props.border};
   border-radius: 50%;
   opacity: ${props => props.opacity || 0.2};
-  animation: ${props => 
-    props.animation === 'ping' ? ping : 
-    props.animation === 'rotate' ? 
-      (props.reverse ? rotateReverse : rotate) : 
-      pulse} 
-    ${props => props.duration || '2.5s'} 
-    ${props => props.animation === 'ping' ? 'ease-out' : 'linear'} 
+  /*
+   * Removed margin-top: 13rem — it was pushing the ring group far below
+   * the visual center of the hero. These are absolutely positioned within
+   * PulsingCircles which is itself centered with translate(-50%, -50%).
+   */
+  animation: ${props =>
+    props.animation === 'ping' ? ping :
+    props.animation === 'rotate' ?
+      (props.reverse ? rotateReverse : rotate) :
+      pulse}
+    ${props => props.duration || '2.5s'}
+    ${props => props.animation === 'ping' ? 'ease-out' : 'linear'}
     infinite;
-  margin-top: 13rem;
+
+  /* Respect user's motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 const OrbitBackground = styled.div`
@@ -387,16 +402,27 @@ const OvalAvatar = styled.img`
 `;
 
 const TextContent = styled.div`
-  max-width: 600px;
+  max-width: 560px;
   color: white;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   animation: ${slideInRight} 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;
 `;
 
 const Title = styled.h1`
-  font-size: 2.5rem;
-  margin-bottom: 1.5rem;
-  background: linear-gradient(90deg, #00bfff, white);
+  /*
+   * Syne at this size has just enough quirk to be memorable.
+   * Gradient anchors at the accent blue and fades to pure white —
+   * matches the color system in index.css.
+   */
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(110deg, var(--color-accent-light, #38bdf8) 0%, #ffffff 55%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -404,45 +430,118 @@ const Title = styled.h1`
 `;
 
 const Description = styled.p`
-  font-size: 1.2rem;
-  line-height: 1.6;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.80);
   animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s backwards;
+`;
+
+const LearnMoreLink = styled(Link)`
+  /*
+   * Replaced float:right (broken in a flex column context) with
+   * align-self so it naturally left-aligns under the description
+   * text while still sitting at the end of the flex column flow.
+   */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin-top: 1.5rem;
+  padding: 0.55rem 1.25rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent-light, #38bdf8);
+  text-decoration: none;
+  border: 1.5px solid rgba(14, 165, 233, 0.38);
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.08);
+  transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+
+  &:hover {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: var(--color-accent, #0ea5e9);
+    color: white;
+    transform: translateX(3px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent, #0ea5e9);
+    outline-offset: 3px;
+  }
 `;
 
 const SocialIcons = styled.div`
   position: absolute;
   bottom: 2rem;
-  right: 2rem;
-  padding-top: 1rem;
+  right: 2.5rem;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.25rem;
   z-index: 3;
+  /*
+   * Padding gives the box-shadow glow on each icon room to render
+   * without being clipped by Main's overflow:hidden. The bottom/right
+   * values account for the absolute positioning offset so the visual
+   * placement stays identical.
+   */
+  padding: 12px;
+  margin: -12px;
 
   @media (max-width: 768px) {
     position: static;
     margin-top: 2rem;
+    margin-left: -12px;
+    margin-right: -12px;
     justify-content: center;
   }
 `;
 
 const IconLink = styled.a`
-  color: white;
-  font-size: 1.8rem;
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.2rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+  transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
   animation: ${popIn} 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards;
-  
+
   &:nth-child(1) { animation-delay: 1.1s; }
   &:nth-child(2) { animation-delay: 1.25s; }
   &:nth-child(3) { animation-delay: 1.4s; }
   &:nth-child(4) { animation-delay: 1.55s; }
 
   &:hover {
-    color: ${({ href }) => 
-      href.includes('linkedin') ? '#0077b5' : 
-      href.includes('github') ? '#6e5494' : 
-      href.includes('instagram') ? '#E1306C' :
-      '#1877f2'};
-    transform: translateY(-5px);
+    color: white;
+    transform: translateY(-4px);
+    background: ${({ href }) =>
+      href.includes('linkedin') ? 'rgba(0, 119, 181, 0.35)' :
+      href.includes('github')   ? 'rgba(110, 84, 148, 0.35)' :
+      href.includes('instagram')? 'rgba(225, 48, 108, 0.35)' :
+                                  'rgba(24, 119, 242, 0.35)'};
+    border-color: ${({ href }) =>
+      href.includes('linkedin') ? 'rgba(0, 119, 181, 0.7)' :
+      href.includes('github')   ? 'rgba(110, 84, 148, 0.7)' :
+      href.includes('instagram')? 'rgba(225, 48, 108, 0.7)' :
+                                  'rgba(24, 119, 242, 0.7)'};
+    box-shadow: ${({ href }) =>
+      href.includes('linkedin') ? '0 4px 16px rgba(0, 119, 181, 0.25)' :
+      href.includes('github')   ? '0 4px 16px rgba(110, 84, 148, 0.25)' :
+      href.includes('instagram')? '0 4px 16px rgba(225, 48, 108, 0.25)' :
+                                  '0 4px 16px rgba(24, 119, 242, 0.25)'};
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent, #0ea5e9);
+    outline-offset: 3px;
   }
 `;
 

@@ -1,4 +1,69 @@
-/* Add this to your global CSS file or index.css */
+/* ─── Google Fonts ────────────────────────────────────────────────────────────
+   Display: Syne — geometric, confident, distinctly contemporary
+   Body:    DM Sans — neutral but has personality, not boring like Inter
+   Mono:    JetBrains Mono — for code snippets / tag chips if needed
+   ─────────────────────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── CSS Custom Properties (Design Tokens) ─────────────────────────────── */
+:root {
+  /* Primary palette */
+  --color-accent:        #0ea5e9;   /* sky-500 — one true blue */
+  --color-accent-dark:   #0284c7;   /* sky-600 */
+  --color-accent-light:  #38bdf8;   /* sky-400 */
+  --color-gold:          #f7ab0a;   /* amber — existing brand touch */
+
+  /* Neutrals */
+  --color-bg:            #0d0f1a;
+  --color-surface:       rgba(255, 255, 255, 0.06);
+  --color-border:        rgba(255, 255, 255, 0.10);
+  --color-border-hover:  rgba(255, 255, 255, 0.20);
+
+  /* Text */
+  --color-text-primary:   #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.72);
+  --color-text-muted:     rgba(255, 255, 255, 0.40);
+
+  /* Typography */
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Spacing scale */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-xl:  28px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card:  0 25px 50px rgba(0, 0, 0, 0.45);
+  --shadow-glow:  0 0 24px rgba(14, 165, 233, 0.35);
+
+  /* Transitions */
+  --transition-fast:   all 0.18s ease;
+  --transition-base:   all 0.25s ease;
+  --transition-slow:   all 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Navbar height */
+  --navbar-h: 60px;
+}
+
+/* ─── Reset & Base ────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  max-width: 100%;
+}
 
 html, body {
   height: 100%;
@@ -6,7 +71,16 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  overflow-y: auto !important;
+  overflow-y: auto;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+
+  /* Apply body font globally */
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -20,17 +94,27 @@ body {
   flex-direction: column;
 }
 
-/* This ensures content is always scrollable when needed */
-* {
-  box-sizing: border-box;
+/* ─── Typography Defaults ─────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  margin: 0;
 }
 
-/* Debug any elements that might be causing overflow issues */
-* {
-  max-width: 100%;
+p {
+  margin: 0;
 }
 
-/* Force scrolling on the main container */
-body, html, #root {
-  overflow-y: auto !important;
+a {
+  color: inherit;
+}
+
+/* ─── Reduced-motion support ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

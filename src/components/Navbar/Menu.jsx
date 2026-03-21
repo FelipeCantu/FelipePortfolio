@@ -24,7 +24,11 @@ height: 2rem;
 position: absolute;
 top: 10px;
 right: 10px;
-z-index: 9;
+/*
+ * Must exceed the sidebar panel (1100) so the close icon
+ * remains clickable when the drawer is open.
+ */
+z-index: 1200;
 display: none;
 @media (max-width: 768px) {
   display: flex;

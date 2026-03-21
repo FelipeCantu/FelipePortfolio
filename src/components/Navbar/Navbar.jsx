@@ -1,9 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Menu from './Menu';
 import styled, { keyframes } from 'styled-components';
 import { Typography } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 
+/*
+ * The hamburger button has been moved to App.js and rendered at the root
+ * stacking context (z-index: 1400) so it always paints above the sidebar
+ * panel (z-index: 1300) and overlay (z-index: 1299).
+ *
+ * Nav has backdrop-filter: blur() which creates a stacking context — any
+ * z-index set on a descendant of Nav is trapped inside that context and
+ * can never beat a sibling element at a higher level. The hamburger must
+ * live outside Nav's DOM subtree entirely.
+ *
+ * No props needed here anymore — Navbar is purely presentational.
+ */
 const Navbar = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -134,7 +145,16 @@ const Navbar = () => {
           </TextContainer>
         </LogoLink>
       </LogoContainer>
-      <Menu />
+      {/*
+       * The Sidebar (desktop nav links + mobile drawer) is rendered at the
+       * App root level, NOT here. Rendering it at the root lets it escape
+       * the stacking context that backdrop-filter creates on this Nav element.
+       * On desktop it uses position:fixed to align itself to the right of the
+       * navbar row — identical visual result, but outside the trapped context.
+       *
+       * The hamburger button is also at the App root level for the same reason.
+       * See App.js — HamburgerButton at z-index: 1400.
+       */}
     </Nav>
   );
 };
@@ -158,7 +178,14 @@ const Nav = styled.nav`
   width: 100%;
   height: 60px;
   display: flex;
-  background: rgba(128,128,128,0.5);
+  /*
+   * Dark navy glass — consistent with the dark aesthetic across every page.
+   * The old rgba(128,128,128,0.5) read as muddy gray against the bg images.
+   */
+  background: rgba(10, 12, 22, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   justify-content: space-between;
   padding-left: 200px;
   z-index: 1000;
@@ -231,10 +258,11 @@ const LogoFallback = styled.div`
 const LogoText = styled.span`
   font-weight: 700;
   font-size: 20px;
-  font-family: 'Inter', 'Roboto', sans-serif;
+  /* Use the display font (Syne) consistent with site headings */
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
   letter-spacing: -0.5px;
   text-shadow: ${props => props.$ishovered ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'};
-  
+
   @media (max-width: 400px) {
     font-size: 18px;
   }
@@ -255,10 +283,11 @@ const TextContainer = styled.div`
 
 const BaseText = styled(Typography)`
   && {
-    font-family: 'Inter', 'Roboto', sans-serif;
-    font-weight: 600;
-    font-size: 1.5em;
-    letter-spacing: 0.5px;
+    /* Syne for the logo wordmark — more character than Inter */
+    font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+    font-weight: 700;
+    font-size: 1.4em;
+    letter-spacing: -0.01em;
     color: white;
     margin: 0;
     display: flex;
@@ -266,12 +295,11 @@ const BaseText = styled(Typography)`
     height: 100%;
 
     @media (max-width: 768px) {
-      font-size: 1.3em;
-      font-weight: 500;
+      font-size: 1.2em;
     }
 
     @media (max-width: 400px) {
-      font-size: 1.1em;
+      font-size: 1.05em;
     }
   }
 `;
@@ -282,11 +310,12 @@ const HoverText = styled(Typography)`
     top: 0;
     left: 20px;
     height: 100%;
-    font-family: 'Inter', 'Roboto', sans-serif;
-    font-weight: 600;
-    font-size: 1.5em;
-    letter-spacing: 0.5px;
-    color: #0097e8;
+    font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+    font-weight: 700;
+    font-size: 1.4em;
+    letter-spacing: -0.01em;
+    /* Unified accent color */
+    color: var(--color-accent, #0ea5e9);
     margin: 0;
     display: flex;
     align-items: center;
@@ -296,12 +325,11 @@ const HoverText = styled(Typography)`
     pointer-events: none;
 
     @media (max-width: 768px) {
-      font-size: 1.3em;
-      font-weight: 500;
+      font-size: 1.2em;
     }
 
     @media (max-width: 400px) {
-      font-size: 1.1em;
+      font-size: 1.05em;
       left: 60px;
     }
   }
