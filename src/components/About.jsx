@@ -39,7 +39,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { FiArrowRight, FiCode, FiLayout, FiZap, FiMessageSquare } from 'react-icons/fi';
-import { SiReact, SiNextdotjs, SiTypescript, SiNodedotjs, SiDjango, SiFirebase, SiMongodb, SiStripe, SiTailwindcss, SiThreedotjs, SiSanity, SiPython, SiLinux, SiGit, SiVercel } from 'react-icons/si';
+import { SiReact, SiNextdotjs, SiTypescript, SiNodedotjs, SiDjango, SiFirebase, SiMongodb, SiFigma, SiTailwindcss, SiThreedotjs, SiSanity, SiPython, SiLinux, SiGit, SiVercel } from 'react-icons/si';
 
 // ─── Animation variants ──────────────────────────────────────────────────────
 //
@@ -140,7 +140,7 @@ const dashCells = [
   { label: 'Django',     color: 'var(--color-accent)',       glow: 0.65, Icon: SiDjango },
   { label: 'Firebase',   color: 'var(--color-gold)',         glow: 0.70, Icon: SiFirebase },
   { label: 'Mongo',      color: 'var(--color-accent)',       glow: 0.55, Icon: SiMongodb },
-  { label: 'Stripe',     color: 'var(--color-gold)',         glow: 0.75, Icon: SiStripe },
+  { label: 'Figma',      color: 'var(--color-gold)',         glow: 0.75, Icon: SiFigma },
   { label: 'Tailwind',   color: 'var(--color-accent-light)', glow: 0.50, Icon: SiTailwindcss },
   { label: 'Three.js',   color: 'var(--color-accent)',       glow: 0.70, Icon: SiThreedotjs },
   { label: 'Sanity',     color: 'var(--color-gold)',         glow: 0.65, Icon: SiSanity },
