@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Form from '../components/Form';
-import { FaGithub, FaLinkedin, FaInstagram, FaMapPin, FaPhoneAlt, FaFacebook } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaInstagram, FaMapPin, FaPhoneAlt, FaFacebook, FaArrowRight } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md';
 import { Helmet } from 'react-helmet-async';
 
@@ -86,7 +86,7 @@ function Contact() {
                     Open to working with other developers—if you're building something interesting, I'd love to hear about it.
                   </CollabNote>
                   <StartProjectNote>
-                    <StartProjectLink to="/get-started">👉 Start a project</StartProjectLink>
+                    <StartProjectLink to="/get-started">Start a project <FaArrowRight style={{ display: 'inline', verticalAlign: 'middle', fontSize: '0.8em' }} /></StartProjectLink>
                   </StartProjectNote>
                 </CollabBlock>
               </FormHeader>
