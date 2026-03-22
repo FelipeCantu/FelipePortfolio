@@ -539,19 +539,31 @@ function About() {
               <AnimatePresence mode="wait" initial={false}>
                 <MobileSwipePanel
                   key={skillTab}
-                  initial={{ x: skillDir * 38, opacity: 0, scale: 0.97, filter: 'blur(10px)', y: 6 }}
+                  initial={{
+                    x: skillDir * 44,
+                    opacity: 0,
+                    scale: 0.94,
+                    rotateY: skillDir * 10,
+                    filter: 'blur(14px)',
+                    transformPerspective: 900,
+                  }}
                   animate={{
-                    x: 0, opacity: 1, scale: 1, filter: 'blur(0px)', y: 0,
+                    x: 0, opacity: 1, scale: 1, rotateY: 0, filter: 'blur(0px)',
+                    transformPerspective: 900,
                     transition: {
-                      duration: 0.52,
+                      duration: 0.6,
                       ease: [0.16, 1, 0.3, 1],
-                      opacity: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
-                      filter: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+                      opacity:  { duration: 0.22, ease: 'easeOut' },
+                      filter:   { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
+                      rotateY:  { duration: 0.6,  ease: [0.16, 1, 0.3, 1] },
+                      scale:    { duration: 0.6,  ease: [0.16, 1, 0.3, 1] },
                     },
                   }}
                   exit={{
-                    x: skillDir * -38, opacity: 0, scale: 0.97, filter: 'blur(10px)', y: -6,
-                    transition: { duration: 0.28, ease: [0.4, 0, 0.6, 0] },
+                    x: skillDir * -44, opacity: 0, scale: 0.94,
+                    rotateY: skillDir * -10, filter: 'blur(14px)',
+                    transformPerspective: 900,
+                    transition: { duration: 0.2, ease: [0.55, 0, 1, 0.45] },
                   }}
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
@@ -585,25 +597,31 @@ function About() {
                       <SectionHeading>Tools I use.</SectionHeading>
                       <DashboardWrap>
                         <DashboardLabel>// skill_matrix.exe</DashboardLabel>
-                        <DashGrid>
+                        <DashGrid
+                          as={motion.div}
+                          variants={staggerContainer}
+                          initial="hidden"
+                          animate="visible"
+                        >
                           {dashCells.map((cell, i) => {
                             const Icon = cell.Icon;
                             return (
-                              <DashCell
-                                key={cell.label}
-                                $color={cell.color}
-                                $glow={cell.glow}
-                                $delay={`${i * 0.08}s`}
-                                tabIndex={0}
-                              >
-                                <DashCellFront>
-                                  <DashCellLabel>{cell.label}</DashCellLabel>
-                                  <DashCellBar $color={cell.color} $fill={cell.glow} />
-                                </DashCellFront>
-                                <DashCellBack $color={cell.color}>
-                                  <Icon size={46} />
-                                </DashCellBack>
-                              </DashCell>
+                              <motion.div key={cell.label} variants={chipVariant}>
+                                <DashCell
+                                  $color={cell.color}
+                                  $glow={cell.glow}
+                                  $delay={`${i * 0.08}s`}
+                                  tabIndex={0}
+                                >
+                                  <DashCellFront>
+                                    <DashCellLabel>{cell.label}</DashCellLabel>
+                                    <DashCellBar $color={cell.color} $fill={cell.glow} />
+                                  </DashCellFront>
+                                  <DashCellBack $color={cell.color}>
+                                    <Icon size={46} />
+                                  </DashCellBack>
+                                </DashCell>
+                              </motion.div>
                             );
                           })}
                         </DashGrid>
