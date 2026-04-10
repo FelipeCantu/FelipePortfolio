@@ -254,7 +254,11 @@ function About() {
           name="description"
           content="Full-Stack Developer & Designer based in Dallas, TX. Passionate about building things that look as good as they work."
         />
-        <link rel="canonical" href="/about" />
+        <link rel="canonical" href="https://felipecantujr.com/about" />
+        <meta property="og:title" content="About | Felipe Cantu Jr" />
+        <meta property="og:description" content="Full-Stack Developer & Designer based in Dallas, TX. Passionate about building things that look as good as they work." />
+        <meta property="og:url" content="https://felipecantujr.com/about" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       {/* Fixed background lives outside the scroll container so it never moves */}

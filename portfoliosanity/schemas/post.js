@@ -18,6 +18,14 @@ export default {
       },
     },
     {
+      name: "excerpt",
+      title: "Excerpt",
+      type: "text",
+      rows: 3,
+      description: "Short summary for SEO and social sharing (1–2 sentences, max 155 characters). Shown in Google results and link previews.",
+      validation: (Rule) => Rule.max(155),
+    },
+    {
       name: "author",
       title: "Author",
       type: "reference",

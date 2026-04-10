@@ -85,6 +85,7 @@ export default function SinglePost() {
           title,
           _id,
           slug,
+          excerpt,
           publishedAt,
           _createdAt,
           mainImage{
@@ -117,6 +118,10 @@ export default function SinglePost() {
           
           post.estimatedReadingTime = Math.max(1, Math.round(wordCount / 200));
           post.displayDate = post.publishedAt || post._createdAt;
+          // Build meta description: prefer CMS excerpt, then first body paragraph, then fallback
+          const firstBlock = post.body?.find(b => b._type === 'block' && b.children);
+          const bodyText = firstBlock?.children?.filter(c => c._type === 'span').map(c => c.text).join('') || '';
+          post.metaDescription = post.excerpt || (bodyText ? bodyText.slice(0, 155) : `Read "${post.title}" — an article about web development by Felipe Cantu Jr.`);
           setSinglePost(post);
         }
         setIsLoading(false);
@@ -164,8 +169,24 @@ export default function SinglePost() {
     <>
       <Helmet>
         <title>{singlePost.title} | Felipe Cantu Jr</title>
-        <meta name="description" content={`Read "${singlePost.title}" - An insightful article about web development and technology.`} />
-        <link rel="canonical" href={`/post/${slug}`} />
+        <meta name="description" content={singlePost.metaDescription} />
+        <link rel="canonical" href={`https://felipecantujr.com/post/${slug}`} />
+        <meta property="og:title" content={`${singlePost.title} | Felipe Cantu Jr`} />
+        <meta property="og:description" content={singlePost.metaDescription} />
+        <meta property="og:url" content={`https://felipecantujr.com/post/${slug}`} />
+        <meta property="og:type" content="article" />
+        {singlePost.mainImage?.asset?.url && <meta property="og:image" content={singlePost.mainImage.asset.url} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          "headline": singlePost.title,
+          "description": singlePost.metaDescription,
+          "url": `https://felipecantujr.com/post/${slug}`,
+          "author": { "@type": "Person", "name": "Felipe Cantu Jr", "url": "https://felipecantujr.com" },
+          "publisher": { "@type": "Person", "name": "Felipe Cantu Jr", "url": "https://felipecantujr.com" },
+          ...(singlePost.mainImage?.asset?.url && { "image": singlePost.mainImage.asset.url }),
+          ...(singlePost.displayDate && { "datePublished": singlePost.displayDate }),
+        })}</script>
       </Helmet>
       
       <PostContainer>

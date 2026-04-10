@@ -9,7 +9,11 @@ function Blog() {
     <Helmet>
       <title>Blog | Felipe Cantu Jr</title>
       <meta name="description" content="Explore insightful articles about web development, technology trends, and programming best practices." />
-      <link rel="canonical" href="/blog" />
+      <link rel="canonical" href="https://felipecantujr.com/blog" />
+      <meta property="og:title" content="Blog | Felipe Cantu Jr" />
+      <meta property="og:description" content="Explore insightful articles about web development, technology trends, and programming best practices." />
+      <meta property="og:url" content="https://felipecantujr.com/blog" />
+      <meta property="og:type" content="website" />
     </Helmet>
     
     <BlogContainer>

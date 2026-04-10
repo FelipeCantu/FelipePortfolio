@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import emailjs from '@emailjs/browser';
 import styled, { keyframes } from 'styled-components';
+import { trackEvent } from '../analytics';
 
 export const Form = () => {
     const form = useRef();
@@ -43,6 +44,7 @@ export const Form = () => {
 
             console.log('Emails sent successfully!');
             setShowSuccess(true);
+            trackEvent('contact_form_submit');
             form.current.reset();
 
             setTimeout(() => setShowSuccess(false), 5000);

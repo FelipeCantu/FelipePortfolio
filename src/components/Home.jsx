@@ -2,14 +2,19 @@ import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from "react-icons/fa";
 import { Helmet } from 'react-helmet-async';
+import { trackEvent } from '../analytics';
 
 function Home() {
   return (
     <>
       <Helmet>
-        <title>Home</title>
-        <meta name="description" content="Full Stack Developer portfolio" />
-        <link rel="canonical" href="/Home" />
+        <title>Felipe Cantu Jr — Full Stack Web Developer</title>
+        <meta name="description" content="Full Stack Developer based in Dallas, TX. I build fast, modern web apps and websites for businesses — React, Node.js, and clean design. Available for freelance." />
+        <link rel="canonical" href="https://felipecantujr.com/" />
+        <meta property="og:title" content="Felipe Cantu Jr — Full Stack Web Developer" />
+        <meta property="og:description" content="Full Stack Developer based in Dallas, TX. Building modern web apps. Available for freelance projects." />
+        <meta property="og:url" content="https://felipecantujr.com/" />
+        <meta property="og:type" content="website" />
       </Helmet>
       <Main>
         <BackgroundImage src="images/mainbg.jpg" alt="Background" />
@@ -97,21 +102,21 @@ function Home() {
               <Description>
                 As a Full Stack Developer, I am a highly motivated tech enthusiast and skilled problem solver with expertise in both front-end and back-end development.
               </Description>
-              <LearnMoreLink to="/about">Learn more &nbsp;→</LearnMoreLink>
+              <LearnMoreLink to="/about" onClick={() => trackEvent('cta_click', { label: 'learn_more' })}>Learn more &nbsp;→</LearnMoreLink>
             </TextContent>
           </ContentContainer>
           
           <SocialIcons>
-            <IconLink href="https://github.com/FelipeCantu" target="_blank">
+            <IconLink href="https://github.com/FelipeCantu" target="_blank" onClick={() => trackEvent('social_click', { platform: 'github' })}>
               <FaGithub />
             </IconLink>
-            <IconLink href="https://linkedin.com/in/felipe-cantu-jr" target="_blank">
+            <IconLink href="https://linkedin.com/in/felipe-cantu-jr" target="_blank" onClick={() => trackEvent('social_click', { platform: 'linkedin' })}>
               <FaLinkedin />
             </IconLink>
-            <IconLink href="https://instagram.com/son_of_robot_" target="_blank">
+            <IconLink href="https://instagram.com/son_of_robot_" target="_blank" onClick={() => trackEvent('social_click', { platform: 'instagram' })}>
               <FaInstagram />
             </IconLink>
-            <IconLink href="https://facebook.com/profile.php?id=100064306140476" target="_blank">
+            <IconLink href="https://facebook.com/profile.php?id=100064306140476" target="_blank" onClick={() => trackEvent('social_click', { platform: 'facebook' })}>
               <FaFacebook />
             </IconLink>
           </SocialIcons>

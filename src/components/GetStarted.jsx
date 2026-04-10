@@ -7,12 +7,16 @@ function GetStarted() {
   return (
     <>
       <Helmet>
-        <title>Start a Project - Felipe Cantu Jr</title>
+        <title>Start a Project — Felipe Cantu Jr</title>
         <meta
           name="description"
-          content="Tell me about your project and schedule a discovery call with Felipe Cantu Jr."
+          content="Ready to build something? Tell me about your project and schedule a free discovery call with Felipe Cantu Jr, Full Stack Web Developer in Dallas, TX."
         />
-        <link rel="canonical" href="/get-started" />
+        <link rel="canonical" href="https://felipecantujr.com/get-started" />
+        <meta property="og:title" content="Start a Project — Felipe Cantu Jr" />
+        <meta property="og:description" content="Ready to build something? Tell me about your project and schedule a free discovery call." />
+        <meta property="og:url" content="https://felipecantujr.com/get-started" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <MainContainer>

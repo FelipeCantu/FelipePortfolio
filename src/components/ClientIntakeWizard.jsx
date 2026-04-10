@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import emailjs from '@emailjs/browser';
+import { trackEvent } from '../analytics';
 import {
   FaLaptopCode,
   FaGlobe,
@@ -156,6 +157,7 @@ function ClientIntakeWizard() {
         EMAILJS_PUBLIC_KEY
       );
       setSubmitted(true);
+      trackEvent('get_started_submit', { project_type: data.projectType });
     } catch (err) {
       console.error('EmailJS error:', err);
       setError('Something went wrong. Please try again or email me directly.');

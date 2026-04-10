@@ -205,10 +205,27 @@ export default function SingleProject() {
           name="description"
           content={
             project.excerpt ||
-            `Explore ${project.title} — a project by Felipe Cantu Jr.`
+            `${project.title} — a ${project.projectType || 'web'} project by Felipe Cantu Jr, Full Stack Developer in Dallas, TX.${project.tags?.length ? ` Built with ${project.tags.slice(0, 3).join(', ')}.` : ''}`
           }
         />
-        <link rel="canonical" href={`/project/${slug}`} />
+        <link rel="canonical" href={`https://felipecantujr.com/project/${slug}`} />
+        <meta property="og:title" content={`${project.title} | Felipe Cantu Jr`} />
+        <meta property="og:description" content={project.excerpt || `${project.title} — a project by Felipe Cantu Jr.`} />
+        <meta property="og:url" content={`https://felipecantujr.com/project/${slug}`} />
+        <meta property="og:type" content="website" />
+        {project.image?.asset?.url && <meta property="og:image" content={project.image.asset.url} />}
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          "name": project.title,
+          "description": project.excerpt || `${project.title} — a project by Felipe Cantu Jr.`,
+          "url": `https://felipecantujr.com/project/${slug}`,
+          "author": { "@type": "Person", "name": "Felipe Cantu Jr", "url": "https://felipecantujr.com" },
+          ...(project.image?.asset?.url && { "image": project.image.asset.url }),
+          ...(project.tags?.length && { "keywords": project.tags.join(", ") }),
+          ...(project.date && { "dateCreated": project.date }),
+          ...(project.link && { "sameAs": project.link }),
+        })}</script>
       </Helmet>
 
       <PageContainer>

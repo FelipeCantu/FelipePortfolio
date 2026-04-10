@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Form from '../components/Form';
+import { trackEvent } from '../analytics';
 import { FaGithub, FaLinkedin, FaInstagram, FaMapPin, FaPhoneAlt, FaFacebook, FaArrowRight } from "react-icons/fa";
 import { MdEmail } from 'react-icons/md';
 import { Helmet } from 'react-helmet-async';
@@ -58,12 +59,16 @@ function Contact() {
   return (
     <>
       <Helmet>
-        <title>Contact - Felipe Cantu Jr</title>
+        <title>Contact — Felipe Cantu Jr</title>
         <meta
           name="description"
-          content="Say hello to Felipe Cantu Jr — reach out for general inquiries, questions, or just to connect."
+          content="Get in touch with Felipe Cantu Jr, Full Stack Web Developer in Dallas, TX. Available for freelance projects, collaborations, and general inquiries."
         />
-        <link rel="canonical" href="/contact" />
+        <link rel="canonical" href="https://felipecantujr.com/contact" />
+        <meta property="og:title" content="Contact — Felipe Cantu Jr" />
+        <meta property="og:description" content="Get in touch with Felipe Cantu Jr. Available for freelance projects and collaborations." />
+        <meta property="og:url" content="https://felipecantujr.com/contact" />
+        <meta property="og:type" content="website" />
       </Helmet>
       
       <MainContainer>
@@ -86,7 +91,7 @@ function Contact() {
                     Open to working with other developers—if you're building something interesting, I'd love to hear about it.
                   </CollabNote>
                   <StartProjectNote>
-                    <StartProjectLink to="/get-started">Start a project <FaArrowRight style={{ display: 'inline', verticalAlign: 'middle', fontSize: '0.8em' }} /></StartProjectLink>
+                    <StartProjectLink to="/get-started" onClick={() => trackEvent('cta_click', { label: 'start_project_contact' })}>Start a project <FaArrowRight style={{ display: 'inline', verticalAlign: 'middle', fontSize: '0.8em' }} /></StartProjectLink>
                   </StartProjectNote>
                 </CollabBlock>
               </FormHeader>

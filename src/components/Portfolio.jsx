@@ -10,7 +10,11 @@ function Portfolio() {
       <Helmet>
         <title>Portfolio | Felipe Cantu Jr</title>
         <meta name="description" content="A collection of full-stack projects by Felipe Cantu Jr — React, JavaScript, and Figma." />
-        <link rel="canonical" href="/Portfolio" />
+        <link rel="canonical" href="https://felipecantujr.com/portfolio" />
+        <meta property="og:title" content="Portfolio | Felipe Cantu Jr" />
+        <meta property="og:description" content="A collection of full-stack projects by Felipe Cantu Jr — React, JavaScript, and Figma." />
+        <meta property="og:url" content="https://felipecantujr.com/portfolio" />
+        <meta property="og:type" content="website" />
       </Helmet>
 
       <BackgroundOverlay>
