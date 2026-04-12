@@ -91,18 +91,18 @@ export default {
     {
       name: 'projectType',
       title: 'Project Type',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
       options: {
         list: [
           {title: 'Web', value: 'web'},
           {title: 'Mobile', value: 'mobile'},
           {title: 'Design', value: 'design'},
-          {title: 'Backend', value: 'backend'},
-          {title: 'Full Stack', value: 'fullstack'},
-          {title: 'Other', value: 'other'},
+          {title: 'Desktop App', value: 'desktop'},
         ],
-        layout: 'radio',
+        layout: 'grid',
       },
+      description: 'Select all types that apply.',
     },
     {
       name: 'tags',
@@ -172,6 +172,13 @@ export default {
       title: 'title',
       subtitle: 'projectType',
       media: 'image',
+    },
+    prepare({title, subtitle, media}) {
+      return {
+        title,
+        subtitle: Array.isArray(subtitle) ? subtitle.join(', ') : subtitle,
+        media,
+      }
     },
   },
 }

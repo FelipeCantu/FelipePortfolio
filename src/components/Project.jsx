@@ -1,9 +1,15 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useHistory } from "react-router-dom";
 import sanityClient from "../sanityClient";
+import imageUrlBuilder from "@sanity/image-url";
 import styled, { keyframes, css } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+
+const builder = imageUrlBuilder(sanityClient);
+function urlFor(source) {
+  return builder.image(source);
+}
 
 // ─── ANIMATION VARIANTS ────────────────────────────────────────────────────────
 
@@ -92,12 +98,17 @@ function getBadgeColor(type) {
     web: "#3498db",
     mobile: "#9b59b6",
     design: "#e67e22",
-    backend: "#e74c3c",
-    fullstack: "#2ecc71",
-    other: "#95a5a6",
+    desktop: "#1abc9c",
   };
-  return colors[type] || "#2ecc71";
+  return colors[type] || "#3498db";
 }
+
+const TYPE_LABELS = {
+  web: "Web",
+  mobile: "Mobile",
+  design: "Design",
+  desktop: "Desktop App",
+};
 
 // ─── SINGLE PROJECT CARD ──────────────────────────────────────────────────────
 
@@ -125,7 +136,7 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }) {
       <CardInner>
         {project.image ? (
           <CardImage
-            src={project.image.asset.url}
+            src={urlFor(project.image).width(800).auto("format").fit("crop").url()}
             alt={project.title}
             loading="lazy"
           />
@@ -134,9 +145,16 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }) {
         )}
 
         <SlidePanel data-slide-panel>
-          <TypeBadge $color={getBadgeColor(project.projectType)}>
-            {project.projectType || "project"}
-          </TypeBadge>
+          <TypeBadgeRow>
+            {Array.isArray(project.projectType)
+              ? project.projectType.filter(type => TYPE_LABELS[type]).map((type, i) => (
+                  <TypeBadge key={i} $color={getBadgeColor(type)}>{TYPE_LABELS[type]}</TypeBadge>
+                ))
+              : TYPE_LABELS[project.projectType]
+              ? <TypeBadge $color={getBadgeColor(project.projectType)}>{TYPE_LABELS[project.projectType]}</TypeBadge>
+              : null
+            }
+          </TypeBadgeRow>
           <PersistentTitle>{project.title}</PersistentTitle>
           {(project.excerpt || project.description) && (
             <DescriptionText>{project.excerpt || project.description}</DescriptionText>
@@ -195,7 +213,7 @@ export default function Project() {
     sanityClient
       .fetch(
         `*[_type == "project" &&
-        ($projectTypeFilter == "all" || projectType == $projectTypeFilter)] | order(featured desc, order asc, date desc){
+        ($projectTypeFilter == "all" || $projectTypeFilter in projectType)] | order(featured desc, order asc, date desc){
           title,
           slug,
           date,
@@ -210,7 +228,8 @@ export default function Project() {
           image {
             asset -> {
               _id,
-              url
+              url,
+              metadata { dimensions }
             }
           }
         }`,
@@ -373,8 +392,7 @@ function FilterUI({ projectTypeFilter, setProjectTypeFilter }) {
           { value: "web", label: "Web" },
           { value: "mobile", label: "Mobile" },
           { value: "design", label: "Design" },
-          { value: "backend", label: "Backend" },
-          { value: "fullstack", label: "Full Stack" },
+          { value: "desktop", label: "Desktop" },
         ].map(({ value, label }) => (
           <FilterOption
             key={value}
@@ -718,6 +736,13 @@ const SlidePanel = styled.div`
     transform: translateY(0);
     padding: 1.5rem 1rem 1rem;
   }
+`;
+
+const TypeBadgeRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
 `;
 
 const TypeBadge = styled.span`

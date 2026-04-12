@@ -21,9 +21,14 @@ const TYPE_COLORS = {
   web: "#3498db",
   mobile: "#9b59b6",
   design: "#e67e22",
-  backend: "#e74c3c",
-  fullstack: "#2ecc71",
-  other: "#95a5a6",
+  desktop: "#1abc9c",
+};
+
+const TYPE_LABELS = {
+  web: "Web",
+  mobile: "Mobile",
+  design: "Design",
+  desktop: "Desktop App",
 };
 
 const STATUS_CONFIG = {
@@ -187,7 +192,8 @@ export default function SingleProject() {
   }
 
   // ── Derived values ──
-  const typeColor = TYPE_COLORS[project.projectType] || TYPE_COLORS.other;
+  const primaryType = Array.isArray(project.projectType) ? project.projectType[0] : project.projectType;
+  const typeColor = TYPE_COLORS[primaryType] || "#2ecc71"; // used for SEO/meta only
   const statusCfg = STATUS_CONFIG[project.status] || STATUS_CONFIG.completed;
   const githubUrl = project.githubLink;
   const formattedDate = project.date
@@ -205,7 +211,7 @@ export default function SingleProject() {
           name="description"
           content={
             project.excerpt ||
-            `${project.title} — a ${project.projectType || 'web'} project by Felipe Cantu Jr, Full Stack Developer in Dallas, TX.${project.tags?.length ? ` Built with ${project.tags.slice(0, 3).join(', ')}.` : ''}`
+            `${project.title} — a ${(Array.isArray(project.projectType) ? project.projectType.join('/') : project.projectType) || 'web'} project by Felipe Cantu Jr, Full Stack Developer in Dallas, TX.${project.tags?.length ? ` Built with ${project.tags.slice(0, 3).join(', ')}.` : ''}`
           }
         />
         <link rel="canonical" href={`https://felipecantujr.com/project/${slug}`} />
@@ -268,11 +274,18 @@ export default function SingleProject() {
 
               {/* Badges */}
               <BadgeRow>
-                {project.projectType && (
-                  <TypeBadge $color={typeColor}>
-                    {project.projectType}
-                  </TypeBadge>
-                )}
+                {Array.isArray(project.projectType)
+                  ? project.projectType.filter(type => TYPE_LABELS[type]).map((type, i) => (
+                      <TypeBadge key={i} $color={TYPE_COLORS[type]}>
+                        {TYPE_LABELS[type]}
+                      </TypeBadge>
+                    ))
+                  : TYPE_LABELS[project.projectType]
+                  ? <TypeBadge $color={TYPE_COLORS[project.projectType]}>
+                      {TYPE_LABELS[project.projectType]}
+                    </TypeBadge>
+                  : null
+                }
                 {project.status && (
                   <StatusBadge $cfg={statusCfg}>
                     {statusCfg.label}
@@ -457,7 +470,7 @@ const Background = styled.div`
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: url("images/mainbg.jpg");
+  background-image: url("/images/mainbg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
