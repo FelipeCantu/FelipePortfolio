@@ -19,11 +19,12 @@ const Sidebar = ({ open, onClose }) => {
   return (
     <nav>
       <Ul id="mobile-sidebar" open={open}>
-        {/*
-         * No close button here — the hamburger in App.js (z-index: 1400)
-         * animates to an X when the sidebar is open and serves as the
-         * single authoritative toggle control.
-         */}
+        <DrawerHeader>
+          <DrawerLogoWrap>
+            <img src="images/mainwlogo.png" alt="FC Logo" />
+          </DrawerLogoWrap>
+          <DrawerName>Felipe Cantu Jr</DrawerName>
+        </DrawerHeader>
         <li><StyledLink to="/Home">Home</StyledLink></li>
         <li><StyledLink to="/Blog">Blogs</StyledLink></li>
         <li><StyledLink to="/Portfolio">Portfolio</StyledLink></li>
@@ -117,6 +118,41 @@ const Ul = styled.ul`
   }
 `;
 
+/* ── Drawer branding header (mobile only) ── */
+const DrawerHeader = styled.div`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    width: 100%;
+  }
+`;
+
+const DrawerLogoWrap = styled.span`
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+
+  img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+`;
+
+const DrawerName = styled.span`
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: -0.01em;
+`;
+
 const StyledLink = styled(Link)`
   /*
    * DM Sans for nav links — pairs well with Syne headings,
@@ -139,11 +175,14 @@ const StyledLink = styled(Link)`
     width: 100%;
     padding: 1rem 1.5rem;
     font-size: 1.05rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.75);
+    border-left: 2px solid transparent;
+    transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 
     &:hover {
-      color: var(--color-accent, #0ea5e9);
+      color: white;
       background: rgba(14, 165, 233, 0.07);
+      border-left-color: rgba(14, 165, 233, 0.7);
     }
   }
 `;

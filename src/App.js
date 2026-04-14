@@ -268,47 +268,65 @@ const HamburgerButton = styled.button`
     justify-content: space-between;
     align-items: center;
     position: fixed;
-    top: 14px;
-    right: 16px;
-    width: 2rem;
-    height: 2rem;
-    padding: 3px 0;
-    background: none;
-    border: none;
+    top: 10px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    padding: 12px 10px;
+    background: rgba(10, 12, 22, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
     cursor: pointer;
     z-index: 1400;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    &:hover {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: rgba(14, 165, 233, 0.45);
+      box-shadow: 0 4px 20px rgba(14, 165, 233, 0.18);
+    }
   }
 
   span {
     display: block;
-    width: 1.75rem;
+    width: 1.5rem;
     height: 2px;
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 4px;
     transform-origin: center center;
     transition:
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity   0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity   0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      width     0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Shorter middle bar for a subtle staggered look */
+    &:nth-child(2) {
+      width: ${({ $open }) => ($open ? '1.5rem' : '1.1rem')};
+      align-self: flex-end;
+      opacity: ${({ $open }) => ($open ? 0 : 1)};
+    }
 
     &:nth-child(1) {
       transform: ${({ $open }) =>
-        $open ? 'translateY(12px) rotate(45deg)' : 'none'};
-    }
-
-    &:nth-child(2) {
-      opacity: ${({ $open }) => ($open ? 0 : 1)};
+        $open ? 'translateY(9px) rotate(45deg)' : 'none'};
     }
 
     &:nth-child(3) {
       transform: ${({ $open }) =>
-        $open ? 'translateY(-12px) rotate(-45deg)' : 'none'};
+        $open ? 'translateY(-9px) rotate(-45deg)' : 'none'};
     }
   }
 
   &:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.7);
-    outline-offset: 4px;
-    border-radius: 4px;
+    outline: 2px solid rgba(14, 165, 233, 0.7);
+    outline-offset: 3px;
+    border-radius: 10px;
   }
 `;
 

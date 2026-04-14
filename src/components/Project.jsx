@@ -603,7 +603,7 @@ const PerspectiveStage = styled.div`
   }
 
   @media (max-width: 600px) {
-    height: calc(88vw * 9 / 16);
+    height: calc(88vw * 3 / 4);
   }
 `;
 
@@ -637,9 +637,9 @@ const AnimatedCard = styled(motion.div)`
 
   @media (max-width: 600px) {
     width: 88vw;
-    height: calc(88vw * 9 / 16);
+    height: calc(88vw * 3 / 4);
     margin-left: -44vw;
-    margin-top: calc(-88vw * 9 / 32);
+    margin-top: calc(-88vw * 3 / 8);
   }
 
   will-change: transform, opacity, filter;
@@ -734,7 +734,8 @@ const SlidePanel = styled.div`
 
   @media (max-width: 600px) {
     transform: translateY(0);
-    padding: 1.5rem 1rem 1rem;
+    padding: 1.75rem 1rem 0.75rem;
+    gap: 0.3rem;
   }
 `;
 
@@ -785,6 +786,8 @@ const DescriptionText = styled.p`
 
   @media (max-width: 600px) {
     display: -webkit-box;
+    -webkit-line-clamp: 1;
+    font-size: 0.75rem;
   }
 `;
 
@@ -817,6 +820,10 @@ const TagRow = styled.div`
 
   @media (max-width: 768px) {
     max-height: 2rem;
+  }
+
+  @media (max-width: 600px) {
+    display: none;
   }
 `;
 
