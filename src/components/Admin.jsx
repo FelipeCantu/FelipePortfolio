@@ -422,10 +422,30 @@ export default function Admin() {
 // ─── Styled Components ───────────────────────────────────────────────────────
 const PageWrapper = styled.div`
   min-height: 100vh;
-  background: var(--color-bg);
   padding-top: var(--navbar-h);
   display: flex;
   flex-direction: column;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url('/images/mainbg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    z-index: -2;
+  }
+
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 15, 26, 0.82);
+    backdrop-filter: blur(1px);
+    z-index: -1;
+  }
 `;
 
 // Gate
@@ -443,10 +463,11 @@ const GateCard = styled.div`
   max-width: 400px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-gold);
   border-radius: var(--radius-lg);
   padding: 2.5rem;
   backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), 0 0 40px rgba(247, 171, 10, 0.08);
 `;
 
 const GateLabel = styled.p`
@@ -455,7 +476,7 @@ const GateLabel = styled.p`
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-accent-light);
+  color: var(--color-gold);
   margin: 0 0 0.5rem;
 `;
 
@@ -532,7 +553,7 @@ const DashLabel = styled.p`
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-accent-light);
+  color: var(--color-gold);
   margin: 0 0 0.4rem;
 `;
 
@@ -578,6 +599,14 @@ const StatCard = styled.div`
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  transition: var(--transition-fast);
+
+  &:nth-child(1) { border-top: 2px solid var(--color-accent); }
+  &:nth-child(2) { border-top: 2px solid var(--color-accent-light); }
+  &:nth-child(3) { border-top: 2px solid var(--color-gold); }
+
+  &:hover { border-color: var(--color-border-hover); }
 `;
 
 const StatLabel = styled.p`
@@ -610,6 +639,8 @@ const SectionHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
 `;
 
 const SectionTitle = styled.h2`
@@ -648,6 +679,9 @@ const ClientCard = styled.div`
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  backdrop-filter: blur(8px);
+  transition: var(--transition-fast);
+  &:hover { border-color: var(--color-border-hover); }
 `;
 
 const ClientHeader = styled.div`
@@ -779,13 +813,15 @@ const ModalBackdrop = styled(motion.div)`
 `;
 
 const ModalCard = styled.div`
-  background: #131629;
+  background: rgba(13, 15, 26, 0.92);
   border: 1px solid var(--color-border);
+  border-top: 2px solid var(--color-accent);
   border-radius: var(--radius-lg);
   padding: 2rem;
   width: 100%;
   max-width: 480px;
   box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
 `;
 
 const ModalTitle = styled.h2`
