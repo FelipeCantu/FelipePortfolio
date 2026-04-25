@@ -6,6 +6,7 @@ import Blog from './components/Blog';
 import Portfolio from './components/Portfolio';
 import Contact from './components/Contact';
 import GetStarted from './components/GetStarted';
+import Admin from './components/Admin';
 import { BrowserRouter as Router, Route, Switch, useLocation } from 'react-router-dom';
 import SinglePost from './components/SinglePost';
 import SingleProject from './components/SingleProject';
@@ -187,6 +188,7 @@ function AppContent() {
           <Route path='/contact' component={Contact} />
           <Route path='/about' component={About} />
           <Route path='/get-started' component={GetStarted} />
+          <Route path='/admin' component={Admin} />
           <Route path='/post/:slug' component={SinglePost} />
           <Route path='/project/:slug' component={SingleProject} />
         </Switch>
