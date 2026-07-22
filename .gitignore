@@ -10,7 +10,6 @@
 
 # production
 /build
-/public/studio
 
 # misc
 .DS_Store
