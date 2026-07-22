@@ -69,6 +69,11 @@ function Contact() {
         <meta property="og:description" content="Get in touch with Felipe Cantu Jr. Available for freelance projects and collaborations." />
         <meta property="og:url" content="https://felipecantujr.com/contact" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://felipecantujr.com/images/felipe.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact — Felipe Cantu Jr" />
+        <meta name="twitter:description" content="Get in touch with Felipe Cantu Jr. Available for freelance projects and collaborations." />
+        <meta name="twitter:image" content="https://felipecantujr.com/images/felipe.jpg" />
       </Helmet>
       
       <MainContainer>

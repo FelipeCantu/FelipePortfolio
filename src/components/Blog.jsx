@@ -14,6 +14,11 @@ function Blog() {
       <meta property="og:description" content="Explore insightful articles about web development, technology trends, and programming best practices." />
       <meta property="og:url" content="https://felipecantujr.com/blog" />
       <meta property="og:type" content="website" />
+      <meta property="og:image" content="https://felipecantujr.com/images/felipe.jpg" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Blog | Felipe Cantu Jr" />
+      <meta name="twitter:description" content="Explore insightful articles about web development, technology trends, and programming best practices." />
+      <meta name="twitter:image" content="https://felipecantujr.com/images/felipe.jpg" />
     </Helmet>
     
     <BlogContainer>

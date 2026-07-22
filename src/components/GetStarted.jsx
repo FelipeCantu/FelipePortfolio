@@ -17,6 +17,11 @@ function GetStarted() {
         <meta property="og:description" content="Ready to build something? Tell me about your project and schedule a free discovery call." />
         <meta property="og:url" content="https://felipecantujr.com/get-started" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://felipecantujr.com/images/felipe.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Start a Project — Felipe Cantu Jr" />
+        <meta name="twitter:description" content="Ready to build something? Tell me about your project and schedule a free discovery call." />
+        <meta name="twitter:image" content="https://felipecantujr.com/images/felipe.jpg" />
       </Helmet>
 
       <MainContainer>

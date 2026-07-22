@@ -15,6 +15,11 @@ function Portfolio() {
         <meta property="og:description" content="A collection of full-stack projects by Felipe Cantu Jr — React, JavaScript, and Figma." />
         <meta property="og:url" content="https://felipecantujr.com/portfolio" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://felipecantujr.com/images/felipe.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Portfolio | Felipe Cantu Jr" />
+        <meta name="twitter:description" content="A collection of full-stack projects by Felipe Cantu Jr — React, JavaScript, and Figma." />
+        <meta name="twitter:image" content="https://felipecantujr.com/images/felipe.jpg" />
       </Helmet>
 
       <BackgroundOverlay>

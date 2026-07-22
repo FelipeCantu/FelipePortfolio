@@ -21,25 +21,28 @@ export const Form = () => {
             const userEmail = formElements.user_email.value;
             const userMessage = formElements.message.value;
 
+            const serviceId = process.env.REACT_APP_EMAILJS_SERVICE_ID;
+            const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY;
+
             // 1. Send the main email (to you)
             await emailjs.sendForm(
-                'service_qergbjn', 
-                'template_purd9i6', 
-                form.current, 
-                'sfy94T_0JRB3qPReX'
+                serviceId,
+                process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
+                form.current,
+                publicKey
             );
 
             // 2. Send thank you email to the user
             await emailjs.send(
-                'service_qergbjn',
-                'template_u6wlz5m',
+                serviceId,
+                process.env.REACT_APP_EMAILJS_TEMPLATE_REPLY_ID,
                 {
                     to_email: userEmail,
                     to_name: userName,
                     from_name: 'Felipe Cantu Jr',
                     user_message: userMessage
                 },
-                'sfy94T_0JRB3qPReX'
+                publicKey
             );
 
             console.log('Emails sent successfully!');
