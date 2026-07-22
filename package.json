@@ -29,7 +29,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "cd portfoliosanity && npm install && npm run build -- ../public/studio && cd .. && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

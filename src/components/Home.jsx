@@ -8,17 +8,24 @@ function Home() {
   return (
     <>
       <Helmet>
-        <title>Felipe Cantu Jr — Full Stack Web Developer</title>
-        <meta name="description" content="Full Stack Developer based in Dallas, TX. I build fast, modern web apps and websites for businesses — React, Node.js, and clean design. Available for freelance." />
+        <title>Felipe Cantu Jr — Full Stack Web Developer in Dallas, TX</title>
+        <meta name="description" content="Full-stack developer in Dallas, TX. I build fast, modern web apps and websites that help businesses grow — React, Node.js, and clean design. Available for freelance." />
         <link rel="canonical" href="https://felipecantujr.com/" />
         <meta property="og:title" content="Felipe Cantu Jr — Full Stack Web Developer" />
-        <meta property="og:description" content="Full Stack Developer based in Dallas, TX. Building modern web apps. Available for freelance projects." />
+        <meta property="og:description" content="Full-stack developer in Dallas, TX helping businesses launch fast, modern websites. Available for freelance." />
         <meta property="og:url" content="https://felipecantujr.com/" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://felipecantujr.com/images/felipe.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Felipe Cantu Jr — Full Stack Web Developer" />
+        <meta name="twitter:description" content="Full-stack developer in Dallas, TX. Building fast, modern web apps for businesses." />
+        <meta name="twitter:image" content="https://felipecantujr.com/images/felipe.jpg" />
       </Helmet>
-      <Main>
+      <PageWrapper>
+      <HeroSection>
         <BackgroundImage src="images/mainbg.jpg" alt="Background" />
         <Wrapper>
+          <OrbitContainer>
           {/* Enhanced Pulsing Background Circles */}
           <PulsingCircles>
             <PulseCircle size="200px" border="2px solid rgba(247, 171, 10, 0.5)" animation="ping" />
@@ -91,6 +98,7 @@ function Home() {
               <OrbitDot delay="4s" radiusX="150px" radiusY="100px" duration="22s" size="6px" glow="0 0 10px rgba(0, 191, 255, 0.8)" />
             </OrbitingElements>
           </OrbitBackground>
+          </OrbitContainer>
 
           <ContentContainer>
             <AvatarContainer>
@@ -98,11 +106,14 @@ function Home() {
             </AvatarContainer>
 
             <TextContent>
-              <Title>Full Stack Web Developer</Title>
+              <Title>I Build Web Apps That Grow Your Business</Title>
               <Description>
-                As a Full Stack Developer, I am a highly motivated tech enthusiast and skilled problem solver with expertise in both front-end and back-end development.
+                Full-stack developer based in Dallas, TX. I help businesses and entrepreneurs launch fast, polished websites that attract clients and deliver real results.
               </Description>
-              <LearnMoreLink to="/about" onClick={() => trackEvent('cta_click', { label: 'learn_more' })}>Learn more &nbsp;→</LearnMoreLink>
+              <CTAGroup>
+                <PrimaryButton to="/portfolio" onClick={() => trackEvent('cta_click', { label: 'view_work' })}>View My Work</PrimaryButton>
+                <SecondaryButton to="/get-started" onClick={() => trackEvent('cta_click', { label: 'start_project' })}>Start a Project &nbsp;→</SecondaryButton>
+              </CTAGroup>
             </TextContent>
           </ContentContainer>
           
@@ -121,7 +132,8 @@ function Home() {
             </IconLink>
           </SocialIcons>
         </Wrapper>
-      </Main>
+      </HeroSection>
+      </PageWrapper>
     </>
   );
 }
@@ -219,11 +231,22 @@ const backgroundZoom = keyframes`
 `;
 
 // Styled Components
-const Main = styled.main`
+const PageWrapper = styled.div`
+  width: 100%;
+`;
+
+const HeroSection = styled.section`
   position: relative;
   width: 100%;
   height: 100vh;
+`;
+
+const OrbitContainer = styled.div`
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 `;
 
 const BackgroundImage = styled.img`
@@ -443,22 +466,48 @@ const Description = styled.p`
   animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.9s backwards;
 `;
 
-const LearnMoreLink = styled(Link)`
-  /*
-   * Replaced float:right (broken in a flex column context) with
-   * align-self so it naturally left-aligns under the description
-   * text while still sitting at the end of the flex column flow.
-   */
+const CTAGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 1.05s backwards;
+`;
+
+const PrimaryButton = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.65rem 1.5rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: white;
+  text-decoration: none;
+  background: var(--color-accent, #0ea5e9);
+  border: 1.5px solid var(--color-accent, #0ea5e9);
+  border-radius: 9999px;
+  transition: background 0.22s ease;
+
+  &:hover {
+    background: #0284c7;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent, #0ea5e9);
+    outline-offset: 3px;
+  }
+`;
+
+const SecondaryButton = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  align-self: flex-start;
-  margin-top: 1.5rem;
-  padding: 0.55rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   color: var(--color-accent-light, #38bdf8);
   text-decoration: none;
   border: 1.5px solid rgba(14, 165, 233, 0.38);
@@ -477,6 +526,29 @@ const LearnMoreLink = styled(Link)`
     outline: 2px solid var(--color-accent, #0ea5e9);
     outline-offset: 3px;
   }
+`;
+
+const AvailabilityBadge = styled.p`
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+  animation: ${slideInUp} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s backwards;
+`;
+
+const AvailabilityDot = styled.span`
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.7);
+  flex-shrink: 0;
 `;
 
 const SocialIcons = styled.div`
