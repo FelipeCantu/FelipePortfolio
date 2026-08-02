@@ -1,5 +1,1 @@
-{
-  "routes": [
-    { "src": "/studio(.*)", "dest": "/studio/index.html" }
-  ]
-}
+{}
