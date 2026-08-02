@@ -23,7 +23,7 @@ function Home() {
       </Helmet>
       <PageWrapper>
       <HeroSection>
-        <BackgroundImage src="images/mainbg.jpg" alt="Background" />
+        <BackgroundImage src="images/mainbg.jpg" alt="" role="presentation" />
         <Wrapper>
           <OrbitContainer>
           {/* Enhanced Pulsing Background Circles */}
@@ -118,16 +118,16 @@ function Home() {
           </ContentContainer>
           
           <SocialIcons>
-            <IconLink href="https://github.com/FelipeCantu" target="_blank" onClick={() => trackEvent('social_click', { platform: 'github' })}>
+            <IconLink href="https://github.com/FelipeCantu" target="_blank" rel="noopener noreferrer" aria-label="GitHub profile" onClick={() => trackEvent('social_click', { platform: 'github' })}>
               <FaGithub />
             </IconLink>
-            <IconLink href="https://linkedin.com/in/felipe-cantu-jr" target="_blank" onClick={() => trackEvent('social_click', { platform: 'linkedin' })}>
+            <IconLink href="https://linkedin.com/in/felipe-cantu-jr" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile" onClick={() => trackEvent('social_click', { platform: 'linkedin' })}>
               <FaLinkedin />
             </IconLink>
-            <IconLink href="https://instagram.com/son_of_robot_" target="_blank" onClick={() => trackEvent('social_click', { platform: 'instagram' })}>
+            <IconLink href="https://instagram.com/son_of_robot_" target="_blank" rel="noopener noreferrer" aria-label="Instagram profile" onClick={() => trackEvent('social_click', { platform: 'instagram' })}>
               <FaInstagram />
             </IconLink>
-            <IconLink href="https://facebook.com/profile.php?id=100064306140476" target="_blank" onClick={() => trackEvent('social_click', { platform: 'facebook' })}>
+            <IconLink href="https://facebook.com/profile.php?id=100064306140476" target="_blank" rel="noopener noreferrer" aria-label="Facebook profile" onClick={() => trackEvent('social_click', { platform: 'facebook' })}>
               <FaFacebook />
             </IconLink>
           </SocialIcons>
