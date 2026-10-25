@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
+import { CONTACT_EMAILJS } from '@/lib/emailjs'
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -30,13 +31,12 @@ export default function ContactForm() {
       const userEmail = formElements.user_email.value
       const userMessage = formElements.message.value
 
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+      const { serviceId, publicKey } = CONTACT_EMAILJS
 
       // 1. Send the main email (to you)
       await emailjs.sendForm(
         serviceId,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+        CONTACT_EMAILJS.templateId,
         form.current,
         publicKey
       )
@@ -44,7 +44,7 @@ export default function ContactForm() {
       // 2. Send thank-you email to the user
       await emailjs.send(
         serviceId,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_REPLY_ID!,
+        CONTACT_EMAILJS.replyTemplateId,
         {
           to_email: userEmail,
           to_name: userName,

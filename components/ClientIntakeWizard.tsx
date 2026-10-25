@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
+import { INTAKE_EMAILJS } from '@/lib/emailjs'
 import {
   FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart,
   FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
@@ -486,10 +487,10 @@ export default function ClientIntakeWizard() {
     setError('')
     try {
       await emailjs.send(
-        process.env.NEXT_PUBLIC_INTAKE_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_INTAKE_EMAILJS_TEMPLATE_ID!,
+        INTAKE_EMAILJS.serviceId,
+        INTAKE_EMAILJS.templateId,
         { user_name: data.name, user_email: data.email, message: buildEmailMessage(data) },
-        process.env.NEXT_PUBLIC_INTAKE_EMAILJS_PUBLIC_KEY!
+        INTAKE_EMAILJS.publicKey
       )
       setSubmitted(true)
       trackEvent('get_started_submit', { project_type: data.projectType })
