@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook, FaMapPin, FaPhoneAlt, FaArrowRight } from 'react-icons/fa'
 import { MdEmail } from 'react-icons/md'
 import { trackEvent } from '@/lib/analytics'
@@ -9,283 +10,136 @@ import ContactForm from './ContactForm'
 // ─── Data ────────────────────────────────────────────────────────────────────
 
 const contactInfo = [
-  { icon: FaMapPin,   label: 'Address', value: 'Dallas, TX',               href: null },
-  { icon: FaPhoneAlt, label: 'Phone',   value: '817-999-7951',             href: 'tel:817-999-7951' },
-  { icon: MdEmail,    label: 'Email',   value: 'cantujr.felipe@gmail.com', href: 'mailto:cantujr.felipe@gmail.com' },
+  { icon: FaMapPin, label: 'Address', value: 'Dallas, TX', href: null },
+  { icon: FaPhoneAlt, label: 'Phone', value: '817-999-7951', href: 'tel:817-999-7951' },
+  { icon: MdEmail, label: 'Email', value: 'cantujr.felipe@gmail.com', href: 'mailto:cantujr.felipe@gmail.com' },
 ]
 
 const socialLinks = [
-  { href: 'https://github.com/FelipeCantu',                           icon: FaGithub,   label: 'GitHub',    color: '#6e5494' },
-  { href: 'https://www.linkedin.com/in/felipe-cantu-jr/',             icon: FaLinkedin, label: 'LinkedIn',  color: '#0077b5' },
-  { href: 'https://www.instagram.com/son_of_robot_/',                 icon: FaInstagram,label: 'Instagram', color: '#e4405f' },
-  { href: 'https://www.facebook.com/profile.php?id=100064306140476',  icon: FaFacebook, label: 'Facebook',  color: '#1877f2' },
+  { href: 'https://github.com/FelipeCantu', icon: FaGithub, label: 'GitHub' },
+  { href: 'https://www.linkedin.com/in/felipe-cantu-jr/', icon: FaLinkedin, label: 'LinkedIn' },
+  { href: 'https://www.instagram.com/son_of_robot_/', icon: FaInstagram, label: 'Instagram' },
+  { href: 'https://www.facebook.com/profile.php?id=100064306140476', icon: FaFacebook, label: 'Facebook' },
 ]
+
+// ─── Motion ──────────────────────────────────────────────────────────────────
+
+const EASE = [0.22, 1, 0.36, 1] as const
+const stack: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } }
+const rise: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: EASE } },
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ContactContent() {
   return (
-    <>
-      {/* Shimmer sweep keyframe for contact cards */}
-      <style>{`
-        @keyframes contactShimmer {
-          0%   { left: -100%; }
-          100% { left: 100%; }
-        }
-      `}</style>
+    <div className="container-page page-top pb-section">
+      <motion.div variants={stack} initial="hidden" animate="show">
+        <motion.header variants={rise} className="mx-auto mb-10 max-w-2xl text-center md:mb-14">
+          <p className="eyebrow">Contact</p>
+          <h1 className="mt-3 text-h1 text-fg">Say hello</h1>
+          <p className="lead mt-3">
+            Have a question or just want to connect? Send me a message and I'll get back to you soon.
+          </p>
+        </motion.header>
 
-      <main
-        className="relative min-h-screen w-full flex items-center justify-center"
-        style={{
-          padding: '1rem',
-          paddingTop: 'calc(var(--navbar-h, 60px) + 1rem)',
-        }}
-      >
-        {/* Fixed background */}
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div
-            className="w-full h-full"
-            style={{
-              backgroundImage: "url('/images/mainbg.jpg')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          />
-          <div className="absolute inset-0 bg-black/75" />
-        </div>
+        <div className="grid items-start gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-8">
+          {/* ── Form ── */}
+          <motion.section variants={rise} aria-labelledby="contact-form-title" className="card p-6 sm:p-8 lg:p-10">
+            <h2 id="contact-form-title" className="text-h3 text-fg">
+              Send a message
+            </h2>
 
-        {/* Content */}
-        <div className="relative z-10 w-full max-w-[1400px] mx-auto">
-          <div
-            className="grid gap-0 rounded-xl lg:rounded-[20px] overflow-hidden border border-white/10 shadow-[0_25px_50px_rgba(0,0,0,0.4)]"
-            style={{
-              gridTemplateColumns: '1fr',
-              background: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(20px)',
-            }}
-          >
-            <style>{`
-              @media (min-width: 1024px) {
-                .contact-grid { grid-template-columns: 1fr 1fr !important; }
-              }
-            `}</style>
-
-            {/* ── Form section ── */}
-            <section
-              className="contact-grid p-6 md:p-8 lg:p-10 xl:p-12"
-              style={{ background: 'rgba(255,255,255,0.03)' }}
-            >
-              <div className="mb-6 md:mb-8">
-                <h1
-                  className="text-white mb-3 leading-[1.1]"
-                  style={{
-                    fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)",
-                    fontSize: 'clamp(1.5rem,3vw,2.25rem)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Say Hello
-                </h1>
-                <p
-                  className="text-white/75 leading-[1.7]"
-                  style={{
-                    fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                    fontSize: 'clamp(0.9rem,1.5vw,1.05rem)',
-                    fontWeight: 300,
-                  }}
-                >
-                  Have a question or just want to connect? Send me a message and I'll get back to you soon.
-                </p>
-
-                {/* Collab block */}
-                <div className="mt-5 pt-[1.1rem] border-t border-white/[0.08]">
-                  <h2
-                    className="text-white m-0 mb-[0.45rem] tracking-[-0.02em]"
-                    style={{
-                      fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)",
-                      fontSize: 'clamp(1rem,2vw,1.2rem)',
-                      fontWeight: 700,
-                    }}
-                  >
-                    Let's Collaborate
-                  </h2>
-                  <p
-                    className="text-white/55 leading-[1.65] m-0 mb-3"
-                    style={{
-                      fontSize: '0.875rem',
-                      fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                    }}
-                  >
-                    Open to working with other developers — if you're building something interesting, I'd love to hear about it.
-                  </p>
-                  <p className="m-0">
-                    <Link
-                      href="/get-started"
-                      onClick={() => trackEvent('cta_click', { label: 'start_project_contact' })}
-                      className="inline-block no-underline font-semibold text-[0.9rem] transition-[color,text-decoration-color] duration-200"
-                      style={{
-                        fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                        color: 'var(--color-accent-light, #38bdf8)',
-                        textDecoration: 'underline',
-                        textUnderlineOffset: '3px',
-                        textDecorationColor: 'rgba(14,165,233,0.4)',
-                      }}
-                      onMouseEnter={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'white'
-                        el.style.textDecorationColor = 'rgba(14,165,233,0.9)'
-                      }}
-                      onMouseLeave={(e) => {
-                        const el = e.currentTarget as HTMLElement
-                        el.style.color = 'var(--color-accent-light, #38bdf8)'
-                        el.style.textDecorationColor = 'rgba(14,165,233,0.4)'
-                      }}
-                    >
-                      Start a project <FaArrowRight style={{ display: 'inline', verticalAlign: 'middle', fontSize: '0.8em' }} />
-                    </Link>
-                  </p>
-                </div>
-              </div>
-
+            <div className="mt-6">
               <ContactForm />
-            </section>
+            </div>
 
-            {/* ── Info section ── */}
-            <section
-              className="p-6 md:p-8 lg:p-10 xl:p-12 flex flex-col text-white"
-              style={{ background: 'rgba(0,0,0,0.4)' }}
-            >
-              <div className="mb-6 md:mb-8">
-                <h2
-                  className="text-white mb-3 leading-[1.1] relative pb-4"
-                  style={{
-                    fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)",
-                    fontSize: 'clamp(1.5rem,3vw,2.25rem)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  Find Me Here
-                  {/* Accent underline */}
-                  <span
-                    className="absolute bottom-0 left-0 w-12 h-[3px] rounded-sm"
-                    style={{ background: 'linear-gradient(90deg, var(--color-accent,#0ea5e9), var(--color-accent-light,#38bdf8))' }}
-                  />
-                </h2>
-                <p
-                  className="text-white/65 leading-[1.7]"
-                  style={{
-                    fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                    fontSize: 'clamp(0.9rem,1.5vw,1.05rem)',
-                    fontWeight: 300,
-                  }}
-                >
-                  Prefer a direct line? Here's where you can reach me.
-                </p>
-              </div>
+            {/* Collab block */}
+            <div className="mt-8 border-t border-line/15 pt-6">
+              <h3 className="text-lg text-fg">Let's collaborate</h3>
+              <p className="mb-3 mt-2 text-small text-muted">
+                Open to working with other developers. If you're building something interesting, I'd love to hear about
+                it.
+              </p>
+              <Link
+                href="/get-started"
+                onClick={() => trackEvent('cta_click', { label: 'start_project_contact' })}
+                className="group inline-flex items-center gap-2 text-small font-semibold text-accent-light underline decoration-accent/40 underline-offset-4 transition-colors hover:text-white hover:decoration-accent"
+              >
+                Start a project
+                <FaArrowRight
+                  aria-hidden="true"
+                  className="text-[0.8em] transition-transform duration-200 group-hover:translate-x-1"
+                />
+              </Link>
+            </div>
+          </motion.section>
 
-              {/* Contact cards */}
-              <div className="flex flex-col gap-4 md:gap-5 mb-8">
-                {contactInfo.map((item, index) => {
+          {/* ── Info ── */}
+          <motion.section variants={rise} aria-labelledby="contact-info-title" className="flex flex-col gap-6">
+            <div className="card p-6 sm:p-8">
+              <h2 id="contact-info-title" className="text-h3 text-fg">
+                Find me here
+              </h2>
+              <p className="mt-2 text-small text-muted">Prefer a direct line? Here's where you can reach me.</p>
+
+              <ul className="m-0 mt-6 flex list-none flex-col gap-3 p-0">
+                {contactInfo.map((item) => {
                   const Icon = item.icon
-                  const card = (
-                    <div
-                      className="flex items-start gap-4 px-5 py-4 rounded-xl bg-white/[0.05] border border-white/[0.08] relative overflow-hidden transition-[background,border-color,box-shadow] duration-300 group"
-                      style={{ cursor: item.href ? 'pointer' : 'default' }}
-                    >
-                      {/* Shimmer on hover */}
-                      <span
-                        className="absolute top-0 -left-full w-full h-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)', animation: 'none' }}
-                        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.animation = 'contactShimmer 0.55s ease forwards' }}
-                      />
-                      <div className="flex-shrink-0 mt-[0.125rem] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[5deg]">
-                        <Icon
-                          className="w-[1.125rem] h-[1.125rem] sm:w-5 sm:h-5 transition-[color] duration-300"
-                          style={{ color: 'var(--color-accent-light, #38bdf8)' }}
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3
-                          className="mb-[0.35rem] uppercase tracking-[0.12em] transition-[color] duration-300"
-                          style={{
-                            fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                            fontSize: '0.72rem',
-                            fontWeight: 700,
-                            color: 'var(--color-accent-light, #38bdf8)',
-                          }}
-                        >
-                          {item.label}
-                        </h3>
-                        <p className="text-white text-[0.9rem] sm:text-base leading-[1.5] m-0 break-words">
-                          {item.value}
-                        </p>
-                      </div>
-                    </div>
+                  const content = (
+                    <>
+                      <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-control border border-accent/25 bg-accent/10 text-accent-light transition-colors duration-300 group-hover:bg-accent/20">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="eyebrow block !text-[0.7rem]">{item.label}</span>
+                        <span className="mt-0.5 block break-words text-fg">{item.value}</span>
+                      </span>
+                    </>
                   )
-
-                  return item.href ? (
-                    <a
-                      key={index}
-                      href={item.href}
-                      aria-label={`${item.label}: ${item.value}`}
-                      className="block no-underline text-inherit transition-transform duration-300 hover:-translate-y-[3px]"
-                    >
-                      {card}
-                    </a>
-                  ) : (
-                    <div key={index} className="transition-transform duration-300 hover:-translate-y-[3px]">
-                      {card}
-                    </div>
+                  const base =
+                    'group flex items-center gap-4 rounded-card border border-line/15 bg-white/[0.03] px-4 py-3.5 no-underline'
+                  return (
+                    <li key={item.label}>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          className={`${base} transition-[border-color,background-color,transform] duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:bg-accent/[0.06]`}
+                        >
+                          {content}
+                        </a>
+                      ) : (
+                        <div className={base}>{content}</div>
+                      )}
+                    </li>
                   )
                 })}
-              </div>
+              </ul>
+            </div>
 
-              {/* Social links */}
-              <div className="mt-auto pt-6 md:pt-8 border-t border-white/10">
-                <h3 className="text-base sm:text-lg font-semibold text-white/90 mb-5 md:mb-6">
-                  Connect With Me
-                </h3>
-                <div className="flex gap-4 md:gap-5 flex-wrap p-2">
-                  {socialLinks.map((social, index) => {
-                    const Icon = social.icon
-                    return (
-                      <a
-                        key={index}
-                        href={social.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={social.label}
-                        className="relative flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-full overflow-hidden border border-white/10 text-white transition-all duration-[400ms] cubic-bezier(0.25,0.8,0.25,1) hover:-translate-y-1 hover:scale-105 hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)]"
-                        style={{ background: 'rgba(255,255,255,0.1)' }}
-                        onMouseEnter={(e) => {
-                          const el = e.currentTarget as HTMLElement
-                          el.style.borderColor = social.color
-                          // Reveal the background pseudo-fill via inline bg
-                          el.style.background = social.color
-                        }}
-                        onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLElement
-                          el.style.borderColor = 'rgba(255,255,255,0.1)'
-                          el.style.background = 'rgba(255,255,255,0.1)'
-                        }}
-                      >
-                        <span className="relative z-[2] flex items-center justify-center w-full h-full">
-                          <Icon
-                            className="w-4 h-4 md:w-[1.125rem] md:h-[1.125rem] transition-all duration-[400ms]"
-                          />
-                        </span>
-                      </a>
-                    )
-                  })}
-                </div>
-              </div>
-            </section>
-          </div>
+            <div className="card p-6 sm:p-8">
+              <h2 className="text-lg text-fg">Connect with me</h2>
+              <ul className="m-0 mt-4 flex list-none flex-wrap gap-3 p-0">
+                {socialLinks.map(({ href, icon: Icon, label }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="flex h-12 w-12 items-center justify-center rounded-full border border-line/25 bg-white/[0.04] text-muted transition-[color,border-color,background-color,transform] duration-300 hover:-translate-y-1 hover:border-accent-light/60 hover:bg-accent/10 hover:text-fg"
+                    >
+                      <Icon className="h-[1.1rem] w-[1.1rem]" aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </motion.section>
         </div>
-      </main>
-    </>
+      </motion.div>
+    </div>
   )
 }

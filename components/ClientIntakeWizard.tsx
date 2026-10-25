@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
@@ -9,6 +9,7 @@ import {
   FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart,
   FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
 } from 'react-icons/fa'
+import { FiAlertCircle } from 'react-icons/fi'
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -38,9 +39,9 @@ const TOTAL_STEPS = 5
 // ─── Framer Motion variants ───────────────────────────────────────────────────
 
 const slideVariants = {
-  enter:  (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
-  center: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 30 } },
-  exit:   (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0, transition: { duration: 0.18 } }),
+  enter:  (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 300, damping: 30 } },
+  exit:   (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0, transition: { duration: 0.16 } }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -51,6 +52,16 @@ interface WizardData {
   description: string; budget: string; timeline: string
   features: string[]; techNotes: string
   preferredDays: string[]; preferredTime: string; additionalNotes: string
+}
+
+type SetField = (f: keyof WizardData, v: string) => void
+type ToggleItem = (f: keyof WizardData, v: string) => void
+
+interface StepProps {
+  data: WizardData
+  set: SetField
+  /** True after the visitor tried to continue with required fields missing. */
+  showErrors: boolean
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -101,9 +112,8 @@ function isStepValid(step: number, data: WizardData): boolean {
 
 function ProgressBar({ step }: { step: number }) {
   return (
-    <div
-      className="flex items-start justify-center px-6 pt-6 pb-7 gap-0"
-      role="list"
+    <ol
+      className="m-0 mb-8 flex list-none items-start justify-center gap-0 p-0"
       aria-label="Wizard progress"
     >
       {STEP_LABELS.map((label, idx) => {
@@ -111,60 +121,83 @@ function ProgressBar({ step }: { step: number }) {
         const completed = num < step
         const active    = num === step
         return (
-          <div key={num} className="contents">
+          <li key={num} className="contents">
             {idx > 0 && (
-              <div
-                className="h-0.5 flex-1 min-w-5 max-w-20 mt-[15px] transition-[background] duration-[400ms]"
-                style={{ background: completed ? '#3498db' : 'rgba(255,255,255,0.1)' }}
+              <span
+                className={`mt-[15px] h-0.5 min-w-4 max-w-20 flex-1 rounded-full transition-colors duration-[400ms] ${completed ? 'bg-accent' : 'bg-line/25'}`}
                 aria-hidden="true"
               />
             )}
-            <div
-              className="flex flex-col items-center gap-[0.45rem] flex-shrink-0 p-1"
-              role="listitem"
+            <span
+              className="flex flex-shrink-0 flex-col items-center gap-2 p-1"
               aria-current={active ? 'step' : undefined}
             >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all duration-300"
-                aria-hidden="true"
-                style={
+              <span
+                className={[
+                  'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300',
                   completed
-                    ? { background: '#3498db', color: 'white' }
+                    ? 'bg-accent text-accent-ink'
                     : active
-                    ? { background: '#3498db', color: 'white', border: '2px solid rgba(255,255,255,0.5)', boxShadow: 'inset 0 0 0 2px #3498db' }
-                    : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)' }
-                }
+                    ? 'bg-accent text-accent-ink ring-4 ring-accent/25'
+                    : 'border border-line/30 bg-white/[0.04] text-subtle',
+                ].join(' ')}
+                aria-hidden="true"
               >
                 {completed ? <FaCheck size={10} /> : num}
-              </div>
+              </span>
+              {/* Visible label on sm+, always available to screen readers */}
               <span
-                className="text-[0.6rem] sm:text-[0.65rem] font-medium tracking-[0.04em] text-center whitespace-nowrap transition-[color] duration-300 max-[479px]:hidden"
-                style={{
-                  color: active ? '#3498db' : completed ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.3)',
-                }}
+                className={[
+                  'whitespace-nowrap text-center text-[0.72rem] font-medium tracking-[0.02em] transition-colors duration-300 max-[479px]:sr-only',
+                  active ? 'text-accent-light' : completed ? 'text-muted' : 'text-subtle',
+                ].join(' ')}
               >
                 {label}
+                {active && <span className="sr-only"> (current step)</span>}
               </span>
-            </div>
-          </div>
+            </span>
+          </li>
         )
       })}
+    </ol>
+  )
+}
+
+// ─── Step shell ───────────────────────────────────────────────────────────────
+
+function StepHeading({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div>
+      <h2 className="text-h3 text-fg" tabIndex={-1} data-step-heading>{title}</h2>
+      <p className="mt-1.5 text-small text-muted">{sub}</p>
     </div>
+  )
+}
+
+function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <p id={id} className="field-error" role="alert">
+      <FiAlertCircle size={15} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+      {children}
+    </p>
   )
 }
 
 // ─── Step 1 ───────────────────────────────────────────────────────────────────
 
-function Step1({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: string) => void }) {
+function Step1({ data, set, showErrors }: StepProps) {
+  const nameErr  = showErrors && data.name.trim() === ''
+  const emailErr = showErrors && data.email.trim() === ''
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-white m-0 leading-[1.25]">About You</h2>
-      <p className="text-[0.875rem] sm:text-[0.9rem] text-white/55 -mt-3 leading-[1.5] m-0">Let's start with some basic information.</p>
+    <div className="flex flex-col gap-6">
+      <StepHeading title="About You" sub="Let's start with some basic information." />
       <FieldGroup label="Full Name" id="wizard-name" required>
-        <FieldInput id="wizard-name" type="text" placeholder="e.g. Jane Smith" value={data.name} onChange={e => set('name', e.target.value)} autoComplete="name" required />
+        <FieldInput id="wizard-name" type="text" placeholder="e.g. Jane Smith" value={data.name} onChange={e => set('name', e.target.value)} autoComplete="name" required invalid={nameErr} />
+        {nameErr && <FieldError id="wizard-name-error">Please enter your name.</FieldError>}
       </FieldGroup>
       <FieldGroup label="Email Address" id="wizard-email" required>
-        <FieldInput id="wizard-email" type="email" placeholder="e.g. jane@company.com" value={data.email} onChange={e => set('email', e.target.value)} autoComplete="email" required />
+        <FieldInput id="wizard-email" type="email" placeholder="e.g. jane@company.com" value={data.email} onChange={e => set('email', e.target.value)} autoComplete="email" required invalid={emailErr} />
+        {emailErr && <FieldError id="wizard-email-error">Please enter your email address.</FieldError>}
       </FieldGroup>
       <FieldGroup label="Company / Organization" id="wizard-company" optional>
         <FieldInput id="wizard-company" type="text" placeholder="e.g. Acme Inc." value={data.company} onChange={e => set('company', e.target.value)} autoComplete="organization" />
@@ -175,48 +208,50 @@ function Step1({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: 
 
 // ─── Step 2 ───────────────────────────────────────────────────────────────────
 
-function Step2({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: string) => void }) {
+function Step2({ data, set, showErrors }: StepProps) {
+  const missing = showErrors && data.projectType === ''
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-white m-0 leading-[1.25]">What Are You Building?</h2>
-      <p className="text-[0.875rem] sm:text-[0.9rem] text-white/55 -mt-3 leading-[1.5] m-0">Select the option that best describes your project.</p>
-      <div
-        className="grid gap-3 overflow-visible p-1 -m-1"
-        style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}
-        role="radiogroup"
-        aria-label="Project type"
-      >
-        <style>{`@media (min-width: 600px) { .type-grid { grid-template-columns: repeat(3, 1fr) !important; } }`}</style>
-        {PROJECT_TYPES.map(({ id, icon: Icon, label, sub }) => {
-          const selected = data.projectType === id
-          return (
-            <div
-              key={id}
-              className="type-grid flex flex-col items-center text-center gap-2 p-4 px-3 rounded-[10px] cursor-pointer transition-all duration-200 select-none hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-              style={{
-                border: `1.5px solid ${selected ? '#3498db' : 'rgba(255,255,255,0.08)'}`,
-                background: selected ? 'rgba(52,152,219,0.12)' : 'rgba(255,255,255,0.04)',
-              }}
-              onClick={() => set('projectType', id)}
-              role="radio"
-              aria-checked={selected}
-              tabIndex={0}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); set('projectType', id) } }}
-            >
-              <div
-                className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[1.1rem] transition-all duration-200"
-                style={{
-                  background: selected ? 'linear-gradient(135deg, rgba(52,152,219,0.3), rgba(155,89,182,0.3))' : 'rgba(255,255,255,0.07)',
-                  color: selected ? '#3498db' : 'rgba(255,255,255,0.55)',
-                }}
+    <div className="flex flex-col gap-6">
+      <StepHeading title="What Are You Building?" sub="Select the option that best describes your project." />
+      <div>
+        <div
+          className="grid grid-cols-2 gap-3 min-[600px]:grid-cols-3"
+          role="radiogroup"
+          aria-label="Project type"
+          aria-describedby={missing ? 'wizard-type-error' : undefined}
+        >
+          {PROJECT_TYPES.map(({ id, icon: Icon, label, sub }) => {
+            const selected = data.projectType === id
+            return (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => set('projectType', id)}
+                className={[
+                  'flex cursor-pointer select-none flex-col items-center gap-2 rounded-card border-[1.5px] px-3 py-4 text-center',
+                  'transition-[transform,border-color,background-color] duration-200 hover:-translate-y-0.5',
+                  selected
+                    ? 'border-accent-light bg-accent/[0.12]'
+                    : missing
+                    ? 'border-danger/50 bg-white/[0.03] hover:border-accent-light/60'
+                    : 'border-line/20 bg-white/[0.03] hover:border-accent-light/50 hover:bg-white/[0.06]',
+                ].join(' ')}
               >
-                <Icon />
-              </div>
-              <span className="text-[0.78rem] font-semibold text-white/90 leading-[1.2]">{label}</span>
-              <span className="text-[0.68rem] text-white/38 leading-[1.3]">{sub}</span>
-            </div>
-          )
-        })}
+                <span
+                  className={`flex h-10 w-10 items-center justify-center rounded-control text-[1.1rem] transition-colors duration-200 ${selected ? 'bg-accent/25 text-accent-light' : 'bg-white/[0.07] text-muted'}`}
+                  aria-hidden="true"
+                >
+                  <Icon />
+                </span>
+                <span className="text-[0.82rem] font-semibold leading-tight text-fg">{label}</span>
+                <span className="text-[0.74rem] leading-snug text-subtle">{sub}</span>
+              </button>
+            )
+          })}
+        </div>
+        {missing && <FieldError id="wizard-type-error">Please choose a project type.</FieldError>}
       </div>
     </div>
   )
@@ -224,19 +259,24 @@ function Step2({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: 
 
 // ─── Step 3 ───────────────────────────────────────────────────────────────────
 
-function Step3({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: string) => void }) {
+function Step3({ data, set, showErrors }: StepProps) {
+  const descErr     = showErrors && data.description.trim() === ''
+  const budgetErr   = showErrors && data.budget === ''
+  const timelineErr = showErrors && data.timeline === ''
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-white m-0 leading-[1.25]">Project Scope</h2>
-      <p className="text-[0.875rem] sm:text-[0.9rem] text-white/55 -mt-3 leading-[1.5] m-0">Help me understand what you need built.</p>
+    <div className="flex flex-col gap-6">
+      <StepHeading title="Project Scope" sub="Help me understand what you need built." />
       <FieldGroup label="Project Description" id="wizard-desc" required>
-        <FieldTextarea id="wizard-desc" rows={4} placeholder="Describe what you want to build, who it's for, and what problem it solves…" value={data.description} onChange={e => set('description', e.target.value)} required />
+        <FieldTextarea id="wizard-desc" rows={4} placeholder="Describe what you want to build, who it's for, and what problem it solves…" value={data.description} onChange={e => set('description', e.target.value)} required invalid={descErr} />
+        {descErr && <FieldError id="wizard-desc-error">Please describe your project.</FieldError>}
       </FieldGroup>
       <FieldGroup label="Budget Range" required>
         <PillRow options={BUDGET_OPTIONS} selected={data.budget} onSelect={v => set('budget', v)} radioGroup aria-label="Budget range" />
+        {budgetErr && <FieldError id="wizard-budget-error">Please select a budget range.</FieldError>}
       </FieldGroup>
       <FieldGroup label="Timeline" required>
         <PillRow options={TIMELINE_OPTIONS} selected={data.timeline} onSelect={v => set('timeline', v)} radioGroup aria-label="Timeline" />
+        {timelineErr && <FieldError id="wizard-timeline-error">Please select a timeline.</FieldError>}
       </FieldGroup>
     </div>
   )
@@ -244,33 +284,32 @@ function Step3({ data, set }: { data: WizardData; set: (f: keyof WizardData, v: 
 
 // ─── Step 4 ───────────────────────────────────────────────────────────────────
 
-function Step4({ data, set, toggleArrayItem }: { data: WizardData; set: (f: keyof WizardData, v: string) => void; toggleArrayItem: (f: keyof WizardData, v: string) => void }) {
+function Step4({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> & { toggleArrayItem: ToggleItem }) {
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-white m-0 leading-[1.25]">Key Requirements</h2>
-      <p className="text-[0.875rem] sm:text-[0.9rem] text-white/55 -mt-3 leading-[1.5] m-0">Select every feature or capability your project needs.</p>
+    <div className="flex flex-col gap-6">
+      <StepHeading title="Key Requirements" sub="Select every feature or capability your project needs." />
       <FieldGroup label="Features & Capabilities">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Feature selection">
           {FEATURE_OPTIONS.map(feat => {
             const active = data.features.includes(feat)
             return (
-              <div
+              <button
                 key={feat}
-                className="inline-flex items-center gap-[0.3rem] px-[0.85rem] py-[0.4rem] rounded-[6px] text-[0.78rem] font-medium cursor-pointer select-none transition-all duration-[180ms] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-                style={{
-                  border: `1.5px solid ${active ? 'rgba(52,152,219,0.6)' : 'rgba(255,255,255,0.1)'}`,
-                  background: active ? 'rgba(52,152,219,0.15)' : 'rgba(255,255,255,0.04)',
-                  color: active ? '#5dade2' : 'rgba(255,255,255,0.6)',
-                }}
-                onClick={() => toggleArrayItem('features', feat)}
+                type="button"
                 role="checkbox"
                 aria-checked={active}
-                tabIndex={0}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleArrayItem('features', feat) } }}
+                onClick={() => toggleArrayItem('features', feat)}
+                className={[
+                  'inline-flex min-h-[2.25rem] cursor-pointer select-none items-center gap-1.5 rounded-control border-[1.5px] px-3.5 py-1.5 text-[0.82rem] font-medium',
+                  'transition-[border-color,background-color,color] duration-200',
+                  active
+                    ? 'border-accent-light/70 bg-accent/15 text-accent-light'
+                    : 'border-line/25 bg-white/[0.03] text-muted hover:border-accent-light/40 hover:text-fg',
+                ].join(' ')}
               >
-                {active && <FaCheck size={9} style={{ flexShrink: 0 }} />}
+                {active && <FaCheck size={9} className="flex-shrink-0" aria-hidden="true" />}
                 {feat}
-              </div>
+              </button>
             )
           })}
         </div>
@@ -284,11 +323,10 @@ function Step4({ data, set, toggleArrayItem }: { data: WizardData; set: (f: keyo
 
 // ─── Step 5 ───────────────────────────────────────────────────────────────────
 
-function Step5({ data, set, toggleArrayItem }: { data: WizardData; set: (f: keyof WizardData, v: string) => void; toggleArrayItem: (f: keyof WizardData, v: string) => void }) {
+function Step5({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> & { toggleArrayItem: ToggleItem }) {
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <h2 className="text-[1.2rem] sm:text-[1.4rem] font-bold text-white m-0 leading-[1.25]">Schedule a Call</h2>
-      <p className="text-[0.875rem] sm:text-[0.9rem] text-white/55 -mt-3 leading-[1.5] m-0">Tell me when you're generally available and I'll reach out to confirm.</p>
+    <div className="flex flex-col gap-6">
+      <StepHeading title="Schedule a Call" sub="Tell me when you're generally available and I'll reach out to confirm." />
       <FieldGroup label="Preferred Days">
         <PillRow
           options={DAY_OPTIONS}
@@ -316,45 +354,46 @@ function Step5({ data, set, toggleArrayItem }: { data: WizardData; set: (f: keyo
 
 // ─── Shared field primitives ──────────────────────────────────────────────────
 
-const fieldInputClass = [
-  'w-full h-[44px] px-[0.875rem] py-[0.65rem] rounded-lg outline-none box-border',
-  'bg-white/[0.06] border border-white/10 text-white text-[0.9rem] placeholder:text-white/28',
-  'transition-[border-color,background,box-shadow] duration-200',
-  'focus:border-[#3498db] focus:bg-[rgba(52,152,219,0.08)] focus:shadow-[0_0_0_3px_rgba(52,152,219,0.18)]',
-].join(' ')
-
-const fieldTextareaClass = [
-  'w-full px-[0.875rem] py-[0.7rem] rounded-lg outline-none box-border resize-y',
-  'bg-white/[0.06] border border-white/10 text-white text-[0.9rem] placeholder:text-white/28',
-  'leading-[1.55] min-h-[80px] font-inherit',
-  'transition-[border-color,background,box-shadow] duration-200',
-  'focus:border-[#3498db] focus:bg-[rgba(52,152,219,0.08)] focus:shadow-[0_0_0_3px_rgba(52,152,219,0.18)]',
-].join(' ')
-
 function FieldGroup({
   label, id, required, optional, children,
 }: { label: string; id?: string; required?: boolean; optional?: boolean; children: React.ReactNode }) {
+  // Without a control id (pill groups) the label is a plain caption, not a <label for>
+  const Label = id ? 'label' : 'p'
   return (
-    <div className="flex flex-col gap-2">
-      <label
-        htmlFor={id}
-        className="text-[0.8rem] font-semibold text-white/80 tracking-[0.03em] uppercase"
-      >
+    <div>
+      <Label {...(id ? { htmlFor: id } : {})} className="field-label">
         {label}
-        {required && <span className="text-[#e74c3c] ml-0.5">*</span>}
-        {optional && <span className="font-normal normal-case text-white/35 text-[0.75rem] ml-1">(optional)</span>}
-      </label>
+        {required && <span className="ml-0.5 text-danger" aria-hidden="true">*</span>}
+        {required && <span className="sr-only"> (required)</span>}
+        {optional && <span className="ml-1.5 text-[0.78rem] font-normal text-subtle">(optional)</span>}
+      </Label>
       {children}
     </div>
   )
 }
 
-function FieldInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={fieldInputClass} />
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }
+function FieldInput({ invalid, ...props }: InputProps) {
+  return (
+    <input
+      {...props}
+      className="field"
+      aria-invalid={invalid ? true : undefined}
+      aria-describedby={invalid && props.id ? `${props.id}-error` : undefined}
+    />
+  )
 }
 
-function FieldTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={fieldTextareaClass} />
+type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }
+function FieldTextarea({ invalid, ...props }: TextareaProps) {
+  return (
+    <textarea
+      {...props}
+      className="field"
+      aria-invalid={invalid ? true : undefined}
+      aria-describedby={invalid && props.id ? `${props.id}-error` : undefined}
+    />
+  )
 }
 
 interface PillRowProps {
@@ -373,31 +412,25 @@ function PillRow({ options, selected, onSelect, onToggle, multiSelect, radioGrou
       {options.map(opt => {
         const active = Array.isArray(selected) ? selected.includes(opt) : selected === opt
         return (
-          <div
+          <button
             key={opt}
-            className="px-4 py-[0.45rem] rounded-full text-[0.8rem] font-medium cursor-pointer select-none transition-all duration-[180ms] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-            style={{
-              border: `1.5px solid ${active ? '#3498db' : 'rgba(255,255,255,0.12)'}`,
-              background: active ? 'rgba(52,152,219,0.2)' : 'rgba(255,255,255,0.05)',
-              color: active ? '#5dade2' : 'rgba(255,255,255,0.65)',
-            }}
+            type="button"
+            role={radioGroup ? 'radio' : 'checkbox'}
+            aria-checked={active}
             onClick={() => {
               if (multiSelect && onToggle) onToggle(opt)
               else if (onSelect) onSelect(opt)
             }}
-            role={radioGroup ? 'radio' : 'checkbox'}
-            aria-checked={active}
-            tabIndex={0}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                if (multiSelect && onToggle) onToggle(opt)
-                else if (onSelect) onSelect(opt)
-              }
-            }}
+            className={[
+              'min-h-[2.5rem] cursor-pointer select-none rounded-pill border-[1.5px] px-4 py-1.5 text-[0.85rem] font-medium',
+              'transition-[border-color,background-color,color] duration-200',
+              active
+                ? 'border-accent-light/70 bg-accent/20 text-accent-light'
+                : 'border-line/25 bg-white/[0.03] text-muted hover:border-accent-light/40 hover:text-fg',
+            ].join(' ')}
           >
             {opt}
-          </div>
+          </button>
         )
       })}
     </div>
@@ -409,38 +442,22 @@ function PillRow({ options, selected, onSelect, onToggle, multiSelect, radioGrou
 function SuccessScreen({ firstName }: { firstName: string }) {
   return (
     <motion.div
-      className="flex flex-col items-center text-center py-10 sm:py-14 px-4 sm:px-8 gap-5"
-      initial={{ opacity: 0, scale: 0.94 }}
+      className="flex flex-col items-center gap-5 px-2 py-8 text-center sm:py-12"
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+      role="status"
     >
-      <style>{`
-        @keyframes orbPulse {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50%       { opacity: 1;   transform: scale(1.05); }
-        }
-      `}</style>
-      <div
-        className="w-[90px] h-[90px] rounded-full flex items-center justify-center flex-shrink-0"
-        style={{
-          background: 'linear-gradient(135deg, rgba(52,152,219,0.25), rgba(155,89,182,0.25))',
-          border: '1.5px solid rgba(52,152,219,0.35)',
-          color: '#3498db',
-          animation: 'orbPulse 2.5s ease-in-out infinite',
-        }}
-      >
-        <FaCheckCircle size={52} />
+      <div className="relative flex h-[90px] w-[90px] flex-shrink-0 items-center justify-center rounded-full border border-success/40 bg-success/10 text-success">
+        <span className="absolute inset-0 rounded-full border border-success/40 motion-safe:animate-pulse-ring" aria-hidden="true" />
+        <FaCheckCircle size={52} aria-hidden="true" />
       </div>
-      <h2 className="text-[1.6rem] sm:text-[1.9rem] font-bold text-white m-0 leading-[1.2]">
-        You're all set, {firstName}!
-      </h2>
-      <p className="text-[0.95rem] text-white/70 leading-[1.65] m-0 max-w-[420px]">
+      <h2 className="text-h2 text-fg">You're all set, {firstName}!</h2>
+      <p className="m-0 max-w-[26rem] text-muted">
         Your intake form has been received. I'll review your project details and follow up within{' '}
-        <strong className="text-white/90 font-semibold">24 hours</strong> to confirm a time that works for both of us.
+        <strong className="font-semibold text-fg">24 hours</strong> to confirm a time that works for both of us.
       </p>
-      <p className="text-[0.8rem] text-white/35 m-0 leading-[1.5]">
-        Check your inbox — a confirmation copy has been sent to you.
-      </p>
+      <p className="m-0 text-small text-subtle">Check your inbox — a confirmation copy has been sent to you.</p>
     </motion.div>
   )
 }
@@ -453,6 +470,8 @@ export default function ClientIntakeWizard() {
   const [submitted,    setSubmitted]    = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error,        setError]        = useState('')
+  const [showErrors,   setShowErrors]   = useState(false)
+  const stepRef = useRef<HTMLDivElement>(null)
   const [data,         setData]         = useState<WizardData>({
     name: '', email: '', company: '',
     projectType: '',
@@ -460,6 +479,12 @@ export default function ClientIntakeWizard() {
     features: [], techNotes: '',
     preferredDays: [], preferredTime: '', additionalNotes: '',
   })
+
+  // Move focus to the new step's heading so keyboard / screen-reader users land in context
+  useEffect(() => {
+    if (step === 1) return
+    stepRef.current?.querySelector<HTMLElement>('[data-step-heading]')?.focus({ preventScroll: true })
+  }, [step])
 
   const set = (field: keyof WizardData, value: string) =>
     setData(prev => ({ ...prev, [field]: value }))
@@ -472,12 +497,21 @@ export default function ClientIntakeWizard() {
   }
 
   const goNext = () => {
-    if (!isStepValid(step, data)) return
+    if (!isStepValid(step, data)) {
+      // Reveal inline errors and send focus to the first problem
+      setShowErrors(true)
+      requestAnimationFrame(() => {
+        stepRef.current?.querySelector<HTMLElement>('[aria-invalid="true"], [role="radiogroup"]')?.focus()
+      })
+      return
+    }
+    setShowErrors(false)
     setDir(1)
     setStep(s => s + 1)
   }
 
   const goBack = () => {
+    setShowErrors(false)
     setDir(-1)
     setStep(s => s - 1)
   }
@@ -507,18 +541,11 @@ export default function ClientIntakeWizard() {
   if (submitted) return <SuccessScreen firstName={firstName} />
 
   return (
-    <div className="w-full flex flex-col overflow-visible">
-      <style>{`
-        @keyframes wizardSpin {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-      `}</style>
-
+    <div className="flex w-full flex-col">
       <ProgressBar step={step} />
 
       {/* Step area */}
-      <div className="pb-2">
+      <div ref={stepRef} className="min-h-[18rem] pb-2">
         <AnimatePresence custom={dir} mode="wait">
           <motion.div
             key={step}
@@ -529,95 +556,69 @@ export default function ClientIntakeWizard() {
             exit="exit"
             style={{ width: '100%' }}
           >
-            {step === 1 && <Step1 data={data} set={set} />}
-            {step === 2 && <Step2 data={data} set={set} />}
-            {step === 3 && <Step3 data={data} set={set} />}
+            {step === 1 && <Step1 data={data} set={set} showErrors={showErrors} />}
+            {step === 2 && <Step2 data={data} set={set} showErrors={showErrors} />}
+            {step === 3 && <Step3 data={data} set={set} showErrors={showErrors} />}
             {step === 4 && <Step4 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
             {step === 5 && <Step5 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Error banner */}
+      {/* Submit error banner */}
       {error && (
         <div
-          className="my-2 px-4 py-[0.65rem] rounded-lg text-[0.83rem] leading-[1.45]"
-          style={{
-            background: 'rgba(231,76,60,0.15)',
-            border: '1px solid rgba(231,76,60,0.35)',
-            color: '#e74c3c',
-          }}
+          className="my-3 flex items-start gap-2.5 rounded-control border border-danger/40 bg-danger/10 px-4 py-3 text-small text-danger"
           role="alert"
         >
+          <FiAlertCircle size={18} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
           {error}
         </div>
       )}
 
       {/* Nav row */}
-      <div className="flex items-center justify-between pt-5 mt-4 border-t border-white/[0.08] gap-3">
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-line/15 pt-6">
         <button
+          type="button"
           onClick={goBack}
           disabled={step === 1}
           aria-label="Go back"
-          className="inline-flex items-center gap-[0.45rem] px-5 py-[0.625rem] rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-all duration-200 min-h-[42px] disabled:opacity-[0.38] disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-          style={{
-            background: 'transparent',
-            border: '1.5px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.7)',
-            fontFamily: 'inherit',
-          }}
-          onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'white' } }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
+          className="btn btn-secondary"
         >
-          <FaArrowLeft />
+          <FaArrowLeft aria-hidden="true" />
           Back
         </button>
 
         {step < TOTAL_STEPS ? (
           <button
+            type="button"
             onClick={goNext}
-            disabled={!isStepValid(step, data)}
             aria-label="Continue to next step"
-            className="inline-flex items-center gap-[0.45rem] px-5 py-[0.625rem] rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-all duration-200 min-h-[42px] ml-auto disabled:opacity-[0.38] disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-            style={{
-              background: 'linear-gradient(135deg, #3498db, #2980b9)',
-              color: 'white',
-              border: 'none',
-              fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = 'linear-gradient(135deg, #2eaadc, #2471a3)'; e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(52,152,219,0.38)' } }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, #3498db, #2980b9)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}
+            className="btn btn-primary ml-auto"
           >
             Next
-            <FaArrowRight />
+            <FaArrowRight aria-hidden="true" />
           </button>
         ) : (
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
             aria-label="Submit and book a call"
-            className="inline-flex items-center gap-[0.45rem] px-6 py-[0.625rem] rounded-[30px] text-[0.875rem] font-semibold cursor-pointer transition-all duration-200 min-h-[42px] ml-auto disabled:opacity-[0.38] disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-[#3498db] focus-visible:outline-offset-[2px]"
-            style={{
-              background: '#3498db',
-              color: 'white',
-              border: '2px solid #3498db',
-              fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#3498db'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)' } }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#3498db'; e.currentTarget.style.color = 'white'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}
+            className="btn btn-primary ml-auto"
           >
             {isSubmitting ? (
               <>
                 <span
-                  className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full flex-shrink-0"
-                  style={{ animation: 'wizardSpin 0.7s linear infinite' }}
+                  className="h-3.5 w-3.5 flex-shrink-0 rounded-full border-2 border-accent-ink/30 border-t-accent-ink motion-safe:animate-spin"
+                  aria-hidden="true"
                 />
                 Sending…
               </>
             ) : (
               <>
                 Book a Call
-                <FaCheck />
+                <FaCheck aria-hidden="true" />
               </>
             )}
           </button>

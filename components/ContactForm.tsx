@@ -1,9 +1,70 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
 import { CONTACT_EMAILJS } from '@/lib/emailjs'
+
+// ─── Validation messages ──────────────────────────────────────────────────────
+
+type FieldName = 'user_name' | 'user_email' | 'message'
+
+const MESSAGES: Record<FieldName, { missing: string; invalid?: string }> = {
+  user_name: { missing: 'Please tell me your name.' },
+  user_email: { missing: 'Please enter your email address.', invalid: "That email doesn't look right. Check for typos." },
+  message: { missing: 'Please add a short message about your project.' },
+}
+
+/** Map the browser's constraint-validation state to a friendly message. */
+function messageFor(name: FieldName, el: HTMLInputElement | HTMLTextAreaElement): string {
+  if (el.validity.valueMissing) return MESSAGES[name].missing
+  return MESSAGES[name].invalid ?? 'Please check this field.'
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({
+  tone,
+  title,
+  body,
+  onDismiss,
+}: {
+  tone: 'success' | 'error'
+  title: string
+  body: string
+  onDismiss: () => void
+}) {
+  const isSuccess = tone === 'success'
+  const Icon = isSuccess ? FiCheckCircle : FiAlertCircle
+  return (
+    <motion.div
+      role={isSuccess ? 'status' : 'alert'}
+      initial={{ opacity: 0, y: -24, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -12, transition: { duration: 0.18 } }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      className={`glass fixed right-5 top-[calc(var(--navbar-h)+0.75rem)] z-[1100] flex w-[min(24rem,calc(100vw-2.5rem))] items-start gap-3 rounded-card border p-4 shadow-lift max-md:inset-x-4 max-md:right-auto max-md:w-auto ${
+        isSuccess ? 'border-success/40' : 'border-danger/40'
+      }`}
+    >
+      <Icon size={22} aria-hidden="true" className={`mt-0.5 flex-shrink-0 ${isSuccess ? 'text-success' : 'text-danger'}`} />
+      <div className="min-w-0 flex-1">
+        <p className="m-0 font-semibold text-fg">{title}</p>
+        <p className="m-0 mt-1 text-small text-muted">{body}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="-mr-1 -mt-1 flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-subtle transition-colors hover:bg-white/[0.08] hover:text-fg"
+      >
+        <FiX size={16} aria-hidden="true" />
+      </button>
+    </motion.div>
+  )
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -12,6 +73,29 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({})
+
+  const setFieldError = (name: FieldName, message?: string) =>
+    setErrors((prev) => {
+      const next = { ...prev }
+      if (message) next[name] = message
+      else delete next[name]
+      return next
+    })
+
+  // Validate on blur (once the visitor leaves a field) and clear as they fix it
+  const handleBlur = (name: FieldName) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const el = e.currentTarget
+    setFieldError(name, el.validity.valid ? undefined : messageFor(name, el))
+  }
+  const handleInput = (name: FieldName) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (errors[name] && e.currentTarget.validity.valid) setFieldError(name)
+  }
+  // Fires on a blocked submit: show our inline message instead of the native bubble
+  const handleInvalid = (name: FieldName) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.preventDefault()
+    setFieldError(name, messageFor(name, e.currentTarget))
+  }
 
   const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -34,12 +118,7 @@ export default function ContactForm() {
       const { serviceId, publicKey } = CONTACT_EMAILJS
 
       // 1. Send the main email (to you)
-      await emailjs.sendForm(
-        serviceId,
-        CONTACT_EMAILJS.templateId,
-        form.current,
-        publicKey
-      )
+      await emailjs.sendForm(serviceId, CONTACT_EMAILJS.templateId, form.current, publicKey)
 
       // 2. Send thank-you email to the user
       await emailjs.send(
@@ -57,6 +136,7 @@ export default function ContactForm() {
       setShowSuccess(true)
       trackEvent('contact_form_submit')
       form.current.reset()
+      setErrors({})
       setTimeout(() => setShowSuccess(false), 5000)
     } catch (error) {
       console.error('Failed to send email:', error)
@@ -67,168 +147,123 @@ export default function ContactForm() {
     }
   }
 
+  const describedBy = (name: FieldName) => (errors[name] ? `cf-${name}-error` : undefined)
+
   return (
-    <div className="w-full relative">
-      {/* Slide-in animation */}
-      <style>{`
-        @keyframes slideInAlert {
-          from { transform: translateY(-100px); opacity: 0; }
-          to   { transform: translateY(0);      opacity: 1; }
-        }
-        @keyframes alertPulse {
-          0%   { transform: scale(1); }
-          50%  { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-      `}</style>
+    <div className="relative w-full">
+      <form ref={form} onSubmit={sendEmail} className="grid w-full gap-5">
+        <div>
+          <label htmlFor="cf-name" className="field-label">
+            Name
+          </label>
+          <input
+            id="cf-name"
+            type="text"
+            name="user_name"
+            required
+            autoComplete="name"
+            placeholder="Your name"
+            className="field"
+            aria-invalid={errors.user_name ? true : undefined}
+            aria-describedby={describedBy('user_name')}
+            onBlur={handleBlur('user_name')}
+            onInput={handleInput('user_name')}
+            onInvalid={handleInvalid('user_name')}
+          />
+          {errors.user_name && (
+            <p id="cf-user_name-error" className="field-error">
+              <FiAlertCircle size={15} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+              {errors.user_name}
+            </p>
+          )}
+        </div>
 
-      <form ref={form} onSubmit={sendEmail} className="grid w-full gap-[15px]">
-        <label
-          htmlFor="cf-name"
-          className="font-semibold text-white/[0.82] text-[0.88rem] tracking-[0.02em]"
-        >
-          Name
-        </label>
-        <input
-          id="cf-name"
-          type="text"
-          name="user_name"
-          required
-          placeholder="Your name"
-          className="w-full h-[45px] px-3 py-3 bg-white/[0.07] border border-white/[0.14] rounded-[6px] text-white text-base placeholder:text-white/35 transition-[border-color,background,box-shadow] duration-200 outline-none focus:border-[var(--color-accent,#0ea5e9)] focus:shadow-[0_0_0_3px_rgba(14,165,233,0.18)] focus:bg-white/10"
-        />
+        <div>
+          <label htmlFor="cf-email" className="field-label">
+            Email
+          </label>
+          <input
+            id="cf-email"
+            type="email"
+            name="user_email"
+            required
+            autoComplete="email"
+            placeholder="your@email.com"
+            className="field"
+            aria-invalid={errors.user_email ? true : undefined}
+            aria-describedby={describedBy('user_email')}
+            onBlur={handleBlur('user_email')}
+            onInput={handleInput('user_email')}
+            onInvalid={handleInvalid('user_email')}
+          />
+          {errors.user_email && (
+            <p id="cf-user_email-error" className="field-error">
+              <FiAlertCircle size={15} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+              {errors.user_email}
+            </p>
+          )}
+        </div>
 
-        <label
-          htmlFor="cf-email"
-          className="font-semibold text-white/[0.82] text-[0.88rem] tracking-[0.02em]"
-        >
-          Email
-        </label>
-        <input
-          id="cf-email"
-          type="email"
-          name="user_email"
-          required
-          placeholder="your@email.com"
-          className="w-full h-[45px] px-3 py-3 bg-white/[0.07] border border-white/[0.14] rounded-[6px] text-white text-base placeholder:text-white/35 transition-[border-color,background,box-shadow] duration-200 outline-none focus:border-[var(--color-accent,#0ea5e9)] focus:shadow-[0_0_0_3px_rgba(14,165,233,0.18)] focus:bg-white/10"
-        />
+        <div>
+          <label htmlFor="cf-message" className="field-label">
+            Message
+          </label>
+          <textarea
+            id="cf-message"
+            name="message"
+            required
+            rows={5}
+            placeholder="Tell me about your project..."
+            className="field"
+            aria-invalid={errors.message ? true : undefined}
+            aria-describedby={describedBy('message')}
+            onBlur={handleBlur('message')}
+            onInput={handleInput('message')}
+            onInvalid={handleInvalid('message')}
+          />
+          {errors.message && (
+            <p id="cf-message-error" className="field-error">
+              <FiAlertCircle size={15} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
+              {errors.message}
+            </p>
+          )}
+        </div>
 
-        <label
-          htmlFor="cf-message"
-          className="font-semibold text-white/[0.82] text-[0.88rem] tracking-[0.02em]"
-        >
-          Message
-        </label>
-        <textarea
-          id="cf-message"
-          name="message"
-          required
-          placeholder="Tell me about your project..."
-          rows={5}
-          className="w-full px-3 py-3 bg-white/[0.07] border border-white/[0.14] rounded-[6px] text-white text-base placeholder:text-white/35 transition-[border-color,background,box-shadow] duration-200 outline-none resize-vertical font-inherit focus:border-[var(--color-accent,#0ea5e9)] focus:shadow-[0_0_0_3px_rgba(14,165,233,0.18)] focus:bg-white/10"
-          style={{ minHeight: '120px' }}
-        />
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="mt-2.5 px-[30px] py-3 rounded-full text-base font-bold cursor-pointer transition-all duration-[250ms] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-          style={{
-            fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-            background: 'var(--color-accent, #0ea5e9)',
-            color: 'white',
-            border: '2px solid var(--color-accent, #0ea5e9)',
-            letterSpacing: '0.03em',
-          }}
-          onMouseEnter={(e) => {
-            if (isSubmitting) return
-            const el = e.currentTarget
-            el.style.background = 'transparent'
-            el.style.color = 'var(--color-accent-light, #38bdf8)'
-            el.style.transform = 'translateY(-2px)'
-            el.style.boxShadow = '0 6px 16px rgba(14,165,233,0.22)'
-          }}
-          onMouseLeave={(e) => {
-            const el = e.currentTarget
-            el.style.background = 'var(--color-accent, #0ea5e9)'
-            el.style.color = 'white'
-            el.style.transform = ''
-            el.style.boxShadow = ''
-          }}
-        >
-          {isSubmitting ? 'Sending...' : 'Send Message'}
+        <button type="submit" disabled={isSubmitting} className="btn btn-primary mt-1 w-full sm:w-auto sm:justify-self-start">
+          {isSubmitting ? (
+            <>
+              <span
+                className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-accent-ink/30 border-t-accent-ink motion-safe:animate-spin"
+                aria-hidden="true"
+              />
+              Sending...
+            </>
+          ) : (
+            'Send Message'
+          )}
         </button>
       </form>
 
-      {/* Success alert */}
-      {showSuccess && (
-        <div
-          className="fixed top-5 right-5 max-md:top-2.5 max-md:right-2.5 max-md:left-2.5 flex items-center gap-3 px-5 py-4 rounded-xl z-[1000] max-w-[400px] min-w-[300px] max-md:max-w-none max-md:min-w-0"
-          style={{
-            background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
-            color: 'white',
-            borderLeft: '5px solid #2e7d32',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-            animation: 'slideInAlert 0.5s ease-out',
-          }}
-          role="alert"
-        >
-          <div
-            className="text-2xl font-bold mr-3 min-w-[24px]"
-            style={{ animation: 'alertPulse 2s infinite' }}
-          >
-            ✓
-          </div>
-          <div className="flex-1">
-            <h4 className="m-0 mb-1 text-base font-semibold">Message Sent Successfully!</h4>
-            <p className="m-0 text-sm opacity-90 leading-[1.4]">
-              Thank you for reaching out. We've received your message and will get back to you soon.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowSuccess(false)}
-            className="bg-none border-none text-white text-2xl cursor-pointer p-0 ml-3 opacity-70 hover:opacity-100 transition-opacity"
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Error alert */}
-      {showError && (
-        <div
-          className="fixed top-5 right-5 max-md:top-2.5 max-md:right-2.5 max-md:left-2.5 flex items-center gap-3 px-5 py-4 rounded-xl z-[1000] max-w-[400px] min-w-[300px] max-md:max-w-none max-md:min-w-0"
-          style={{
-            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
-            color: 'white',
-            borderLeft: '5px solid #c62828',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-            animation: 'slideInAlert 0.5s ease-out',
-          }}
-          role="alert"
-        >
-          <div
-            className="text-2xl font-bold mr-3 min-w-[24px]"
-            style={{ animation: 'alertPulse 2s infinite' }}
-          >
-            ⚠
-          </div>
-          <div className="flex-1">
-            <h4 className="m-0 mb-1 text-base font-semibold">Failed to Send Message</h4>
-            <p className="m-0 text-sm opacity-90 leading-[1.4]">
-              Sorry, there was an error sending your message. Please try again or contact us directly.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowError(false)}
-            className="bg-none border-none text-white text-2xl cursor-pointer p-0 ml-3 opacity-70 hover:opacity-100 transition-opacity"
-            aria-label="Dismiss"
-          >
-            ×
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {showSuccess && (
+          <Toast
+            key="success"
+            tone="success"
+            title="Message sent successfully!"
+            body="Thank you for reaching out. I've received your message and will get back to you soon."
+            onDismiss={() => setShowSuccess(false)}
+          />
+        )}
+        {showError && (
+          <Toast
+            key="error"
+            tone="error"
+            title="Failed to send message"
+            body="Sorry, there was an error sending your message. Please try again or email me directly."
+            onDismiss={() => setShowError(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

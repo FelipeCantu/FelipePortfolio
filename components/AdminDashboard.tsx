@@ -74,10 +74,8 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
   return (
     <div
       className="relative min-h-screen flex items-center justify-center px-6 py-12 overflow-hidden"
-      style={{ marginTop: 'var(--navbar-h, 60px)' }}
+      style={{ marginTop: 'var(--navbar-h)' }}
     >
-      <img src="/images/mainbg.jpg" alt="" className="fixed inset-0 w-full h-full object-cover object-center z-0 pointer-events-none" />
-      <div className="fixed inset-0 bg-black/[0.78] z-[1] pointer-events-none" />
 
       <motion.div
         variants={fadeUp}
@@ -140,11 +138,11 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
               onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }}
             />
-            {error && <p className="text-[0.8rem] text-[#f87171] m-0">{error}</p>}
+            {error && <p className="text-[0.8rem] text-danger m-0">{error}</p>}
             <button
               type="submit"
               disabled={loading || !pw}
-              className="inline-flex items-center gap-[0.4rem] justify-center px-7 py-[0.85rem] rounded-[10px] text-[0.9rem] font-semibold text-white cursor-pointer transition-[background,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-[0.4rem] justify-center px-7 py-[0.85rem] rounded-[10px] text-[0.9rem] font-semibold text-accent-ink cursor-pointer transition-[background,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}
               onMouseEnter={(e) => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = 'var(--color-accent-dark)'; e.currentTarget.style.transform = 'translateY(-1px)' } }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-accent)'; e.currentTarget.style.transform = '' }}
@@ -240,10 +238,10 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
               <input className={inputClass} style={inputStyle} placeholder="e.g. Angel Face Studio" value={name} onChange={e => setName(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
               <label className="text-[0.72rem] font-bold tracking-[0.12em] uppercase text-white/45 -mb-[0.35rem]">Email <span className="font-normal normal-case tracking-normal opacity-60">(optional)</span></label>
               <input type="email" className={inputClass} style={inputStyle} placeholder="client@example.com" value={email} onChange={e => setEmail(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
-              {error && <p className="text-[0.8rem] text-[#f87171] m-0">{error}</p>}
+              {error && <p className="text-[0.8rem] text-danger m-0">{error}</p>}
               <div className="flex gap-3 justify-end mt-2.5">
                 <button type="button" onClick={onClose} className="px-5 py-3 rounded-[10px] text-[0.88rem] text-white/55 cursor-pointer transition-[border-color,color] duration-200 hover:border-white/30 hover:text-white" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', fontFamily: 'var(--font-body)' }}>Cancel</button>
-                <button type="submit" disabled={loading || !name} className="inline-flex items-center gap-[0.4rem] px-7 py-3 rounded-[10px] text-[0.9rem] font-semibold text-white cursor-pointer transition-[background,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}>
+                <button type="submit" disabled={loading || !name} className="inline-flex items-center gap-[0.4rem] px-7 py-3 rounded-[10px] text-[0.9rem] font-semibold text-accent-ink cursor-pointer transition-[background,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}>
                   {loading ? 'Creating…' : 'Create Account →'}
                 </button>
               </div>
@@ -251,7 +249,7 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
           </>
         ) : (
           <>
-            <div className="inline-flex items-center gap-[0.4rem] text-[0.72rem] font-bold tracking-[0.12em] uppercase text-[#34d399] bg-[rgba(52,211,153,0.1)] border border-[rgba(52,211,153,0.25)] rounded-full px-[0.85rem] py-[0.3rem] mb-4">
+            <div className="inline-flex items-center gap-[0.4rem] text-[0.72rem] font-bold tracking-[0.12em] uppercase text-success bg-[rgba(52,211,153,0.1)] border border-[rgba(52,211,153,0.25)] rounded-full px-[0.85rem] py-[0.3rem] mb-4">
               ✓ Account Created
             </div>
             <h2 className="text-[1.5rem] font-extrabold text-white m-0 mb-2" style={{ fontFamily: 'var(--font-display)' }}>{name}</h2>
@@ -270,7 +268,7 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
                 className="inline-flex items-center gap-[0.35rem] px-[0.65rem] py-[0.3rem] rounded-[6px] text-[0.75rem] font-semibold cursor-pointer whitespace-nowrap flex-shrink-0 transition-all duration-200"
                 style={{
                   background: copied ? 'rgba(52,211,153,0.15)' : 'transparent',
-                  color: copied ? '#34d399' : 'var(--color-accent-light)',
+                  color: copied ? 'rgb(var(--c-success))' : 'var(--color-accent-light)',
                   border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(14,165,233,0.35)'}`,
                   fontFamily: 'var(--font-body)',
                 }}
@@ -279,7 +277,7 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
               </button>
             </div>
             <div className="flex justify-end">
-              <button onClick={onClose} className="inline-flex items-center gap-[0.4rem] px-7 py-3 rounded-[10px] text-[0.9rem] font-semibold text-white cursor-pointer" style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}>Done</button>
+              <button onClick={onClose} className="inline-flex items-center gap-[0.4rem] px-7 py-3 rounded-[10px] text-[0.9rem] font-semibold text-accent-ink cursor-pointer" style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}>Done</button>
             </div>
           </>
         )}
@@ -332,7 +330,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
           <div
             className="w-2 h-2 rounded-full flex-shrink-0"
             style={{
-              background: allGood ? '#34d399' : 'rgba(255,255,255,0.25)',
+              background: allGood ? 'rgb(var(--c-success))' : 'rgba(255,255,255,0.25)',
               boxShadow: allGood ? '0 0 8px rgba(52,211,153,0.5)' : 'none',
             }}
           />
@@ -370,7 +368,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
                   className="text-[0.7rem] font-semibold px-[0.7rem] py-[0.25rem] rounded-full"
                   style={{
                     background: ok ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
-                    color: ok ? '#34d399' : 'rgba(255,255,255,0.35)',
+                    color: ok ? 'rgb(var(--c-success))' : 'rgba(255,255,255,0.35)',
                     border: `1px solid ${ok ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.1)'}`,
                   }}
                 >
@@ -421,7 +419,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
                     className="inline-flex items-center gap-[0.35rem] px-[0.65rem] py-[0.3rem] rounded-[6px] text-[0.7rem] font-semibold cursor-pointer whitespace-nowrap flex-shrink-0 transition-all duration-200"
                     style={{
                       background: copied ? 'rgba(52,211,153,0.15)' : 'transparent',
-                      color: copied ? '#34d399' : 'var(--color-accent-light)',
+                      color: copied ? 'rgb(var(--c-success))' : 'var(--color-accent-light)',
                       border: `1px solid ${copied ? 'rgba(52,211,153,0.3)' : 'rgba(14,165,233,0.35)'}`,
                       fontFamily: 'var(--font-body)',
                     }}
@@ -473,10 +471,8 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
   return (
     <div
       className="relative min-h-screen flex items-center justify-center px-6 py-12 overflow-hidden"
-      style={{ marginTop: 'var(--navbar-h, 60px)' }}
+      style={{ marginTop: 'var(--navbar-h)' }}
     >
-      <img src="/images/mainbg.jpg" alt="" className="fixed inset-0 w-full h-full object-cover object-center z-0 pointer-events-none" />
-      <div className="fixed inset-0 bg-black/[0.78] z-[1] pointer-events-none" />
 
       <motion.div
         variants={fadeUp}
@@ -541,7 +537,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
           </h2>
           <button
             onClick={() => setShowModal(true)}
-            className="inline-flex items-center gap-[0.4rem] px-4 py-2 rounded-[10px] text-[0.8rem] font-semibold text-white cursor-pointer transition-[background,transform] duration-200"
+            className="inline-flex items-center gap-[0.4rem] px-4 py-2 rounded-[10px] text-[0.8rem] font-semibold text-accent-ink cursor-pointer transition-[background,transform] duration-200"
             style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}
           >
             <FaPlus size={10} /> Add Client

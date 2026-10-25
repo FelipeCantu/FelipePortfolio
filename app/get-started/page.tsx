@@ -10,17 +10,15 @@ export const metadata: Metadata = {
 
 export default function GetStartedPage() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-8 relative"
-      style={{
-        backgroundImage: 'linear-gradient(rgba(20,20,30,0.75),rgba(20,20,30,0.75)),url(/images/mainbg.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      <div className="relative z-10 w-full max-w-2xl">
-        <ClientIntakeWizard />
+    <div className="container-page page-top pb-section">
+      <div className="mx-auto w-full max-w-2xl">
+        <header className="mb-8 text-center">
+          <p className="eyebrow">Get started</p>
+          <h1 className="mt-3 text-h1 text-fg">Plan your project</h1>
+        </header>
+        <div className="card p-6 sm:p-8 lg:p-10">
+          <ClientIntakeWizard />
+        </div>
       </div>
     </div>
   )

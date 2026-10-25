@@ -161,8 +161,8 @@ function DashCell({ label, color, glow, delay, Icon }: { label: string; color: s
       {/* Front face */}
       <div className="flex flex-col gap-[0.45rem] w-full transition-[opacity,transform] duration-[250ms] group-hover:opacity-0 group-hover:scale-[0.8] group-focus:opacity-0 group-focus:scale-[0.8]">
         <span
-          className="text-[0.62rem] font-medium text-white/70 tracking-[0.04em] text-center"
-          style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)" }}
+          className="text-[0.75rem] font-medium text-muted tracking-[0.04em] text-center"
+          style={{ fontFamily: 'var(--font-mono)' }}
         >
           {label}
         </span>
@@ -295,16 +295,10 @@ export default function AboutContent() {
         }
       `}</style>
 
-      {/* Fixed background */}
-      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
-        <div className="w-full h-full" style={{ backgroundImage: "url('/images/mainbg.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0" style={{ backgroundColor: 'rgba(10,12,22,0.85)' }} />
-      </div>
-
       {/* Dot navigation */}
       <nav
-        className="fixed right-5 z-[100] flex flex-col gap-[0.55rem]"
-        style={{ top: '50%', transform: 'translateY(-50%)', marginTop: 'calc(var(--navbar-h,60px) / 2)' }}
+        className="fixed right-5 z-[100] hidden flex-col gap-[0.55rem] lg:flex"
+        style={{ top: '50%', transform: 'translateY(-50%)', marginTop: 'calc(var(--navbar-h) / 2)' }}
         aria-label="Page sections"
       >
         {SECTION_IDS.map((id, i) => (
@@ -331,9 +325,9 @@ export default function AboutContent() {
       <div
         className="relative z-10 overflow-y-scroll"
         style={{
-          height: 'calc(100vh - var(--navbar-h, 60px))',
-          marginTop: 'var(--navbar-h, 60px)',
-          scrollSnapType: 'y mandatory',
+          height: 'calc(100dvh - var(--navbar-h))',
+          marginTop: 'var(--navbar-h)',
+          scrollSnapType: 'y proximity',
           scrollBehavior: 'smooth',
         }}
       >
@@ -344,7 +338,7 @@ export default function AboutContent() {
           id="intro"
           aria-label="Introduction"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass tall>
             <div className="flex flex-col md:flex-row w-full">
@@ -356,12 +350,12 @@ export default function AboutContent() {
                 viewport={{ once: false, amount: 0.4 }}
                 className="flex-1 flex flex-col items-center text-center justify-center p-2 sm:p-3 md:p-12 md:pr-10"
               >
-                <p className="text-[0.6rem] md:text-[0.7rem] font-bold tracking-[0.17em] uppercase text-accent-light m-0 mb-1 md:mb-[0.9rem]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)", color: 'var(--color-accent-light, #38bdf8)' }}>
+                <p className="text-[0.75rem] md:text-[0.8rem] font-bold tracking-[0.17em] uppercase text-accent-light m-0 mb-1 md:mb-[0.9rem]" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-accent-light, #38bdf8)' }}>
                   Full-Stack Developer & Designer
                 </p>
                 <h1
-                  className="font-extrabold text-white leading-[1.05] tracking-[-0.04em] m-0 mb-2 md:mb-5 overflow-visible"
-                  style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(1.2rem,4.5vw,5rem)' }}
+                  className="font-extrabold text-fg leading-[1.05] tracking-[-0.04em] m-0 mb-2 md:mb-5 overflow-visible"
+                  style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.25rem,5vw,4.5rem)' }}
                 >
                   Felipe<br />
                   <span
@@ -376,7 +370,7 @@ export default function AboutContent() {
                     Cantu Jr
                   </span>
                 </h1>
-                <p className="font-light text-white/75 w-full max-w-[480px] m-0 mb-1 md:mb-7 leading-[1.5] md:leading-[1.75]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)", fontSize: 'clamp(0.68rem,1.8vw,1.15rem)' }}>
+                <p className="font-light text-muted w-full max-w-[480px] m-0 mb-1 md:mb-7 leading-[1.5] md:leading-[1.75]" style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(0.95rem,1.8vw,1.15rem)' }}>
                   If you've got an idea for a website or an application, I'll take it from concept to completion: design, development, and everything in between. Working with one person from start to finish means nothing falls through the cracks.
                 </p>
                 <div className="flex flex-wrap justify-center gap-1 md:justify-start md:gap-[0.55rem] pt-[2px] md:pt-1">
@@ -386,7 +380,7 @@ export default function AboutContent() {
                   ].map(({ label, gold }) => (
                     <span
                       key={label}
-                      className="inline-flex items-center text-[0.62rem] md:text-[0.76rem] font-semibold tracking-[0.03em] rounded-full"
+                      className="inline-flex items-center text-[0.75rem] md:text-[0.76rem] font-semibold tracking-[0.03em] rounded-full"
                       style={{
                         padding: '0.18rem 0.5rem',
                         background: gold ? 'rgba(247,171,10,0.10)' : 'rgba(14,165,233,0.10)',
@@ -445,7 +439,7 @@ export default function AboutContent() {
           id="story"
           aria-label="Personal story"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(95vw,560px)]">
@@ -479,8 +473,8 @@ export default function AboutContent() {
                 className="flex-1 flex flex-col items-center text-center justify-center p-2 sm:p-3 md:px-10 md:py-12 max-[899px]:relative max-[899px]:z-[2] max-[899px]:w-full max-[899px]:px-5 max-[899px]:py-6"
                 style={{ fontSize: '0.8em', background: 'linear-gradient(to bottom, rgba(4,4,14,0.55) 0%, rgba(4,4,14,0.85) 100%)' } as React.CSSProperties}
               >
-                <p className="text-[0.6rem] md:text-[0.7rem] font-bold tracking-[0.17em] uppercase m-0 mb-1 md:mb-[0.9rem]" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>The story</p>
-                <h2 className="font-extrabold text-white tracking-[-0.025em] leading-[1.1] m-0 mb-2 md:mb-8 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(0.95rem,3vw,2.2rem)' }}>
+                <p className="text-[0.75rem] md:text-[0.8rem] font-bold tracking-[0.17em] uppercase m-0 mb-1 md:mb-[0.9rem]" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>The story</p>
+                <h2 className="font-extrabold text-fg tracking-[-0.025em] leading-[1.1] m-0 mb-2 md:mb-8 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>
                   Rooted in Port Isabel, TX.
                 </h2>
                 {[
@@ -488,7 +482,7 @@ export default function AboutContent() {
                   "I know hiring a developer can feel overwhelming. There's often the worry of getting buried in jargon, losing touch with someone along the way, or starting a project that never quite reaches the finish line. I've structured my work to avoid those problems. We start with a small, focused piece of work, something real, so you can see how I work before deciding whether to move forward.",
                   "When I'm not coding, I spend time with my wife and three kids. They're my foundation and the reason I show up ready every day. I also play guitar, skateboard, and am a longtime fan of Doctor Who. I believe things can always be better. It just takes someone willing to figure out how.",
                 ].map((para, i) => (
-                  <p key={i} className="font-light text-white/73 max-w-[54ch] m-0 mb-2 md:mb-5 last:mb-0 leading-[1.5] md:leading-[1.85]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)", fontSize: 'clamp(0.68rem,1.6vw,1.02rem)' }}>
+                  <p key={i} className="font-light text-muted max-w-[54ch] m-0 mb-2 md:mb-5 last:mb-0 leading-[1.5] md:leading-[1.85]" style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(0.92rem,1.6vw,1.02rem)' }}>
                     {para}
                   </p>
                 ))}
@@ -503,7 +497,7 @@ export default function AboutContent() {
           id="skills"
           aria-label="Technical skills"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             {/* Desktop: two-column */}
@@ -517,8 +511,8 @@ export default function AboutContent() {
                 className="flex-[0_0_50%] flex flex-col justify-start overflow-y-auto px-12 py-10"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(14,165,233,0.2) transparent' }}
               >
-                <p className="text-[0.7rem] font-bold tracking-[0.17em] uppercase text-accent-light m-0 mb-[0.9rem]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)", color: 'var(--color-accent-light, #38bdf8)' }}>How it works</p>
-                <h2 className="font-extrabold text-white tracking-[-0.025em] leading-[1.1] m-0 mb-8 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(1.5rem,3.2vw,2.2rem)' }}>
+                <p className="text-[0.8rem] font-bold tracking-[0.17em] uppercase text-accent-light m-0 mb-[0.9rem]" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-accent-light, #38bdf8)' }}>How it works</p>
+                <h2 className="font-extrabold text-fg tracking-[-0.025em] leading-[1.1] m-0 mb-8 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3.2vw,2.2rem)' }}>
                   From idea to launch.
                 </h2>
                 <motion.ol
@@ -532,12 +526,12 @@ export default function AboutContent() {
                   {processSteps.map((step) => (
                     <motion.div key={step.number} variants={chipVariant} className="h-full flex flex-col">
                       <li className="flex flex-row items-start gap-2 px-3 py-[0.55rem] rounded-[14px] border transition-[background,border-color,transform] duration-[250ms] hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] hover:translate-y-[1px] h-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.6rem] font-bold border" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
+                        <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.75rem] font-bold border" style={{ fontFamily: 'var(--font-mono)', background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
                           {step.number}
                         </span>
                         <div className="flex flex-col justify-start flex-1 min-w-0">
-                          <p className="font-semibold text-white/95 m-0 mb-[0.2rem] tracking-[0.01em] leading-[1.2] text-[0.875rem]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>{step.title}</p>
-                          <p className="text-white/58 m-0 leading-[1.4] text-[0.70rem]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>{step.body}</p>
+                          <p className="font-semibold text-fg m-0 mb-[0.2rem] tracking-[0.01em] leading-[1.2] text-[0.875rem]" style={{ fontFamily: 'var(--font-body)' }}>{step.title}</p>
+                          <p className="text-muted m-0 leading-[1.4] text-[0.8rem]" style={{ fontFamily: 'var(--font-body)' }}>{step.body}</p>
                         </div>
                       </li>
                     </motion.div>
@@ -555,7 +549,7 @@ export default function AboutContent() {
                 aria-hidden="true"
               >
                 <div className="w-full max-w-[320px] flex flex-col gap-3 pt-1">
-                  <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
+                  <p className="text-[0.8rem] m-0 mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'rgba(56,189,248,0.8)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
                   <div className="grid gap-[0.6rem]" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     {dashCells.map((cell, i) => (
                       <DashCell key={cell.label} {...cell} delay={`${i * 0.08}s`} />
@@ -575,7 +569,7 @@ export default function AboutContent() {
                     onClick={() => goToSkillTab(idx)}
                     className="flex-1 py-[0.55rem] bg-none border-none cursor-pointer text-[0.8rem] tracking-[0.03em] transition-[color] duration-[220ms]"
                     style={{
-                      fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
+                      fontFamily: 'var(--font-body)',
                       fontWeight: skillTab === idx ? 700 : 500,
                       color: skillTab === idx ? 'var(--color-accent-light, #38bdf8)' : 'rgba(255,255,255,0.40)',
                     }}
@@ -612,18 +606,18 @@ export default function AboutContent() {
                 >
                   {skillTab === 0 ? (
                     <>
-                      <p className="text-[0.6rem] font-bold tracking-[0.17em] uppercase m-0" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>How it works</p>
-                      <h2 className="font-extrabold text-white leading-[1.1] m-0 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(0.95rem,3vw,2.2rem)' }}>From idea to launch.</h2>
+                      <p className="text-[0.75rem] font-bold tracking-[0.17em] uppercase m-0" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>How it works</p>
+                      <h2 className="font-extrabold text-fg leading-[1.1] m-0 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>From idea to launch.</h2>
                       <ol className="list-none m-0 pb-4 grid gap-2" style={{ gridTemplateColumns: '1fr' }}>
                         {processSteps.map((step) => (
                           <motion.div key={step.number} variants={chipVariant} initial="hidden" animate="visible">
                             <li className="flex flex-row items-start gap-1.5 px-[0.45rem] py-[0.3rem] rounded-[14px] border hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] transition-all duration-[250ms]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                              <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.6rem] font-bold" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
+                              <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.75rem] font-bold" style={{ fontFamily: 'var(--font-mono)', background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
                                 {step.number}
                               </span>
                               <div className="flex flex-col flex-1 min-w-0">
-                                <p className="font-semibold text-white/95 m-0 mb-[0.1rem] text-[0.72rem] leading-[1.2]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>{step.title}</p>
-                                <p className="text-white/58 m-0 text-[0.6rem] leading-[1.35]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>{step.body}</p>
+                                <p className="font-semibold text-fg m-0 mb-[0.1rem] text-[0.8rem] leading-[1.2]" style={{ fontFamily: 'var(--font-body)' }}>{step.title}</p>
+                                <p className="text-muted m-0 text-[0.75rem] leading-[1.35]" style={{ fontFamily: 'var(--font-body)' }}>{step.body}</p>
                               </div>
                             </li>
                           </motion.div>
@@ -632,10 +626,10 @@ export default function AboutContent() {
                     </>
                   ) : (
                     <>
-                      <p className="text-[0.6rem] font-bold tracking-[0.17em] uppercase m-0" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>Tech stack</p>
-                      <h2 className="font-extrabold text-white leading-[1.1] m-0 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(0.95rem,3vw,2.2rem)' }}>Tools I use.</h2>
+                      <p className="text-[0.75rem] font-bold tracking-[0.17em] uppercase m-0" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>Tech stack</p>
+                      <h2 className="font-extrabold text-fg leading-[1.1] m-0 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>Tools I use.</h2>
                       <div className="w-full max-w-full flex flex-col gap-3 pt-1">
-                        <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
+                        <p className="text-[0.8rem] m-0 mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'rgba(56,189,248,0.8)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
                         <motion.div
                           variants={staggerContainer}
                           initial="hidden"
@@ -683,7 +677,7 @@ export default function AboutContent() {
           id="values"
           aria-label="Work philosophy"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(115vw,680px)]">
@@ -697,8 +691,8 @@ export default function AboutContent() {
                 style={{ background: 'linear-gradient(to bottom, rgba(4,4,14,0.55) 0%, rgba(4,4,14,0.85) 100%)' } as React.CSSProperties}
               >
                 <motion.div variants={fromLeft}>
-                  <p className="text-[0.6rem] md:text-[0.7rem] font-bold tracking-[0.17em] uppercase m-0 mb-1 md:mb-[0.9rem]" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>How I work</p>
-                  <h2 className="font-extrabold text-white tracking-[-0.025em] leading-[1.1] m-0 mb-7 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(0.95rem,3vw,2.2rem)' }}>
+                  <p className="text-[0.75rem] md:text-[0.8rem] font-bold tracking-[0.17em] uppercase m-0 mb-1 md:mb-[0.9rem]" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>How I work</p>
+                  <h2 className="font-extrabold text-fg tracking-[-0.025em] leading-[1.1] m-0 mb-7 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>
                     Why I do this differently.
                   </h2>
                 </motion.div>
@@ -741,10 +735,10 @@ export default function AboutContent() {
                           >
                             <Icon size={18} aria-hidden="true" />
                           </div>
-                          <h3 className="font-bold text-white tracking-[-0.01em] m-0 mb-[0.15rem] md:mb-[0.4rem] text-[0.75rem] md:text-base" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)" }}>
+                          <h3 className="font-bold text-fg tracking-[-0.01em] m-0 mb-[0.15rem] md:mb-[0.4rem] text-[0.75rem] md:text-base" style={{ fontFamily: 'var(--font-display)' }}>
                             {v.title}
                           </h3>
-                          <p className="font-light text-white/62 m-0 leading-[1.45] md:leading-[1.65] text-[0.65rem] md:text-[0.85rem]" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>
+                          <p className="font-light text-muted m-0 leading-[1.45] md:leading-[1.65] text-[0.78rem] md:text-[0.85rem]" style={{ fontFamily: 'var(--font-body)' }}>
                             {v.body}
                           </p>
                         </article>
@@ -777,7 +771,7 @@ export default function AboutContent() {
           id="cta"
           aria-label="Call to action"
           className={`${snapSectionClass} relative`}
-          style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+          style={{ scrollSnapAlign: 'start' }}
         >
           <div className="relative z-[2] w-full max-w-[900px] flex items-center justify-center">
             <div
@@ -806,7 +800,7 @@ export default function AboutContent() {
 
               <div className="relative z-[3]">
                 <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }}>
-                  <p className="text-[0.72rem] font-bold tracking-[0.18em] uppercase m-0 mb-2" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>
+                  <p className="text-[0.8rem] font-bold tracking-[0.18em] uppercase m-0 mb-2" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>
                     Let's work together
                   </p>
                   {/* Accent seam bar */}
@@ -816,13 +810,13 @@ export default function AboutContent() {
                 </motion.div>
 
                 <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.1 }}>
-                  <h2 className="font-extrabold text-white tracking-[-0.03em] leading-[1.1] m-0 mb-3 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(1.4rem,6vw,2.8rem)' }}>
+                  <h2 className="font-extrabold text-fg tracking-[-0.03em] leading-[1.1] m-0 mb-3 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem,6vw,2.8rem)' }}>
                     Ready to build something?
                   </h2>
                 </motion.div>
 
                 <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.2 }}>
-                  <p className="font-light text-white/65 leading-[1.65] max-w-[46ch] mx-auto m-0 mb-5 sm:mb-9" style={{ fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)", fontSize: 'clamp(0.88rem,2.5vw,1.1rem)' }}>
+                  <p className="font-light text-muted leading-[1.65] max-w-[46ch] mx-auto m-0 mb-5 sm:mb-9" style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(0.95rem,2.5vw,1.1rem)' }}>
                     Whether you have a full brief or just a rough idea, let's talk. I'll tell you what's possible and how we can get started.
                   </p>
                 </motion.div>
@@ -830,43 +824,19 @@ export default function AboutContent() {
                 <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.3 }}>
                   <nav className="flex flex-col items-stretch gap-[0.65rem] py-1 sm:flex-row sm:items-center sm:justify-center sm:py-3 sm:gap-3">
                     {[
-                      { href: '/contact',   label: 'Get in touch', primary: true  },
+                      { href: '/contact',   label: 'Get in touch', primary: true },
                       { href: '/portfolio', label: 'See my work',  primary: false },
                     ].map(({ href, label, primary }) => (
                       <Link
                         key={href}
                         href={href}
-                        className="inline-flex items-center justify-center gap-[0.45rem] px-7 py-3 rounded-xl font-bold text-[0.9rem] tracking-[0.03em] no-underline whitespace-nowrap transition-all duration-[220ms] focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
-                        style={{
-                          fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                          background: primary ? 'var(--color-accent, #0ea5e9)' : 'rgba(255,255,255,0.06)',
-                          border: primary ? '2px solid var(--color-accent, #0ea5e9)' : '1px solid rgba(255,255,255,0.15)',
-                          color: primary ? 'white' : 'rgba(255,255,255,0.82)',
-                        }}
-                        onMouseEnter={(e) => {
-                          const el = e.currentTarget as HTMLElement
-                          if (primary) {
-                            el.style.background = 'transparent'
-                            el.style.color = 'var(--color-accent-light, #38bdf8)'
-                          } else {
-                            el.style.background = 'rgba(255,255,255,0.11)'
-                            el.style.borderColor = 'rgba(255,255,255,0.30)'
-                            el.style.color = 'white'
-                          }
-                          el.style.transform = 'translateY(-2px)'
-                          el.style.boxShadow = primary ? '0 8px 24px rgba(14,165,233,0.30)' : '0 8px 24px rgba(0,0,0,0.28)'
-                        }}
-                        onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLElement
-                          el.style.background = primary ? 'var(--color-accent, #0ea5e9)' : 'rgba(255,255,255,0.06)'
-                          el.style.borderColor = primary ? 'var(--color-accent, #0ea5e9)' : 'rgba(255,255,255,0.15)'
-                          el.style.color = primary ? 'white' : 'rgba(255,255,255,0.82)'
-                          el.style.transform = ''
-                          el.style.boxShadow = ''
-                        }}
+                        className={`btn ${primary ? 'btn-primary' : 'btn-secondary'} group px-7`}
                       >
                         {label}
-                        <FiArrowRight aria-hidden="true" />
+                        <FiArrowRight
+                          aria-hidden="true"
+                          className="transition-transform duration-200 group-hover:translate-x-1"
+                        />
                       </Link>
                     ))}
                   </nav>
