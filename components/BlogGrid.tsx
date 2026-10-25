@@ -96,7 +96,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
   const processedPosts = posts.map(processPost)
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-[calc(var(--navbar-h,60px)+2rem)] pb-16 px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto">
       {/* Section header */}
       <div className="text-center mb-12 max-md:mb-8 max-[480px]:mb-6">
         <h2 className="text-[2.5rem] max-md:text-[2rem] max-[480px]:text-2xl font-bold text-white mb-2">
@@ -110,7 +110,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
       {/* Post grid */}
       <div
         className="grid gap-8 max-md:gap-4 max-[480px]:gap-3"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(350px, 100%), 1fr))' }}
       >
         {processedPosts.map((post, index) => (
           <article

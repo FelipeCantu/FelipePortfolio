@@ -74,7 +74,7 @@ export default function Navbar() {
           {/* Wordmark with cursor-reveal hover effect */}
           <div
             ref={textRef}
-            className="relative flex items-center h-full pl-5 max-[400px]:pl-[60px]"
+            className="relative flex items-center h-full pl-5 max-[400px]:pl-3"
             onMouseMove={handleMouseMove}
           >
             <span className="font-display font-bold text-[1.4em] tracking-[-0.01em] text-white md:text-[1.2em] max-[400px]:text-[1.05em]">
@@ -82,7 +82,7 @@ export default function Navbar() {
             </span>
             {/* Accent overlay revealed by clip-path circle following cursor */}
             <span
-              className="absolute top-0 left-5 h-full flex items-center font-display font-bold text-[1.4em] tracking-[-0.01em] text-accent pointer-events-none transition-opacity duration-200 md:text-[1.2em] max-[400px]:text-[1.05em] max-[400px]:left-[60px]"
+              className="absolute top-0 left-5 h-full flex items-center font-display font-bold text-[1.4em] tracking-[-0.01em] text-accent pointer-events-none transition-opacity duration-200 md:text-[1.2em] max-[400px]:text-[1.05em] max-[400px]:left-3"
               style={{
                 clipPath: `circle(30px at ${mousePos.x}px ${mousePos.y}px)`,
                 opacity: isHovered ? 1 : 0,

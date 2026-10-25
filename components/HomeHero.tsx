@@ -172,7 +172,7 @@ export default function HomeHero() {
         }
       `}</style>
 
-      <section className="relative w-full h-screen overflow-hidden">
+      <section className="relative w-full h-screen overflow-hidden" style={{ height: '100svh' }}>
         {/* Background image */}
         <img
           src="/images/mainbg.jpg"
@@ -332,9 +332,9 @@ export default function HomeHero() {
             </div>
           </div>
 
-          {/* Social icons — bottom-right absolute on desktop, centered below content on mobile */}
+          {/* Social icons — bottom-right on desktop, bottom-center on mobile */}
           <div
-            className="absolute bottom-8 right-10 max-md:static max-md:mt-8 max-md:justify-center flex gap-5 z-[3]"
+            className="absolute bottom-6 right-10 max-md:right-auto max-md:left-1/2 max-md:-translate-x-1/2 max-md:bottom-5 flex gap-5 z-[3]"
             style={{ padding: '12px', margin: '-12px' }}
           >
             {socialLinks.map((social, i) => {

@@ -25,7 +25,7 @@ export default function Sidebar({ open, onClose }: Props) {
         id="mobile-sidebar"
         className={clsx(
           // Desktop: fixed row top-right, always visible
-          'fixed top-0 right-0 h-[60px] flex flex-row flex-nowrap items-center list-none m-0 p-0 pr-[10px] z-[1001] xl:pr-[200px]',
+          'fixed top-0 right-0 h-[60px] flex flex-row flex-nowrap items-center list-none m-0 p-0 pr-[10px] z-[1300] xl:pr-[200px]',
           // Mobile: full-height slide drawer
           'max-md:flex-col max-md:flex-nowrap max-md:w-[280px] max-md:h-screen max-md:bg-[rgba(10,12,22,0.96)] max-md:backdrop-blur-[24px] max-md:border-l max-md:border-white/[0.08] max-md:shadow-[-12px_0_40px_rgba(0,0,0,0.55)] max-md:pt-20 max-md:pb-8 max-md:justify-start max-md:items-start max-md:transition-transform max-md:duration-[320ms] max-md:ease-[cubic-bezier(0.4,0,0.2,1)]',
           open ? 'max-md:translate-x-0' : 'max-md:translate-x-full'

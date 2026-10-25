@@ -38,7 +38,7 @@ export default function ContactContent() {
         className="relative min-h-screen w-full flex items-center justify-center"
         style={{
           padding: '1rem',
-          paddingTop: 'calc(80px + 1rem)',
+          paddingTop: 'calc(var(--navbar-h, 60px) + 1rem)',
         }}
       >
         {/* Fixed background */}

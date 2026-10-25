@@ -19,9 +19,5 @@ export const revalidate = 3600
 
 export default async function PortfolioPage() {
   const projects = await sanity.fetch(ALL_PROJECTS_QUERY)
-  return (
-    <div className="h-[calc(100vh-var(--navbar-h))] overflow-y-auto">
-      <ProjectCarousel initialProjects={projects} />
-    </div>
-  )
+  return <ProjectCarousel initialProjects={projects} />
 }

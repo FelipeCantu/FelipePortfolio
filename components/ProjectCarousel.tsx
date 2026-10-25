@@ -265,8 +265,12 @@ function CarouselCard({ project, position, direction, layoutKey, sideX, filter }
               {types.filter((t) => TYPE_LABELS[t]).map((t, i) => (
                 <span
                   key={i}
-                  className="text-[0.62rem] font-bold uppercase tracking-[0.12em]"
-                  style={{ color: getBadgeColor(t) }}
+                  className="inline-flex items-center px-[0.5rem] py-[0.18rem] rounded-full text-[0.6rem] font-bold uppercase tracking-[0.1em]"
+                  style={{
+                    color: getBadgeColor(t),
+                    background: getBadgeColor(t) + '20',
+                    border: `1px solid ${getBadgeColor(t)}45`,
+                  }}
                 >
                   {TYPE_LABELS[t]}
                 </span>
@@ -305,11 +309,11 @@ function CarouselCard({ project, position, direction, layoutKey, sideX, filter }
 
           {/* Tags — hidden on mobile */}
           {project.tags && project.tags.length > 0 && (
-            <div className="flex flex-wrap gap-[0.3rem] mt-[0.1rem] overflow-hidden max-h-14 max-[768px]:max-h-8 max-[600px]:hidden">
+            <div className="flex flex-wrap gap-[0.3rem] mt-[0.15rem] overflow-hidden max-h-14 max-[768px]:max-h-8 max-[600px]:hidden">
               {project.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="bg-white/[0.07] border border-white/10 text-white/80 px-[0.55rem] py-[0.22rem] rounded-[4px] text-[0.68rem] font-medium tracking-[0.01em]"
+                  className="bg-[rgba(14,165,233,0.10)] border border-[rgba(14,165,233,0.22)] text-white/75 px-[0.55rem] py-[0.22rem] rounded-md text-[0.67rem] font-medium tracking-[0.02em]"
                 >
                   {tag}
                 </span>
