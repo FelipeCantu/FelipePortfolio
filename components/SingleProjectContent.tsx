@@ -1,6 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { motion, type Variants } from 'framer-motion'
 import {
   FiArrowLeft,
   FiExternalLink,
@@ -12,140 +13,9 @@ import {
 } from 'react-icons/fi'
 import { FaGithub } from 'react-icons/fa'
 import { PortableText } from '@portabletext/react'
-import { urlFor } from '@/lib/sanity'
-
-// ─── Design tokens (keep in sync with tailwind.config.ts) ──────────────────
-
-const TYPE_COLORS: Record<string, string> = {
-  web: '#3498db',
-  mobile: '#9b59b6',
-  design: '#e67e22',
-  desktop: '#1abc9c',
-}
-const TYPE_LABELS: Record<string, string> = {
-  web: 'Web',
-  mobile: 'Mobile',
-  design: 'Design',
-  desktop: 'Desktop App',
-}
-const STATUS_CONFIG: Record<
-  string,
-  { bg: string; text: string; border: string; dot: string; label: string }
-> = {
-  inProgress: {
-    bg: 'rgba(243,156,18,0.12)',
-    text: '#f39c12',
-    border: 'rgba(243,156,18,0.30)',
-    dot: '#f39c12',
-    label: 'In Progress',
-  },
-  completed: {
-    bg: 'rgba(46,204,113,0.12)',
-    text: '#2ecc71',
-    border: 'rgba(46,204,113,0.30)',
-    dot: '#2ecc71',
-    label: 'Completed',
-  },
-  archived: {
-    bg: 'rgba(149,165,166,0.12)',
-    text: '#95a5a6',
-    border: 'rgba(149,165,166,0.30)',
-    dot: '#95a5a6',
-    label: 'Archived',
-  },
-}
-
-// ─── Portable Text Components ────────────────────────────────────────────────
-
-const portableComponents = {
-  block: {
-    h2: ({ children }: { children?: React.ReactNode }) => (
-      <h2 className="font-display font-bold text-white leading-[1.15] tracking-[-0.025em] mb-4 mt-12 first:mt-0"
-          style={{ fontSize: 'clamp(1.4rem, 2.5vw, 1.9rem)' }}>
-        {children}
-      </h2>
-    ),
-    h3: ({ children }: { children?: React.ReactNode }) => (
-      <h3 className="font-display font-semibold text-white/90 text-xl leading-snug mb-3 mt-9 first:mt-0">
-        {children}
-      </h3>
-    ),
-    h4: ({ children }: { children?: React.ReactNode }) => (
-      <h4 className="font-display font-semibold text-white/85 text-lg mb-2 mt-7 first:mt-0">
-        {children}
-      </h4>
-    ),
-    blockquote: ({ children }: { children?: React.ReactNode }) => (
-      <blockquote className="relative my-8 pl-6 pr-5 py-4 rounded-r-2xl italic text-white/60 text-[1.05rem] leading-[1.8]"
-                  style={{ borderLeft: '3px solid var(--color-accent,#0ea5e9)', background: 'rgba(14,165,233,0.05)' }}>
-        {children}
-      </blockquote>
-    ),
-    normal: ({ children }: { children?: React.ReactNode }) => (
-      <p className="mb-[1.4em] last:mb-0 leading-[1.9] text-white/70 text-[1rem]">{children}</p>
-    ),
-  },
-  marks: {
-    strong: ({ children }: { children?: React.ReactNode }) => (
-      <strong className="font-semibold text-white">{children}</strong>
-    ),
-    em: ({ children }: { children?: React.ReactNode }) => (
-      <em className="italic text-white/65">{children}</em>
-    ),
-    link: ({ children, value }: { children?: React.ReactNode; value?: { href: string } }) => (
-      <a
-        href={value?.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-accent-light underline underline-offset-[3px] decoration-accent/40 hover:decoration-accent hover:text-white transition-colors duration-150"
-      >
-        {children}
-      </a>
-    ),
-  },
-  list: {
-    bullet: ({ children }: { children?: React.ReactNode }) => (
-      <ul className="my-6 space-y-2.5 pl-1">{children}</ul>
-    ),
-    number: ({ children }: { children?: React.ReactNode }) => (
-      <ol className="my-6 space-y-2.5 pl-5 list-decimal">{children}</ol>
-    ),
-  },
-  listItem: {
-    bullet: ({ children }: { children?: React.ReactNode }) => (
-      <li className="flex gap-3 items-start text-white/70 leading-[1.75]">
-        <span className="mt-[0.55em] w-1 h-1 rounded-full flex-shrink-0"
-              style={{ background: 'var(--color-accent,#0ea5e9)' }} />
-        <span>{children}</span>
-      </li>
-    ),
-    number: ({ children }: { children?: React.ReactNode }) => (
-      <li className="text-white/70 leading-[1.75] pl-1 [&::marker]:text-accent [&::marker]:font-semibold">
-        {children}
-      </li>
-    ),
-  },
-  types: {
-    image: ({
-      value,
-    }: {
-      value: { asset: never; alt?: string; caption?: string }
-    }) => (
-      <figure className="my-10">
-        <img
-          src={urlFor(value.asset).url()}
-          alt={value.alt ?? 'Project image'}
-          className="w-full rounded-2xl shadow-[0_12px_48px_rgba(0,0,0,0.5)]"
-        />
-        {value.caption && (
-          <figcaption className="text-center text-sm text-white/35 italic mt-3 leading-relaxed">
-            {value.caption}
-          </figcaption>
-        )}
-      </figure>
-    ),
-  },
-}
+import { portableTextComponents } from '@/components/portableTextComponents'
+import { TYPE_LABELS, TYPE_BADGE, STATUS_CONFIG } from '@/components/projectMeta'
+import Reveal from '@/components/ui/Reveal'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -178,10 +48,35 @@ interface Props {
   slug: string
 }
 
+// ─── Motion ──────────────────────────────────────────────────────────────────
+
+const EASE = [0.22, 1, 0.36, 1] as const
+
+const heroStack: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+}
+const rise: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: EASE } },
+}
+
+// ─── Small pieces ────────────────────────────────────────────────────────────
+
+function SectionHeading({ title, count }: { title: string; count: string }) {
+  return (
+    <div className="mb-6 flex items-baseline gap-4">
+      <h2 className="text-h3 text-fg">{title}</h2>
+      <span className="text-small text-subtle">{count}</span>
+    </div>
+  )
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function SingleProjectContent({ project }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
+  const closeBtnRef = useRef<HTMLButtonElement>(null)
 
   const openLightbox = (src: string, alt: string) => setLightbox({ src, alt })
   const closeLightbox = () => setLightbox(null)
@@ -191,6 +86,7 @@ export default function SingleProjectContent({ project }: Props) {
   useEffect(() => {
     if (!lightbox) return
     document.body.style.overflow = 'hidden'
+    closeBtnRef.current?.focus()
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightbox(null)
     }
@@ -201,7 +97,7 @@ export default function SingleProjectContent({ project }: Props) {
     }
   }, [lightbox])
 
-  // Sanity allows gallery entries with no uploaded asset — skip them
+  // Sanity allows gallery entries with no uploaded asset: skip them
   const gallery = (project.gallery ?? []).filter((img) => img.asset?.url)
 
   const types = Array.isArray(project.projectType)
@@ -210,8 +106,7 @@ export default function SingleProjectContent({ project }: Props) {
     ? [project.projectType]
     : []
 
-  const statusCfg =
-    STATUS_CONFIG[project.status ?? 'completed'] ?? STATUS_CONFIG.completed
+  const statusCfg = STATUS_CONFIG[project.status ?? 'completed'] ?? STATUS_CONFIG.completed
 
   const formattedDate = project.date
     ? new Date(project.date + 'T12:00:00').toLocaleDateString('en-US', {
@@ -220,552 +115,254 @@ export default function SingleProjectContent({ project }: Props) {
       })
     : null
 
+  const hasLinks = Boolean(project.liveUrl || project.githubUrl)
+  const hasBody = Array.isArray(project.body) && project.body.length > 0
 
   return (
     <>
-      {/*
-        All keyframes defined here keep the component self-contained
-        and avoid relying on arbitrary Tailwind JIT generation for
-        the one-off stagger delays used throughout.
-      */}
-      <style>{`
-        @keyframes spc-fade-up {
-          from { opacity: 0; transform: translateY(28px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spc-fade-in {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes spc-slide-right {
-          from { opacity: 0; transform: translateX(-20px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes spc-scale-up {
-          from { opacity: 0; transform: scale(0.94); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes spc-line-grow {
-          from { transform: scaleX(0); }
-          to   { transform: scaleX(1); }
-        }
-@keyframes spc-badge-pop {
-          from { opacity: 0; transform: translateY(8px) scale(0.9); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes spc-float-cta {
-          from { opacity: 0; transform: translateY(100%); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .spc-animate-fade-up {
-          animation: spc-fade-up 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .spc-animate-fade-in {
-          animation: spc-fade-in 0.6s ease both;
-        }
-        .spc-animate-scale-up {
-          animation: spc-scale-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-.spc-animate-badge {
-          animation: spc-badge-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .spc-animate-slide-right {
-          animation: spc-slide-right 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .spc-animate-float-cta {
-          animation: spc-float-cta 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.8s both;
-        }
-        .spc-line-grow {
-          animation: spc-line-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
-          transform-origin: left;
-        }
-
-/* Gallery masonry rhythm: every 4th item is wide */
-        .spc-gallery-item:nth-child(4n) {
-          grid-column: span 2;
-        }
-        @media (max-width: 639px) {
-          .spc-gallery-item:nth-child(4n) {
-            grid-column: span 1;
-          }
-        }
-
-        /* Tech stack pill hover shimmer */
-        .spc-tech-pill {
-          position: relative;
-          overflow: hidden;
-        }
-        .spc-tech-pill::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(105deg, transparent 40%, rgba(56,189,248,0.15) 50%, transparent 60%);
-          transform: translateX(-100%);
-          transition: transform 0.4s ease;
-        }
-        .spc-tech-pill:hover::before {
-          transform: translateX(100%);
-        }
-
-        /* Body prose horizontal rule */
-        .spc-prose hr {
-          border: none;
-          height: 1px;
-          background: rgba(255,255,255,0.07);
-          margin: 2.5rem 0;
-        }
-      `}</style>
-
-      {/* ── Fixed site background ───────────────────────────────────────────── */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-[#0a0c16]" />
-
-      <div className="relative z-10 min-h-screen">
-
-        {/* ── Hero ── */}
-        <div
-          className="px-6 sm:px-12 pb-12 sm:pb-16"
-          style={{ paddingTop: 'calc(var(--navbar-h, 60px) + 2rem)' }}
-        >
-          {/* Back link */}
-          <div className="mb-8 spc-animate-slide-right" style={{ animationDelay: '80ms' }}>
-            <Link
-              href="/portfolio"
-              className="inline-flex items-center gap-2 text-white/65 no-underline text-[0.8rem] font-medium px-3.5 py-1.5 rounded-full border border-white/[0.12] transition-all duration-200 hover:text-white hover:border-white/25 hover:-translate-x-0.5"
-              style={{ background: 'rgba(255,255,255,0.05)' }}
-            >
-              <FiArrowLeft size={12} />
+      {/* ── Hero ── */}
+      <header className="container-page page-top pb-10 sm:pb-14">
+        <motion.div variants={heroStack} initial="hidden" animate="show">
+          <motion.div variants={rise}>
+            <Link href="/portfolio" className="btn btn-ghost btn-sm group -ml-4 mb-6">
+              <FiArrowLeft
+                aria-hidden="true"
+                className="transition-transform duration-200 group-hover:-translate-x-1"
+              />
               Portfolio
             </Link>
-          </div>
+          </motion.div>
 
-          <div className="max-w-[820px]">
+          <div className="max-w-3xl">
             {/* Badges */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {types.filter((t) => TYPE_LABELS[t]).map((t, i) => (
-                <span
-                  key={t}
-                  className="spc-animate-badge px-3 py-1 rounded-full text-[0.68rem] font-bold tracking-[0.08em] uppercase"
-                  style={{
-                    background: TYPE_COLORS[t] + '1a',
-                    border: `1px solid ${TYPE_COLORS[t]}44`,
-                    color: TYPE_COLORS[t],
-                    animationDelay: `${160 + i * 55}ms`,
-                  }}
-                >
-                  {TYPE_LABELS[t]}
-                </span>
-              ))}
-              <span
-                className="spc-animate-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.68rem] font-bold tracking-[0.08em] uppercase border"
-                style={{
-                  background: statusCfg.bg,
-                  color: statusCfg.text,
-                  borderColor: statusCfg.border,
-                  animationDelay: `${160 + types.length * 55}ms`,
-                }}
+            <motion.ul variants={rise} className="mb-6 flex list-none flex-wrap gap-2 p-0">
+              {types
+                .filter((t) => TYPE_LABELS[t])
+                .map((t) => (
+                  <li
+                    key={t}
+                    className={`rounded-pill border px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${TYPE_BADGE[t]}`}
+                  >
+                    {TYPE_LABELS[t]}
+                  </li>
+                ))}
+              <li
+                className={`inline-flex items-center gap-1.5 rounded-pill border px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${statusCfg.badge}`}
               >
-                <span
-                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ background: statusCfg.dot, boxShadow: `0 0 6px ${statusCfg.dot}` }}
-                />
+                <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} aria-hidden="true" />
                 {statusCfg.label}
-              </span>
+              </li>
               {project.featured && (
-                <span
-                  className="spc-animate-badge px-3 py-1 rounded-full text-[0.68rem] font-bold tracking-[0.08em] uppercase border border-[rgba(247,171,10,0.35)] text-gold"
-                  style={{
-                    background: 'rgba(247,171,10,0.12)',
-                    animationDelay: `${160 + (types.length + 1) * 55}ms`,
-                  }}
-                >
+                <li className="rounded-pill border border-gold/35 bg-gold/10 px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] text-gold">
                   Featured
-                </span>
+                </li>
               )}
-            </div>
+            </motion.ul>
 
-            {/* Accent rule */}
-            <div
-              className="w-10 h-[2px] mb-5 rounded-full spc-line-grow"
-              style={{ background: 'var(--color-accent,#0ea5e9)' }}
-            />
-
-            {/* Title */}
-            <h1
-              className="font-display font-extrabold text-white leading-[1.02] tracking-[-0.04em] mb-5 spc-animate-fade-up"
-              style={{ fontSize: 'clamp(2.2rem, 5vw, 3.75rem)', animationDelay: '260ms' }}
-            >
+            <motion.h1 variants={rise} className="text-h1 text-fg sm:text-display">
               {project.title}
-            </h1>
+            </motion.h1>
 
             {project.excerpt && (
-              <p
-                className="text-white/60 leading-[1.8] mb-8 spc-animate-fade-up"
-                style={{ fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)', animationDelay: '340ms' }}
-              >
+              <motion.p variants={rise} className="lead mt-5 max-w-2xl">
                 {project.excerpt}
-              </p>
+              </motion.p>
             )}
 
-            {/* CTAs */}
-            <div className="flex flex-wrap gap-3 spc-animate-fade-up" style={{ animationDelay: '420ms' }}>
-              {project.liveUrl && (
-                <a
-                  href={project.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold no-underline transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0"
-                  style={{ background: 'var(--color-accent,#0ea5e9)', boxShadow: '0 4px 20px rgba(14,165,233,0.30)' }}
-                >
-                  <FiArrowUpRight size={14} />
-                  Live Demo
-                </a>
-              )}
-              {project.githubUrl && (
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white/80 text-sm font-medium no-underline border border-white/[0.15] transition-all duration-200 hover:bg-white/[0.10] hover:text-white hover:-translate-y-0.5 active:translate-y-0"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
-                >
-                  <FaGithub size={14} />
-                  GitHub
-                </a>
-              )}
-            </div>
+            {hasLinks && (
+              <motion.div variants={rise} className="mt-8 flex flex-wrap gap-3">
+                {project.liveUrl && (
+                  <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                    <FiArrowUpRight aria-hidden="true" />
+                    Live Demo
+                  </a>
+                )}
+                {project.githubUrl && (
+                  <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                    <FaGithub aria-hidden="true" />
+                    GitHub
+                  </a>
+                )}
+              </motion.div>
+            )}
           </div>
 
-          {/* Project image — shown as a contained preview below the title block */}
+          {/* Project image */}
           {project.mainImage?.asset?.url && (
-            <div
-              className="mt-10 rounded-2xl overflow-hidden border border-white/[0.07] spc-animate-fade-up"
-              style={{ animationDelay: '500ms', maxWidth: '900px' }}
+            <motion.figure
+              variants={rise}
+              className="mt-12 overflow-hidden rounded-card border border-line/15 shadow-lift"
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={project.mainImage.asset.url}
                 alt={project.mainImage.alt ?? project.title}
                 className="w-full object-cover"
               />
-            </div>
+            </motion.figure>
           )}
-        </div>
+        </motion.div>
+      </header>
 
-        {/* ══════════════════════════════════════════════════════════════════
-            METADATA STRIP
-            Full-width horizontal byline that runs between hero and body.
-            Replaces the generic squeezed sidebar with a scannable row.
-        ════════════════════════════════════════════════════════════════════ */}
-        <div
-          className="relative border-y border-white/[0.06] spc-animate-fade-in"
-          style={{
-            background: 'rgba(255,255,255,0.025)',
-            backdropFilter: 'blur(16px)',
-            animationDelay: '550ms',
-          }}
-        >
-          <div className="max-w-[1200px] mx-auto px-6 sm:px-12 py-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-
+      {/* ── Metadata strip ── */}
+      {(formattedDate || project.place) && (
+        <div className="border-y border-line/15 bg-white/[0.02]">
+          <dl className="container-page m-0 flex flex-wrap items-center gap-x-8 gap-y-2 py-4">
             {formattedDate && (
               <div className="flex items-center gap-2">
-                <FiCalendar size={12} className="text-accent flex-shrink-0 opacity-70" />
-                <span className="text-[0.78rem] text-white/45 font-medium tracking-[0.03em]">
-                  {formattedDate}
-                </span>
+                <dt className="sr-only">Date</dt>
+                <FiCalendar size={14} className="flex-shrink-0 text-accent-light" aria-hidden="true" />
+                <dd className="m-0 text-small font-medium text-muted">{formattedDate}</dd>
               </div>
             )}
-
             {project.place && (
-              <>
-                {formattedDate && <div className="hidden sm:block w-px h-3.5 bg-white/10" />}
-                <div className="flex items-center gap-2">
-                  <FiMapPin size={12} className="text-accent flex-shrink-0 opacity-70" />
-                  <span className="text-[0.78rem] text-white/45 font-medium tracking-[0.03em]">
-                    {project.place}
-                  </span>
-                </div>
-              </>
+              <div className="flex items-center gap-2">
+                <dt className="sr-only">Context</dt>
+                <FiMapPin size={14} className="flex-shrink-0 text-accent-light" aria-hidden="true" />
+                <dd className="m-0 text-small font-medium text-muted">{project.place}</dd>
+              </div>
             )}
-
-            {/* Spacer — pushes the project number label to the far right */}
-            <div className="flex-1" />
-
-            <span
-              className="hidden md:block font-display font-bold text-[0.65rem] tracking-[0.14em] uppercase"
-              style={{ color: 'rgba(14,165,233,0.4)' }}
-            >
-              Case Study
-            </span>
-          </div>
-
-          {/* Bottom accent line */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-px spc-line-grow"
-            style={{
-              background:
-                'linear-gradient(to right, var(--color-accent,#0ea5e9), transparent)',
-              opacity: 0.3,
-            }}
-          />
+            <span className="eyebrow ml-auto hidden text-accent-light/70 md:block">Case study</span>
+          </dl>
         </div>
+      )}
 
-        {/* ══════════════════════════════════════════════════════════════════
-            BODY
-            Two-column at lg+: wide article | narrow supplementary column.
-            The supplementary column is NOT a generic card — it's whitespace
-            with a floating sticky link strip anchored to the top.
-        ════════════════════════════════════════════════════════════════════ */}
-        <div className="max-w-[1200px] mx-auto px-6 sm:px-12 pt-14 pb-28">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
-
-            {/* Article */}
-            <article
-              className="flex-1 min-w-0 spc-prose spc-animate-fade-up"
-              style={{ animationDelay: '620ms' }}
-            >
-              {project.body && Array.isArray(project.body) && project.body.length > 0 ? (
-                <PortableText value={project.body as never} components={portableComponents} />
+      {/* ── Body ── */}
+      <div className="container-page pb-28 pt-14 lg:pb-section">
+        <div className="flex flex-col items-start gap-12 lg:flex-row lg:gap-16">
+          <Reveal className="min-w-0 max-w-prose-lg flex-1">
+            <article className="prose-pt">
+              {hasBody ? (
+                <PortableText value={project.body as never} components={portableTextComponents} />
               ) : project.description ? (
-                <p className="text-white/65 leading-[1.9] text-[1rem]">{project.description}</p>
+                <p>{project.description}</p>
               ) : null}
             </article>
+          </Reveal>
 
-            {/* Supplementary column — sticky link + meta strip */}
+          {/* Desktop side column: sticky links */}
+          {hasLinks && (
             <aside
-              className="w-full lg:w-[220px] flex-shrink-0 lg:sticky"
-              style={{ top: 'calc(var(--navbar-h,60px) + 2rem)' }}
+              className="hidden w-[15rem] flex-shrink-0 lg:sticky lg:block"
+              style={{ top: 'calc(var(--navbar-h) + 2rem)' }}
+              aria-label="Project links"
             >
-              {/* Link card */}
-              {(project.liveUrl || project.githubUrl) && (
-                <div
-                  className="rounded-2xl border border-white/[0.08] overflow-hidden mb-5 spc-animate-scale-up"
-                  style={{
-                    background: 'rgba(255,255,255,0.035)',
-                    backdropFilter: 'blur(18px)',
-                    animationDelay: '680ms',
-                  }}
-                >
-                  {/* Accent cap */}
-                  <div
-                    className="h-[2px]"
-                    style={{
-                      background:
-                        'linear-gradient(90deg, var(--color-accent,#0ea5e9), var(--color-accent-light,#38bdf8))',
-                    }}
-                  />
-                  <div className="p-4 flex flex-col gap-2.5">
-                    <p className="text-[0.62rem] font-bold tracking-[0.14em] uppercase text-white/25 mb-1">
-                      View Project
-                    </p>
-                    {project.liveUrl && (
-                      <a
-                        href={project.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between w-full px-4 py-2.5 rounded-xl text-white text-[0.82rem] font-semibold no-underline transition-all duration-200 hover:brightness-110 hover:-translate-y-px"
-                        style={{ background: 'var(--color-accent,#0ea5e9)' }}
-                      >
-                        Live Demo
-                        <FiExternalLink size={12} />
-                      </a>
-                    )}
-                    {project.githubUrl && (
-                      <a
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between w-full px-4 py-2.5 rounded-xl text-white/75 text-[0.82rem] font-medium no-underline border border-white/[0.10] transition-all duration-200 hover:bg-white/[0.08] hover:text-white hover:-translate-y-px"
-                        style={{ background: 'rgba(255,255,255,0.04)' }}
-                      >
-                        GitHub
-                        <FaGithub size={12} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Meta details */}
-              {(formattedDate || project.place) && (
-                <div
-                  className="rounded-2xl border border-white/[0.06] p-4 flex flex-col gap-4 spc-animate-scale-up"
-                  style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    backdropFilter: 'blur(12px)',
-                    animationDelay: '720ms',
-                  }}
-                >
-                  {formattedDate && (
-                    <div>
-                      <p className="text-[0.6rem] font-bold tracking-[0.14em] uppercase text-white/20 mb-1.5">
-                        Date
-                      </p>
-                      <p className="flex items-center gap-2 text-white/65 text-[0.82rem]">
-                        <FiCalendar size={11} className="text-accent/60 flex-shrink-0" />
-                        {formattedDate}
-                      </p>
-                    </div>
-                  )}
-                  {project.place && (
-                    <div>
-                      <p className="text-[0.6rem] font-bold tracking-[0.14em] uppercase text-white/20 mb-1.5">
-                        Context
-                      </p>
-                      <p className="flex items-center gap-2 text-white/65 text-[0.82rem]">
-                        <FiMapPin size={11} className="text-accent/60 flex-shrink-0" />
-                        {project.place}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </aside>
-          </div>
-
-          {/* ══════════════════════════════════════════════════════════════
-              TECH STACK — full-width section below article
-              Rendered as a generous tag grid with stagger animation,
-              not squeezed into a 260px sidebar column.
-          ══════════════════════════════════════════════════════════════ */}
-          {project.techStack && project.techStack.length > 0 && (
-            <div
-              className="mt-14 pt-12 border-t border-white/[0.06] spc-animate-fade-up"
-              style={{ animationDelay: '0ms' }}
-            >
-              <div className="flex items-baseline gap-4 mb-6">
-                <h2 className="font-display font-bold text-white tracking-[-0.02em]"
-                    style={{ fontSize: 'clamp(1.1rem, 2vw, 1.35rem)' }}>
-                  Tech Stack
-                </h2>
-                <span className="text-white/20 text-sm">
-                  {project.techStack.length} technologies
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2.5">
-                {project.techStack.map((tag, i) => (
-                  <span
-                    key={i}
-                    className="spc-tech-pill spc-animate-badge px-3.5 py-1.5 rounded-xl text-[0.78rem] font-semibold text-accent-light border border-[rgba(14,165,233,0.22)] tracking-[0.02em] cursor-default"
-                    style={{
-                      background: 'rgba(14,165,233,0.07)',
-                      animationDelay: `${i * 45}ms`,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ══════════════════════════════════════════════════════════════
-              GALLERY
-              Rhythmic grid: 3 columns, every 4th item spans 2 columns for
-              visual relief. Lightbox on click, keyboard Escape to close.
-          ══════════════════════════════════════════════════════════════ */}
-          {gallery.length > 0 && (
-            <div className="mt-14 pt-12 border-t border-white/[0.06]">
-              <div className="flex items-baseline gap-4 mb-8">
-                <h2
-                  className="font-display font-bold text-white tracking-[-0.02em]"
-                  style={{ fontSize: 'clamp(1.1rem, 2vw, 1.35rem)' }}
-                >
-                  Gallery
-                </h2>
-                <span className="text-white/20 text-sm">
-                  {gallery.length} image{gallery.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              {/* Grid — 2 cols sm, 3 cols lg, with span-2 promotion via CSS class */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 auto-rows-[260px]">
-                {gallery.map((img, i) => (
-                  <div
-                    key={`${img.asset._id}-${i}`}
-                    className="spc-gallery-item relative overflow-hidden rounded-2xl cursor-pointer group border border-white/[0.06]"
-                    style={{ background: 'rgba(255,255,255,0.03)' }}
-                    onClick={() =>
-                      openLightbox(img.asset.url, img.alt ?? `Gallery image ${i + 1}`)
-                    }
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Open gallery image ${i + 1}${img.alt ? ': ' + img.alt : ''}`}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        openLightbox(img.asset.url, img.alt ?? `Gallery image ${i + 1}`)
-                      }
-                    }}
-                  >
-                    <img
-                      src={img.asset.url}
-                      alt={img.alt ?? `Gallery image ${i + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                    />
-
-                    {/* Hover overlay */}
-                    <div
-                      className="absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                      style={{
-                        background:
-                          'linear-gradient(to top, rgba(10,12,22,0.85) 0%, rgba(10,12,22,0.35) 60%, transparent 100%)',
-                      }}
-                    />
-
-                    {/* Zoom icon + caption */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2 p-4">
-                      <div
-                        className="w-10 h-10 flex items-center justify-center rounded-full border border-white/25 backdrop-blur-[10px]"
-                        style={{ background: 'rgba(255,255,255,0.1)' }}
-                      >
-                        <FiZoomIn size={16} className="text-white" />
-                      </div>
-                    </div>
-
-                    {/* Caption strip at bottom */}
-                    {img.caption && (
-                      <div className="absolute bottom-0 inset-x-0 px-4 pb-4 pt-10 translate-y-1 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <p className="text-white/80 text-xs leading-relaxed text-center drop-shadow">
-                          {img.caption}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Subtle index number — editorial detail */}
-                    <span
-                      className="absolute top-3 right-3 font-display font-bold text-white/15 text-[0.65rem] tracking-[0.1em] select-none"
-                      aria-hidden="true"
+              <div className="card overflow-hidden">
+                <div className="h-0.5 bg-gradient-to-r from-accent to-accent-light" aria-hidden="true" />
+                <div className="flex flex-col gap-2.5 p-4">
+                  <p className="eyebrow mb-1 !text-subtle">View project</p>
+                  {project.liveUrl && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary btn-sm justify-between"
                     >
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-                ))}
+                      Live Demo
+                      <FiExternalLink aria-hidden="true" />
+                    </a>
+                  )}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary btn-sm justify-between"
+                    >
+                      GitHub
+                      <FaGithub aria-hidden="true" />
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
+            </aside>
           )}
         </div>
+
+        {/* Tech stack */}
+        {project.techStack && project.techStack.length > 0 && (
+          <Reveal className="mt-16 border-t border-line/15 pt-12">
+            <SectionHeading title="Tech Stack" count={`${project.techStack.length} technologies`} />
+            <ul className="m-0 flex list-none flex-wrap gap-2.5 p-0">
+              {project.techStack.map((tag, i) => (
+                <li
+                  key={`${tag}-${i}`}
+                  className="rounded-control border border-accent/25 bg-accent/[0.07] px-3.5 py-1.5 font-mono text-[0.8rem] font-medium text-accent-light transition-colors duration-200 hover:border-accent-light/60 hover:bg-accent/15"
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        )}
+
+        {/* Gallery */}
+        {gallery.length > 0 && (
+          <section className="mt-16 border-t border-line/15 pt-12" aria-label="Gallery">
+            <SectionHeading title="Gallery" count={`${gallery.length} image${gallery.length !== 1 ? 's' : ''}`} />
+
+            {/* 1 / 2 / 3 columns; every 4th tile spans two columns on sm+ for rhythm */}
+            <ul className="m-0 grid list-none auto-rows-[16rem] grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+              {gallery.map((img, i) => {
+                const label = img.alt ?? `Gallery image ${i + 1}`
+                return (
+                  <li key={`${img.asset._id}-${i}`} className="sm:[&:nth-child(4n)]:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(img.asset.url, label)}
+                      aria-label={`Open gallery image ${i + 1}${img.alt ? ': ' + img.alt : ''}`}
+                      className="group relative block h-full w-full cursor-zoom-in overflow-hidden rounded-card border border-line/15 bg-surface p-0 text-left"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.asset.url}
+                        alt={label}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.05]"
+                      />
+                      <span
+                        className="absolute inset-0 bg-gradient-to-t from-bg/85 via-bg/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                        aria-hidden="true"
+                      >
+                        <span className="glass flex h-11 w-11 items-center justify-center rounded-full border border-line/40">
+                          <FiZoomIn size={18} className="text-fg" />
+                        </span>
+                      </span>
+                      {img.caption && (
+                        <span className="absolute inset-x-0 bottom-0 translate-y-1 px-4 pb-4 pt-10 text-center text-[0.8rem] leading-snug text-fg opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                          {img.caption}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MOBILE FLOATING CTA BAR
-          On small screens the sidebar links are hidden; this sticky bottom bar
-          surfaces the primary actions without polluting the article flow.
-      ══════════════════════════════════════════════════════════════════════ */}
-      {(project.liveUrl || project.githubUrl) && (
-        <div
-          className="lg:hidden fixed bottom-0 inset-x-0 z-50 spc-animate-float-cta border-t border-white/[0.08]"
-          style={{ background: 'rgba(10,12,22,0.92)', backdropFilter: 'blur(20px)' }}
+      {/* ── Mobile floating CTA bar (sidebar links are hidden below lg) ── */}
+      {hasLinks && (
+        <motion.div
+          className="glass fixed inset-x-0 bottom-0 z-50 border-t border-line/20 lg:hidden"
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.45, delay: 0.8, ease: EASE }}
         >
-          <div className="flex gap-2.5 px-4 py-3 max-w-lg mx-auto">
+          <div className="mx-auto flex max-w-lg gap-2.5 px-4 py-3">
             {project.liveUrl && (
               <a
                 href={project.liveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-semibold no-underline transition-opacity duration-200 hover:opacity-90"
-                style={{ background: 'var(--color-accent,#0ea5e9)' }}
+                className="btn btn-primary btn-sm flex-1"
               >
-                <FiArrowUpRight size={14} />
+                <FiArrowUpRight aria-hidden="true" />
                 Live Demo
               </a>
             )}
@@ -774,56 +371,54 @@ export default function SingleProjectContent({ project }: Props) {
                 href={project.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white/80 text-sm font-medium no-underline border border-white/[0.12] transition-all duration-200 hover:bg-white/[0.08] hover:text-white"
-                style={{ background: 'rgba(255,255,255,0.05)' }}
+                className="btn btn-secondary btn-sm flex-1"
               >
-                <FaGithub size={14} />
+                <FaGithub aria-hidden="true" />
                 GitHub
               </a>
             )}
           </div>
-          {/* Safe-area inset for devices with home indicator */}
+          {/* Safe-area inset for devices with a home indicator */}
           <div className="h-[env(safe-area-inset-bottom)]" />
-        </div>
+        </motion.div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          LIGHTBOX
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── Lightbox ── */}
       {lightbox && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 spc-animate-fade-in"
-          style={{
-            background: 'rgba(5,7,15,0.97)',
-            backdropFilter: 'blur(8px)',
-            animationDuration: '0.2s',
-          }}
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightbox.alt}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-bg/95 p-4 backdrop-blur-md"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
           onClick={closeLightbox}
         >
-          {/* Close button */}
           <button
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 flex items-center justify-center rounded-full border border-white/[0.15] text-white/70 hover:text-white hover:bg-white/[0.1] transition-all duration-150 cursor-pointer"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
+            ref={closeBtnRef}
+            type="button"
+            className="absolute right-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-line/30 bg-white/[0.06] text-fg transition-colors hover:bg-white/[0.12] sm:right-6 sm:top-6"
             onClick={closeLightbox}
             aria-label="Close lightbox"
           >
-            <FiX size={16} />
+            <FiX size={18} aria-hidden="true" />
           </button>
 
-          {/* Image */}
-          <img
+          <motion.img
             src={lightbox.src}
             alt={lightbox.alt}
-            className="max-w-[92vw] max-h-[88vh] object-contain rounded-2xl shadow-[0_24px_80px_rgba(0,0,0,0.7)] spc-animate-scale-up"
-            style={{ animationDuration: '0.3s' }}
+            className="max-h-[88vh] max-w-[92vw] rounded-card object-contain shadow-lift"
+            initial={{ scale: 0.94, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, ease: EASE }}
             onClick={(e) => e.stopPropagation()}
           />
 
-          {/* Keyboard hint */}
-          <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/20 text-[0.7rem] tracking-[0.1em] font-medium select-none">
+          <p className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 select-none text-[0.75rem] tracking-[0.1em] text-subtle">
             ESC to close
           </p>
-        </div>
+        </motion.div>
       )}
     </>
   )
