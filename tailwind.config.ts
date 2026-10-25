@@ -1,104 +1,106 @@
 import type { Config } from 'tailwindcss'
 
+/**
+ * Design tokens live in app/globals.css as CSS variables (RGB channels).
+ * This file maps them onto the Tailwind theme so utilities like
+ * `bg-accent/10`, `text-muted`, `rounded-card`, `text-h2` all share one source.
+ */
+const channel = (name: string) => `rgb(var(--c-${name}) / <alpha-value>)`
+
 const config: Config = {
-  content: [
-    './app/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-  ],
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        accent: '#0ea5e9',
-        'accent-dark': '#0284c7',
-        'accent-light': '#38bdf8',
-        gold: '#f7ab0a',
+        bg: channel('bg'),
+        surface: channel('surface'),
+        raised: channel('raised'),
+        fg: channel('fg'),
+        muted: channel('muted'),
+        subtle: channel('subtle'),
+        line: channel('line'),
+        accent: {
+          DEFAULT: channel('accent'),
+          light: channel('accent-light'),
+          dark: channel('accent-dark'),
+          ink: channel('accent-ink'),
+        },
+        gold: {
+          DEFAULT: channel('gold'),
+          ink: channel('gold-ink'),
+        },
+        success: channel('success'),
+        warning: channel('warning'),
+        danger: channel('danger'),
       },
       fontFamily: {
-        display: ['var(--font-syne)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-bricolage)', 'Segoe UI', 'system-ui', 'sans-serif'],
         body: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains-mono)', 'Consolas', 'monospace'],
       },
+      /**
+       * Type scale. Display sizes are fluid (clamp) so there are no
+       * breakpoint-by-breakpoint overrides in components.
+       */
+      fontSize: {
+        display: ['clamp(2.5rem, 1.6rem + 4.2vw, 4.5rem)', { lineHeight: '1.04', letterSpacing: '-0.035em', fontWeight: '800' }],
+        h1: ['clamp(2rem, 1.4rem + 2.6vw, 3.25rem)', { lineHeight: '1.08', letterSpacing: '-0.03em', fontWeight: '800' }],
+        h2: ['clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem)', { lineHeight: '1.15', letterSpacing: '-0.025em', fontWeight: '700' }],
+        h3: ['clamp(1.2rem, 1.1rem + 0.6vw, 1.5rem)', { lineHeight: '1.25', letterSpacing: '-0.015em', fontWeight: '700' }],
+        lead: ['clamp(1.0625rem, 1rem + 0.4vw, 1.25rem)', { lineHeight: '1.7' }],
+        body: ['1rem', { lineHeight: '1.65' }],
+        small: ['0.875rem', { lineHeight: '1.55' }],
+        eyebrow: ['0.75rem', { lineHeight: '1.2', letterSpacing: '0.16em', fontWeight: '500' }],
+      },
+      spacing: {
+        gutter: 'var(--gutter)',
+        section: 'var(--section-y)',
+        nav: 'var(--navbar-h)',
+      },
+      maxWidth: {
+        content: '72rem',
+        'prose-lg': '44rem',
+      },
+      borderRadius: {
+        control: 'var(--radius-control)',
+        card: 'var(--radius-card)',
+        pill: 'var(--radius-pill)',
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',
+        lift: 'var(--shadow-lift)',
+        glow: 'var(--shadow-glow)',
+      },
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.22, 1, 0.36, 1)',
+      },
       keyframes: {
         float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-5px)' },
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
         },
         fadeInUp: {
-          from: { opacity: '0', transform: 'translateY(30px)' },
+          from: { opacity: '0', transform: 'translateY(20px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
-        fadeInScale: {
-          '0%': { opacity: '0', transform: 'scale(0.5) rotate(-10deg)' },
-          '100%': { opacity: '1', transform: 'scale(1) rotate(0deg)' },
-        },
-        slideInUp: {
-          '0%': { opacity: '0', transform: 'translateY(60px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideInRight: {
-          '0%': { opacity: '0', transform: 'translateX(-60px)' },
-          '100%': { opacity: '1', transform: 'translateX(0)' },
-        },
-        popIn: {
-          '0%': { opacity: '0', transform: 'scale(0) translateY(20px)' },
-          '50%': { transform: 'scale(1.1) translateY(-5px)' },
-          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
-        },
-        backgroundZoom: {
-          '0%': { transform: 'scale(1.2)', filter: 'blur(10px)' },
-          '100%': { transform: 'scale(1)', filter: 'blur(0px)' },
-        },
         shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
-        spin: {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' },
+        orbit: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
         },
-        ping: {
-          '0%': { transform: 'scale(0.8)', opacity: '0.8' },
-          '70%': { transform: 'scale(1.1)', opacity: '0.2' },
-          '100%': { transform: 'scale(0.8)', opacity: '0' },
-        },
-        rotate: {
-          '0%': { transform: 'translate(-50%, -50%) rotate(0deg)' },
-          '100%': { transform: 'translate(-50%, -50%) rotate(360deg)' },
-        },
-        rotateReverse: {
-          '0%': { transform: 'translate(-50%, -50%) rotate(0deg)' },
-          '100%': { transform: 'translate(-50%, -50%) rotate(-360deg)' },
-        },
-        ringRotate: {
-          '0%': { transform: 'rotate(0deg)', borderTopColor: '#0ea5e9' },
-          '50%': { borderTopColor: '#38bdf8' },
-          '100%': { transform: 'rotate(360deg)', borderTopColor: '#0ea5e9' },
-        },
-        logoBreathe: {
-          '0%, 100%': { transform: 'scale(1)', opacity: '0.9' },
-          '50%': { transform: 'scale(1.05)', opacity: '1' },
-        },
-        progressFlow: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
+        pulseRing: {
+          '0%': { transform: 'scale(0.9)', opacity: '0.6' },
+          '100%': { transform: 'scale(1.5)', opacity: '0' },
         },
       },
       animation: {
-        float: 'float 3s ease-in-out infinite',
-        'fade-in-up': 'fadeInUp 0.6s ease-out',
-        'fade-in-scale': 'fadeInScale 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards',
-        'slide-in-up': 'slideInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards',
-        'slide-in-right': 'slideInRight 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards',
-        'pop-in': 'popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) backwards',
-        'bg-zoom': 'backgroundZoom 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+        float: 'float 4s ease-in-out infinite',
+        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.22,1,0.36,1) both',
         shimmer: 'shimmer 2s linear infinite',
-        spin: 'spin 1s linear infinite',
-        ping: 'ping 2.5s ease-out infinite',
-        rotate: 'rotate 30s linear infinite',
-        'rotate-reverse': 'rotateReverse 30s linear infinite',
-        'ring-rotate': 'ringRotate 2s linear infinite',
-        'logo-breathe': 'logoBreathe 3s ease-in-out infinite',
-        'progress-flow': 'progressFlow 2s linear infinite',
+        'pulse-ring': 'pulseRing 2.4s ease-out infinite',
       },
     },
   },

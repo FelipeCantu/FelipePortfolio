@@ -2,84 +2,241 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   DESIGN TOKENS  --  "Midnight Signal"
+   Single source of truth. Colors are stored as space-separated RGB channels so
+   Tailwind can compose opacity (`bg-accent/10`) and CSS can do
+   `rgb(var(--c-accent) / 0.2)`. tailwind.config.ts maps these to the theme.
+   ========================================================================== */
 :root {
-  /* Color tokens */
-  --color-accent: #0ea5e9;
-  --color-accent-dark: #0284c7;
-  --color-accent-light: #38bdf8;
-  --color-gold: #f7ab0a;
-  --color-neutral-900: #0a0c16;
-  --color-neutral-800: #111827;
-  --color-neutral-700: #1f2937;
-  --color-neutral-600: #374151;
+  color-scheme: dark;
 
-  /* Typography */
-  --font-display: var(--font-syne), 'Syne', system-ui, sans-serif;
-  --font-body: var(--font-dm-sans), 'DM Sans', system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'Consolas', monospace;
+  /* Surfaces (dark-only site; elevation = lighter navy) */
+  --c-bg: 10 12 22;            /* #0a0c16 page */
+  --c-surface: 16 20 36;       /* #101424 cards */
+  --c-raised: 23 28 50;        /* #171c32 hover / popovers */
 
-  /* Spacing */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+  /* Text. Contrast vs --c-bg: fg 17:1, muted 8:1, subtle 5.4:1 (all >= AA) */
+  --c-fg: 241 245 249;
+  --c-muted: 160 174 192;
+  --c-subtle: 125 138 160;
 
-  /* Border radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
+  /* Brand */
+  --c-accent: 14 165 233;       /* sky-500, interactive + emphasis */
+  --c-accent-light: 56 189 248; /* sky-400, text/links on dark */
+  --c-accent-dark: 2 132 199;   /* sky-600, pressed */
+  --c-accent-ink: 3 17 28;      /* text ON accent fills (7.4:1; white was 2.8:1) */
+  --c-gold: 247 171 10;         /* conversion CTA + "available / featured" only */
+  --c-gold-ink: 26 18 2;
+
+  /* Status */
+  --c-success: 52 211 153;
+  --c-warning: 251 191 36;
+  --c-danger: 248 113 113;
+
+  /* Hairlines */
+  --c-line: 148 163 184;        /* used at 0.14 / 0.28 alpha */
+
+  /* Back-compat full-color aliases (inline styles + admin use these) */
+  --color-accent: rgb(var(--c-accent));
+  --color-accent-light: rgb(var(--c-accent-light));
+  --color-accent-dark: rgb(var(--c-accent-dark));
+  --color-gold: rgb(var(--c-gold));
+  --color-neutral-900: rgb(var(--c-bg));
+  --color-neutral-800: rgb(var(--c-surface));
+
+  /* Typography families (next/font injects the --font-* face variables) */
+  --font-display: var(--font-bricolage), 'Segoe UI', system-ui, sans-serif;
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), Consolas, monospace;
+
+  /* Radii */
+  --radius-control: 0.75rem;   /* inputs, small buttons */
+  --radius-card: 1.25rem;
+  --radius-pill: 9999px;
 
   /* Shadows */
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.18);
-  --shadow-glow: 0 0 24px rgba(14, 165, 233, 0.25);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 12px 32px -12px rgb(0 0 0 / 0.55);
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 24px 48px -16px rgb(0 0 0 / 0.7);
+  --shadow-glow: 0 0 0 1px rgb(var(--c-accent) / 0.35), 0 12px 40px -8px rgb(var(--c-accent) / 0.35);
 
-  /* Transitions */
-  --transition-fast: 0.18s ease;
-  --transition-base: 0.25s ease;
-  --transition-slow: 0.42s ease;
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-base: 240ms;
+  --dur-slow: 480ms;
 
   /* Layout */
-  --navbar-h: 60px;
+  --navbar-h: 64px;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --section-y: clamp(3.5rem, 8vw, 6.5rem);
 }
 
-/* Base reset (Tailwind preflight handles most, these are supplements) */
+/* ==========================================================================
+   BASE
+   ========================================================================== */
 html {
+  background-color: rgb(var(--c-bg));
   scroll-behavior: smooth;
-}
-
-html, body, #__next {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  scroll-padding-top: calc(var(--navbar-h) + 1rem);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  overflow-x: hidden;
-  overflow-y: auto;
-  background-color: var(--color-neutral-900);
-  color: white;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  /* clip (not hidden) so body never becomes a scroll container */
+  overflow-x: clip;
+  color: rgb(var(--c-fg));
   font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* One shared ambient backdrop for every page: replaces the per-page
+   mainbg.jpg + overlay stacks (one fewer large image on the critical path). */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58rem 36rem at 88% -8%, rgb(var(--c-accent) / 0.16), transparent 62%),
+    radial-gradient(44rem 30rem at -8% 18%, rgb(var(--c-accent-dark) / 0.12), transparent 60%),
+    radial-gradient(40rem 26rem at 50% 115%, rgb(var(--c-gold) / 0.05), transparent 60%);
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
-/* Reduced motion */
+p { text-wrap: pretty; }
+
+::selection { background: rgb(var(--c-accent) / 0.35); color: #fff; }
+
+/* Thin themed scrollbars */
+* { scrollbar-width: thin; scrollbar-color: rgb(var(--c-line) / 0.35) transparent; }
+
+/* Keyboard focus: one consistent, high-visibility ring everywhere */
+:focus-visible {
+  outline: 2px solid rgb(var(--c-accent-light));
+  outline-offset: 3px;
+  border-radius: 0.375rem;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Reduced motion: CSS animations/transitions collapse; framer-motion is handled
+   by <MotionConfig reducedMotion="user"> in components/MotionProvider.tsx */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Utility layer extras */
+/* ==========================================================================
+   COMPONENT PRIMITIVES
+   Small, reusable, token-driven. Page components compose these instead of
+   re-declaring hex values.
+   ========================================================================== */
+@layer components {
+  /* Layout */
+  .container-page { @apply mx-auto w-full max-w-content px-gutter; }
+  .section-y { padding-block: var(--section-y); }
+  .page-top { padding-top: calc(var(--navbar-h) + clamp(1.5rem, 4vw, 3rem)); }
+
+  /* Typography helpers */
+  .eyebrow {
+    @apply font-mono text-eyebrow uppercase text-accent-light;
+  }
+  .lead { @apply text-lead text-muted; }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex min-h-[2.75rem] items-center justify-center gap-2 whitespace-nowrap rounded-pill border border-transparent px-6 py-2.5 font-body text-[0.95rem] font-semibold leading-none no-underline;
+    @apply transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out-expo;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+  .btn-primary {
+    @apply bg-accent text-accent-ink shadow-[0_8px_24px_-8px_rgb(var(--c-accent)/0.6)];
+    @apply hover:bg-accent-light hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgb(var(--c-accent)/0.7)];
+  }
+  .btn-secondary {
+    @apply border-line/30 bg-white/[0.04] text-fg;
+    @apply hover:-translate-y-0.5 hover:border-accent-light/60 hover:bg-accent/10 hover:text-white;
+  }
+  .btn-gold {
+    @apply bg-gold text-gold-ink shadow-[0_8px_24px_-10px_rgb(var(--c-gold)/0.6)];
+    @apply hover:-translate-y-0.5 hover:brightness-110;
+  }
+  .btn-ghost { @apply px-4 text-muted hover:bg-white/[0.06] hover:text-fg; }
+  .btn-sm { @apply min-h-[2.25rem] px-4 py-2 text-[0.85rem]; }
+
+  /* Cards */
+  .card {
+    @apply rounded-card border border-line/15 bg-surface shadow-card;
+  }
+  .card-interactive {
+    @apply card transition-[transform,border-color,box-shadow,background-color] duration-300 ease-out-expo;
+    @apply hover:-translate-y-1 hover:border-accent/40 hover:bg-raised hover:shadow-lift;
+  }
+
+  /* Chips / badges */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill border border-line/20 bg-white/[0.04] px-3 py-1 font-mono text-[0.72rem] font-medium text-muted;
+  }
+  .chip-accent { @apply border-accent/30 bg-accent/10 text-accent-light; }
+  .chip-gold { @apply border-gold/35 bg-gold/10 text-gold; }
+
+  /* Form fields */
+  .field-label { @apply mb-1.5 block text-[0.85rem] font-semibold text-fg; }
+  .field-hint { @apply mt-1.5 text-[0.8rem] text-subtle; }
+  .field-error { @apply mt-1.5 flex items-start gap-1.5 text-[0.8rem] font-medium text-danger; }
+  .field {
+    @apply block min-h-[2.9rem] w-full rounded-control border border-line/25 bg-bg/60 px-4 py-3 font-body text-base text-fg placeholder:text-subtle;
+    @apply transition-[border-color,box-shadow,background-color] duration-200;
+    @apply hover:border-line/45;
+    @apply focus:border-accent-light focus:bg-bg focus:outline-none focus:ring-4 focus:ring-accent/20;
+  }
+  .field[aria-invalid='true'] {
+    @apply border-danger/70 focus:border-danger focus:ring-danger/20;
+  }
+  textarea.field { @apply min-h-[7.5rem] resize-y leading-relaxed; }
+
+  /* Portable Text / long-form reading (blog posts + case studies) */
+  .prose-pt { @apply text-[1.0625rem] leading-[1.8] text-muted; }
+  .prose-pt > * + * { margin-top: 1.4em; }
+  .prose-pt > :first-child { margin-top: 0; }
+  .prose-pt h1, .prose-pt h2, .prose-pt h3, .prose-pt h4 { @apply text-fg; }
+  .prose-pt h2 { @apply mt-14 text-h2; }
+  .prose-pt h3 { @apply mt-10 text-h3; }
+  .prose-pt h4 { @apply mt-8 text-xl; }
+  .prose-pt strong { @apply font-semibold text-fg; }
+  .prose-pt a { @apply text-accent-light underline decoration-accent/40 underline-offset-4 transition-colors hover:text-white hover:decoration-accent; }
+  .prose-pt blockquote { @apply rounded-r-card border-l-[3px] border-accent bg-accent/[0.06] py-4 pl-6 pr-5 italic text-fg/85; }
+  .prose-pt code { @apply rounded-md border border-line/20 bg-white/[0.06] px-1.5 py-0.5 font-mono text-[0.88em] text-accent-light; }
+  .prose-pt pre { @apply overflow-x-auto rounded-control border border-line/20 bg-bg p-4 font-mono text-sm; }
+  .prose-pt hr { @apply my-10 border-line/20; }
+  .prose-pt ul { @apply list-disc space-y-2 pl-6; }
+  .prose-pt ol { @apply list-decimal space-y-2 pl-6; }
+  .prose-pt li::marker { @apply font-semibold text-accent-light; }
+  .prose-pt li > p { margin-top: 0; }
+  .prose-pt img { @apply rounded-card; }
+}
+
+/* Utilities not covered by Tailwind core */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -93,4 +250,22 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .text-gradient {
+    background-image: linear-gradient(100deg, rgb(var(--c-accent-light)) 0%, rgb(var(--c-fg)) 75%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .glass {
+    background-color: rgb(var(--c-bg) / 0.72);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+  .hex-clip { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+}
+
+/* Align fixed header chrome (navbar + desktop links) with the content column */
+@layer utilities {
+  .pl-nav-gutter { padding-left: max(var(--gutter), calc((100vw - 72rem) / 2 + var(--gutter))); }
+  .pr-nav-gutter { padding-right: max(var(--gutter), calc((100vw - 72rem) / 2 + var(--gutter))); }
 }

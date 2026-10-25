@@ -1,19 +1,21 @@
-import type { Metadata } from 'next'
-import { Syne, DM_Sans, JetBrains_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Bricolage_Grotesque, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import SidebarShell from '@/components/SidebarShell'
+import Footer from '@/components/Footer'
+import MotionProvider from '@/components/MotionProvider'
 
-const syne = Syne({
+// Display: variable font, so one file covers every weight we use (500-800)
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['600', '700', '800'],
-  variable: '--font-syne',
+  variable: '--font-bricolage',
   display: 'swap',
 })
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-dm-sans',
   display: 'swap',
 })
@@ -24,6 +26,11 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-jetbrains-mono',
   display: 'swap',
 })
+
+export const viewport: Viewport = {
+  themeColor: '#0a0c16',
+  colorScheme: 'dark',
+}
 
 export const metadata: Metadata = {
   title: {
@@ -55,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={`${bricolage.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <link rel="preconnect" href="https://cdn.sanity.io" />
@@ -106,11 +113,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-full overflow-x-hidden overflow-y-auto bg-[#0a0c16] text-white font-body">
-        <SidebarShell>
-          <Navbar />
-          <main className="flex-1 w-full relative">{children}</main>
-        </SidebarShell>
+      <body className="font-body">
+        <a
+          href="#main"
+          className="fixed left-4 top-4 z-[2000] -translate-y-24 rounded-pill bg-accent px-5 py-2.5 font-semibold text-accent-ink no-underline transition-transform focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+        <MotionProvider>
+          <SidebarShell>
+            <div className="flex min-h-dvh flex-col">
+              <Navbar />
+              <main id="main" className="relative w-full flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </SidebarShell>
+        </MotionProvider>
       </body>
     </html>
   )
