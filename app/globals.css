@@ -97,17 +97,54 @@ body {
 }
 
 /* One shared ambient backdrop for every page: replaces the per-page
-   mainbg.jpg + overlay stacks (one fewer large image on the critical path). */
+   mainbg.jpg + overlay stacks (one fewer large image on the critical path).
+   Layers, back to front: film grain (html) -> drifting glows (body::before)
+   -> faded dot grid (body::after). All pure CSS, no image requests. */
+html {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 body::before {
+  content: '';
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58rem 36rem at 88% 2%, rgb(var(--c-accent) / 0.16), transparent 62%),
+    radial-gradient(44rem 30rem at 4% 24%, rgb(var(--c-accent-dark) / 0.12), transparent 60%),
+    radial-gradient(40rem 26rem at 50% 105%, rgb(var(--c-gold) / 0.05), transparent 60%);
+  animation: ambient-drift 40s ease-in-out infinite alternate;
+  /* Scroll parallax: glows lag far behind content (capped so they never
+     leave the viewport on long pages). `translate` composes with the
+     drift animation's `transform`. --scroll-y is set by ScrollParallax. */
+  translate: 0 max(-25vh, calc(var(--scroll-y, 0) * -0.15px));
+  will-change: transform, translate;
+}
+
+body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(58rem 36rem at 88% -8%, rgb(var(--c-accent) / 0.16), transparent 62%),
-    radial-gradient(44rem 30rem at -8% 18%, rgb(var(--c-accent-dark) / 0.12), transparent 60%),
-    radial-gradient(40rem 26rem at 50% 115%, rgb(var(--c-gold) / 0.05), transparent 60%);
+  background-image: radial-gradient(rgb(var(--c-accent-light) / 0.22) 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  /* Dots scroll at ~40% of page speed: a mid layer between glows and content */
+  background-position: 0 calc(var(--scroll-y, 0) * -0.4px);
+  /* Strongest behind the hero/top of the viewport, gone behind reading text */
+  -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 0%, #000 20%, transparent 80%);
+  mask-image: radial-gradient(ellipse 75% 55% at 50% 0%, #000 20%, transparent 80%);
+}
+
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes ambient-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-3%, 2%, 0) scale(1.06); }
+  100% { transform: translate3d(2%, -2%, 0) scale(1.02); }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -252,9 +289,30 @@ p { text-wrap: pretty; }
   }
   .text-gradient {
     background-image: linear-gradient(100deg, rgb(var(--c-accent-light)) 0%, rgb(var(--c-fg)) 75%);
+    /* Each wrapped line gets the full gradient, so a last line isn't all white */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  /* Blinking text cursor for components/ui/Typewriter.tsx. An empty inline
+     anchor with an absolutely placed bar: it takes no width and adds no
+     line-break opportunity, so it never nudges or re-wraps the text. */
+  .typewriter-caret {
+    position: relative;
+  }
+  .typewriter-caret::after {
+    content: '';
+    position: absolute;
+    left: 0.02em;
+    top: 50%;
+    width: 0.08em;
+    height: 0.9em;
+    transform: translateY(-50%);
+    border-radius: 1px;
+    background-color: rgb(var(--c-accent-light));
+    animation: caret-blink 1s steps(1) infinite;
   }
   .glass {
     background-color: rgb(var(--c-bg) / 0.72);

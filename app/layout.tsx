@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar'
 import SidebarShell from '@/components/SidebarShell'
 import Footer from '@/components/Footer'
 import MotionProvider from '@/components/MotionProvider'
+import ScrollParallax from '@/components/ScrollParallax'
 
 // Display: variable font, so one file covers every weight we use (500-800)
 const bricolage = Bricolage_Grotesque({
@@ -120,6 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        <ScrollParallax />
         <MotionProvider>
           <SidebarShell>
             <div className="flex min-h-dvh flex-col">
