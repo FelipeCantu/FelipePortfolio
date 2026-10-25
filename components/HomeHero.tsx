@@ -1,119 +1,75 @@
 'use client'
 
 import Link from 'next/link'
+import { motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa'
+import { FiArrowRight } from 'react-icons/fi'
 import { trackEvent } from '@/lib/analytics'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
-interface SocialLink {
-  href: string
-  icon: React.ComponentType<{ size?: number }>
-  label: string
-  hoverBg: string
-  hoverBorder: string
-  hoverShadow: string
-}
-
-const socialLinks: SocialLink[] = [
-  {
-    href: 'https://github.com/FelipeCantu',
-    icon: FaGithub,
-    label: 'GitHub profile',
-    hoverBg: 'rgba(110, 84, 148, 0.35)',
-    hoverBorder: 'rgba(110, 84, 148, 0.7)',
-    hoverShadow: '0 4px 16px rgba(110, 84, 148, 0.25)',
-  },
-  {
-    href: 'https://linkedin.com/in/felipe-cantu-jr',
-    icon: FaLinkedin,
-    label: 'LinkedIn profile',
-    hoverBg: 'rgba(0, 119, 181, 0.35)',
-    hoverBorder: 'rgba(0, 119, 181, 0.7)',
-    hoverShadow: '0 4px 16px rgba(0, 119, 181, 0.25)',
-  },
-  {
-    href: 'https://instagram.com/son_of_robot_',
-    icon: FaInstagram,
-    label: 'Instagram profile',
-    hoverBg: 'rgba(225, 48, 108, 0.35)',
-    hoverBorder: 'rgba(225, 48, 108, 0.7)',
-    hoverShadow: '0 4px 16px rgba(225, 48, 108, 0.25)',
-  },
-  {
-    href: 'https://facebook.com/profile.php?id=100064306140476',
-    icon: FaFacebook,
-    label: 'Facebook profile',
-    hoverBg: 'rgba(24, 119, 242, 0.35)',
-    hoverBorder: 'rgba(24, 119, 242, 0.7)',
-    hoverShadow: '0 4px 16px rgba(24, 119, 242, 0.25)',
-  },
+const socialLinks = [
+  { href: 'https://github.com/FelipeCantu', icon: FaGithub, label: 'GitHub profile' },
+  { href: 'https://linkedin.com/in/felipe-cantu-jr', icon: FaLinkedin, label: 'LinkedIn profile' },
+  { href: 'https://instagram.com/son_of_robot_', icon: FaInstagram, label: 'Instagram profile' },
+  { href: 'https://facebook.com/profile.php?id=100064306140476', icon: FaFacebook, label: 'Facebook profile' },
 ]
 
-// ─── Orbit helpers — all layout/animation values in inline styles ─────────────
-// Using inline styles here because the animation keyframes reference CSS custom
-// properties (--radiusX, --radiusY) that can't be expressed in Tailwind classes.
+// ─── Motion ───────────────────────────────────────────────────────────────────
 
-interface OrbitCircleProps {
-  size: string
-  color: string
-  radiusX: string
-  radiusY: string
-  duration: string
-  delay: string
-  reverse?: boolean
+const EASE = [0.22, 1, 0.36, 1] as const
+
+const stack: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } },
 }
 
-function OrbitCircle({ size, color, radiusX, radiusY, duration, delay, reverse }: OrbitCircleProps) {
+const rise: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
+}
+
+const avatarIn: Variants = {
+  hidden: { opacity: 0, scale: 0.85 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.9, ease: EASE } },
+}
+
+// ─── Decorative orbit ─────────────────────────────────────────────────────────
+// Three slow, low-contrast rings with a few travelling dots. Purely decorative
+// (aria-hidden) and static for reduced-motion users via `motion-safe:`.
+
+function OrbitRing({
+  size,
+  duration,
+  reverse,
+  dot,
+}: {
+  size: string
+  duration: string
+  reverse?: boolean
+  dot?: 'accent' | 'gold' | 'white'
+}) {
+  const dotColor = dot === 'gold' ? 'bg-gold' : dot === 'white' ? 'bg-fg' : 'bg-accent-light'
   return (
     <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        background: color,
-        borderRadius: '50%',
-        // CSS custom props for the keyframe animation
-        ['--radiusX' as string]: radiusX,
-        ['--radiusY' as string]: radiusY,
-        animation: `${reverse ? 'ovalOrbitReverse' : 'ovalOrbit'} ${duration} linear infinite`,
-        animationDelay: delay,
-        boxShadow: `0 0 20px ${color}`,
-        zIndex: 1,
-      }}
-    />
-  )
-}
-
-interface OrbitDotProps {
-  size: string
-  glow: string
-  radiusX: string
-  radiusY: string
-  duration: string
-  delay: string
-  reverse?: boolean
-}
-
-function OrbitDot({ size, glow, radiusX, radiusY, duration, delay, reverse }: OrbitDotProps) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        background: 'white',
-        borderRadius: '50%',
-        ['--radiusX' as string]: radiusX,
-        ['--radiusY' as string]: radiusY,
-        animation: `${reverse ? 'ovalOrbitReverse' : 'ovalOrbit'} ${duration} linear infinite`,
-        animationDelay: delay,
-        boxShadow: glow,
-        zIndex: 1,
-      }}
-    />
+      className="absolute left-1/2 top-1/2 rounded-full border border-dashed border-accent-light/[0.14] motion-safe:animate-[orbit_var(--d)_linear_infinite]"
+      style={
+        {
+          width: size,
+          height: size,
+          marginLeft: `calc(${size} / -2)`,
+          marginTop: `calc(${size} / -2)`,
+          '--d': duration,
+          animationDirection: reverse ? 'reverse' : 'normal',
+        } as React.CSSProperties
+      }
+    >
+      {dot && (
+        <span
+          className={`absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full ${dotColor} shadow-[0_0_14px_2px_rgb(var(--c-accent)/0.55)]`}
+        />
+      )}
+    </div>
   )
 }
 
@@ -121,264 +77,98 @@ function OrbitDot({ size, glow, radiusX, radiusY, duration, delay, reverse }: Or
 
 export default function HomeHero() {
   return (
-    <>
-      {/* Global keyframes — injected once per mount */}
-      <style>{`
-        @keyframes ovalOrbit {
-          0%   { transform: rotate(0deg)    translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(0deg); }
-          100% { transform: rotate(360deg)  translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(-360deg); }
-        }
-        @keyframes ovalOrbitReverse {
-          0%   { transform: rotate(0deg)    translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(0deg); }
-          100% { transform: rotate(-360deg) translateX(var(--radiusX)) translateY(var(--radiusY)) rotate(360deg); }
-        }
-        @keyframes heroPing {
-          0%   { transform: scale(0.8); opacity: 0.8; }
-          70%  { transform: scale(1.1); opacity: 0.2; }
-          100% { transform: scale(0.8); opacity: 0; }
-        }
-        @keyframes heroRotate {
-          0%   { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        @keyframes heroRotateReverse {
-          0%   { transform: translate(-50%, -50%) rotate(0deg); }
-          100% { transform: translate(-50%, -50%) rotate(-360deg); }
-        }
-        @keyframes fadeInScale {
-          0%   { opacity: 0; transform: scale(0.5) rotate(-10deg); }
-          100% { opacity: 1; transform: scale(1)   rotate(0deg); }
-        }
-        @keyframes heroSlideUp {
-          0%   { opacity: 0; transform: translateY(60px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes heroSlideRight {
-          0%   { opacity: 0; transform: translateX(-60px); }
-          100% { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes heroPopIn {
-          0%   { opacity: 0; transform: scale(0)   translateY(20px); }
-          50%  { transform: scale(1.1) translateY(-5px); }
-          100% { opacity: 1; transform: scale(1)   translateY(0); }
-        }
-        @keyframes heroBgZoom {
-          0%   { transform: scale(1.2); filter: blur(10px); }
-          100% { transform: scale(1);   filter: blur(0px); }
-        }
+    <section className="relative isolate flex min-h-dvh w-full items-center overflow-hidden pb-16 pt-[calc(var(--navbar-h)+2rem)]">
+      {/* Ambient orbit decoration */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+        <div className="absolute left-1/2 top-1/2 h-0 w-0 lg:left-[28%]">
+          <OrbitRing size="min(70vw, 420px)" duration="60s" dot="accent" />
+          <OrbitRing size="min(100vw, 640px)" duration="90s" reverse dot="gold" />
+          <OrbitRing size="min(140vw, 900px)" duration="140s" dot="white" />
+        </div>
+        {/* Soft vignette so text always sits on a calm field */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgb(var(--c-bg)/0.7)_100%)]" />
+      </div>
 
-        @media (prefers-reduced-motion: reduce) {
-          [data-orbit] { animation: none !important; }
-        }
-      `}</style>
-
-      <section className="relative w-full h-screen overflow-hidden" style={{ height: '100svh' }}>
-        {/* Background image */}
-        <img
-          src="/images/mainbg.jpg"
-          alt=""
-          role="presentation"
-          className="absolute inset-0 w-full h-full object-cover -z-10"
-          style={{ animation: 'heroBgZoom 1.5s cubic-bezier(0.4,0,0.2,1) forwards' }}
-        />
-
-        {/* Wrapper — dark overlay + centered layout */}
-        <div
-          className="flex flex-col justify-center items-center w-full h-full px-8 relative"
-          style={{ background: 'rgba(20, 20, 30, 0.85)', animation: 'fadeIn 0.8s ease-out' }}
-        >
-          {/* ── Orbit decoration ── */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-            {/* Pulsing ring circles */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-              {/* Ping circle */}
-              <div data-orbit style={{ position: 'absolute', width: '200px', height: '200px', border: '2px solid rgba(247,171,10,0.5)', borderRadius: '50%', opacity: 0.2, animation: 'heroPing 2.5s ease-out infinite' }} />
-              <div data-orbit style={{ position: 'absolute', width: '300px', height: '300px', border: '2px solid rgba(51,51,51,0.7)', borderRadius: '50%', opacity: 0.2, animation: 'heroRotate 40s linear infinite' }} />
-              <div data-orbit style={{ position: 'absolute', width: '500px', height: '500px', border: '3px solid rgba(51,51,51,0.5)', borderRadius: '50%', opacity: 0.2, animation: 'heroRotateReverse 60s linear infinite' }} />
-              <div data-orbit style={{ position: 'absolute', width: '650px', height: '650px', border: '4px solid rgba(247,171,10,0.3)', borderRadius: '50%', opacity: 0.3, animation: 'heroRotate 80s linear infinite' }} />
-              <div data-orbit style={{ position: 'absolute', width: '800px', height: '800px', border: '3px solid rgba(51,51,51,0.4)', borderRadius: '50%', opacity: 0.2, animation: 'heroRotateReverse 100s linear infinite' }} />
-              <div data-orbit style={{ position: 'absolute', width: '1200px', height: '1200px', border: '4px solid rgba(247,171,10,0.2)', borderRadius: '50%', opacity: 0.15, animation: 'heroRotate 150s linear infinite' }} />
-            </div>
-
-            {/* Oval orbit rings */}
-            <div className="absolute top-1/2 left-1/2 w-full h-full flex items-center justify-center">
-              <div data-orbit style={{ position: 'absolute', width: '1100px', height: '900px', border: '3px dotted rgba(100,200,255,0.2)', borderRadius: '50%', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'heroRotateReverse 120s linear infinite', opacity: 0.5 }} />
-              <div data-orbit style={{ position: 'absolute', width: '600px', height: '400px', border: '2px dashed rgba(100,200,255,0.4)', borderRadius: '50%', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'heroRotate 50s linear infinite', opacity: 0.5 }} />
-              <div data-orbit style={{ position: 'absolute', width: '450px', height: '300px', border: '2px dotted rgba(255,255,255,0.3)', borderRadius: '50%', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'heroRotateReverse 40s linear infinite', opacity: 0.5 }} />
-              <div data-orbit style={{ position: 'absolute', width: '300px', height: '200px', border: '2px solid rgba(0,191,255,0.25)', borderRadius: '50%', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'heroRotate 30s linear infinite', opacity: 0.5 }} />
-            </div>
-
-            {/* Orbiting elements */}
-            <div className="absolute inset-0">
-              <OrbitCircle size="20px" color="rgba(247,171,10,0.7)"    radiusX="550px" radiusY="450px" duration="60s" delay="0s" />
-              <OrbitCircle size="16px" color="rgba(100,200,255,0.7)"   radiusX="550px" radiusY="450px" duration="60s" delay="30s" reverse />
-              <OrbitCircle size="16px" color="rgba(30,144,255,0.9)"    radiusX="280px" radiusY="180px" duration="30s" delay="0s" />
-              <OrbitCircle size="12px" color="rgba(247,171,10,0.8)"    radiusX="280px" radiusY="180px" duration="30s" delay="10s" reverse />
-              <OrbitCircle size="14px" color="rgba(100,200,255,0.8)"   radiusX="200px" radiusY="130px" duration="25s" delay="3s" />
-              <OrbitCircle size="10px" color="rgba(255,255,255,0.8)"   radiusX="200px" radiusY="130px" duration="25s" delay="7s" reverse />
-              <OrbitCircle size="12px" color="rgba(0,191,255,0.8)"     radiusX="120px" radiusY="80px"  duration="20s" delay="5s" />
-              <OrbitCircle size="18px" color="rgba(247,171,10,0.8)"    radiusX="120px" radiusY="80px"  duration="20s" delay="2s" reverse />
-              <OrbitDot size="10px" glow="0 0 15px rgba(255,255,255,0.8)"   radiusX="300px" radiusY="200px" duration="35s" delay="0s" />
-              <OrbitDot size="10px" glow="0 0 15px rgba(100,200,255,0.8)"  radiusX="300px" radiusY="200px" duration="35s" delay="5s" reverse />
-              <OrbitDot size="8px"  glow="0 0 12px rgba(247,171,10,0.8)"   radiusX="220px" radiusY="150px" duration="28s" delay="2s" />
-              <OrbitDot size="8px"  glow="0 0 12px rgba(255,255,255,0.8)"  radiusX="220px" radiusY="150px" duration="28s" delay="7s" reverse />
-              <OrbitDot size="6px"  glow="0 0 10px rgba(0,191,255,0.8)"    radiusX="150px" radiusY="100px" duration="22s" delay="4s" />
-            </div>
-          </div>
-
-          {/* ── Content ── */}
-          <div
-            className="flex flex-col lg:flex-row items-center justify-center max-w-[1200px] w-full gap-8 lg:gap-16 z-[2] relative"
-            style={{ animation: 'heroSlideRight 1s cubic-bezier(0.34,1.56,0.64,1) 0.5s backwards' }}
-          >
-            {/* Hexagonal avatar */}
+      <motion.div
+        className="container-page grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-20"
+        variants={stack}
+        initial="hidden"
+        animate="show"
+      >
+        {/* Hexagonal avatar */}
+        <motion.div variants={avatarIn} className="mx-auto lg:mx-0">
+          <div className="relative">
             <div
-              className="relative w-[220px] h-[250px] max-md:w-[180px] max-md:h-[180px] z-[2] shrink-0"
-              style={{
-                clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                background: 'linear-gradient(135deg, rgba(0,191,255,0.3), rgba(30,144,255,0.1))',
-                padding: '8px',
-                animation: 'fadeInScale 1s cubic-bezier(0.34,1.56,0.64,1) 0.3s backwards',
-              }}
-            >
+              className="absolute -inset-4 rounded-full bg-accent/20 blur-3xl motion-safe:animate-pulse"
+              aria-hidden="true"
+            />
+            <div className="hex-clip relative h-[190px] w-[170px] bg-gradient-to-br from-accent-light/70 via-accent/30 to-accent-dark/10 p-[3px] sm:h-[250px] sm:w-[220px] lg:h-[330px] lg:w-[290px]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/avatarpic.png"
                 alt="Felipe Cantu Jr"
-                className="w-full h-full object-cover"
-                style={{
-                  clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
-                  filter: 'sepia(0.1) brightness(1.05)',
-                  transition: 'all 0.4s ease',
-                }}
+                width={290}
+                height={330}
+                className="hex-clip h-full w-full bg-surface object-cover"
               />
             </div>
-
-            {/* Text content */}
-            <div className="max-w-[560px] text-white z-[1] flex flex-col">
-              <h1
-                className="mb-5 bg-gradient-to-r from-[var(--color-accent-light,#38bdf8)] to-white bg-clip-text text-transparent"
-                style={{
-                  fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)",
-                  fontSize: 'clamp(2rem, 4vw, 3rem)',
-                  fontWeight: 800,
-                  lineHeight: 1.1,
-                  letterSpacing: '-0.02em',
-                  animation: 'heroSlideUp 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.7s backwards',
-                }}
-              >
-                I Build Web Apps That Grow Your Business
-              </h1>
-
-              <p
-                className="text-white/80 mb-0"
-                style={{
-                  fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                  fontSize: 'clamp(1rem, 1.5vw, 1.15rem)',
-                  fontWeight: 300,
-                  lineHeight: 1.75,
-                  animation: 'heroSlideUp 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.9s backwards',
-                }}
-              >
-                Full-stack developer based in Dallas, TX. I help businesses and entrepreneurs launch fast, polished websites that attract clients and deliver real results.
-              </p>
-
-              {/* CTA buttons */}
-              <div
-                className="flex flex-wrap gap-3 mt-7"
-                style={{ animation: 'heroSlideUp 0.8s cubic-bezier(0.34,1.56,0.64,1) 1.05s backwards' }}
-              >
-                <Link
-                  href="/portfolio"
-                  onClick={() => trackEvent('cta_click', { label: 'view_work' })}
-                  className="inline-flex items-center px-6 py-[0.65rem] no-underline text-white font-bold text-[0.9rem] tracking-[0.02em] rounded-full transition-[background] duration-[220ms] focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
-                  style={{
-                    fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                    background: 'var(--color-accent, #0ea5e9)',
-                    border: '1.5px solid var(--color-accent, #0ea5e9)',
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#0284c7' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-accent, #0ea5e9)' }}
-                >
-                  View My Work
-                </Link>
-                <Link
-                  href="/get-started"
-                  onClick={() => trackEvent('cta_click', { label: 'start_project' })}
-                  className="inline-flex items-center gap-[0.4rem] px-5 py-[0.65rem] no-underline font-semibold text-[0.9rem] tracking-[0.02em] rounded-full transition-all duration-[220ms] focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
-                  style={{
-                    fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)",
-                    color: 'var(--color-accent-light, #38bdf8)',
-                    border: '1.5px solid rgba(14,165,233,0.38)',
-                    background: 'rgba(14,165,233,0.08)',
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.background = 'rgba(14,165,233,0.18)'
-                    el.style.borderColor = 'var(--color-accent, #0ea5e9)'
-                    el.style.color = 'white'
-                    el.style.transform = 'translateX(3px)'
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.background = 'rgba(14,165,233,0.08)'
-                    el.style.borderColor = 'rgba(14,165,233,0.38)'
-                    el.style.color = 'var(--color-accent-light, #38bdf8)'
-                    el.style.transform = ''
-                  }}
-                >
-                  Start a Project &nbsp;→
-                </Link>
-              </div>
-            </div>
           </div>
+        </motion.div>
 
-          {/* Social icons — bottom-right on desktop, bottom-center on mobile */}
-          <div
-            className="absolute bottom-6 right-10 max-md:right-auto max-md:left-1/2 max-md:-translate-x-1/2 max-md:bottom-5 flex gap-5 z-[3]"
-            style={{ padding: '12px', margin: '-12px' }}
-          >
-            {socialLinks.map((social, i) => {
-              const Icon = social.icon
-              return (
+        {/* Copy */}
+        <div className="text-center lg:text-left">
+          <motion.p variants={rise} className="eyebrow">
+            Full-stack developer &middot; Dallas, TX
+          </motion.p>
+
+          <motion.h1 variants={rise} className="mt-4 text-display text-fg">
+            I build web apps that <span className="text-gradient">grow your business</span>
+          </motion.h1>
+
+          <motion.p variants={rise} className="lead mx-auto mt-6 max-w-xl lg:mx-0">
+            I help businesses and entrepreneurs launch fast, polished websites that attract clients and deliver real
+            results.
+          </motion.p>
+
+          <motion.div variants={rise} className="mt-9 flex flex-wrap justify-center gap-3 lg:justify-start">
+            <Link
+              href="/portfolio"
+              onClick={() => trackEvent('cta_click', { label: 'view_work' })}
+              className="btn btn-primary"
+            >
+              View My Work
+            </Link>
+            <Link
+              href="/get-started"
+              onClick={() => trackEvent('cta_click', { label: 'start_project' })}
+              className="btn btn-secondary group"
+            >
+              Start a Project
+              <FiArrowRight
+                aria-hidden="true"
+                className="transition-transform duration-200 group-hover:translate-x-1"
+              />
+            </Link>
+          </motion.div>
+
+          <motion.ul variants={rise} className="mt-10 flex justify-center gap-3 lg:justify-start">
+            {socialLinks.map(({ href, icon: Icon, label }) => (
+              <li key={label}>
                 <a
-                  key={social.label}
-                  href={social.href}
+                  href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={social.label}
-                  onClick={() => trackEvent('social_click', { platform: social.label.toLowerCase() })}
-                  className="flex items-center justify-center w-10 h-10 rounded-full no-underline transition-all duration-[250ms] focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
-                  style={{
-                    color: 'rgba(255,255,255,0.75)',
-                    fontSize: '1.2rem',
-                    background: 'rgba(255,255,255,0.07)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    animation: `heroPopIn 0.6s cubic-bezier(0.68,-0.55,0.265,1.55) ${1.1 + i * 0.15}s backwards`,
-                  }}
-                  onMouseEnter={(e) => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.color = 'white'
-                    el.style.transform = 'translateY(-4px)'
-                    el.style.background = social.hoverBg
-                    el.style.borderColor = social.hoverBorder
-                    el.style.boxShadow = social.hoverShadow
-                  }}
-                  onMouseLeave={(e) => {
-                    const el = e.currentTarget as HTMLElement
-                    el.style.color = 'rgba(255,255,255,0.75)'
-                    el.style.transform = ''
-                    el.style.background = 'rgba(255,255,255,0.07)'
-                    el.style.borderColor = 'rgba(255,255,255,0.12)'
-                    el.style.boxShadow = ''
-                  }}
+                  aria-label={label}
+                  onClick={() => trackEvent('social_click', { platform: label.toLowerCase() })}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-line/25 bg-white/[0.04] text-muted transition-[color,border-color,background-color,transform] duration-200 hover:-translate-y-1 hover:border-accent-light/60 hover:bg-accent/10 hover:text-fg"
                 >
-                  <Icon size={18} />
+                  <Icon size={18} aria-hidden="true" />
                 </a>
-              )
-            })}
-          </div>
+              </li>
+            ))}
+          </motion.ul>
         </div>
-      </section>
-    </>
+      </motion.div>
+    </section>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { sanity, urlFor, TESTIMONIALS_QUERY } from '@/lib/sanity'
+import Reveal from '@/components/ui/Reveal'
 
 interface Testimonial {
   _id: string
@@ -15,9 +16,11 @@ interface Testimonial {
 function Stars({ rating }: { rating?: number }) {
   if (!rating) return null
   return (
-    <div className="flex gap-0.5" aria-label={`${rating} out of 5 stars`}>
+    <div className="flex gap-0.5" role="img" aria-label={`${rating} out of 5 stars`}>
       {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={`text-[0.9rem] ${i < rating ? 'text-yellow-400' : 'text-white/15'}`}>★</span>
+        <span key={i} aria-hidden="true" className={`text-[0.95rem] ${i < rating ? 'text-gold' : 'text-line/30'}`}>
+          ★
+        </span>
       ))}
     </div>
   )
@@ -27,16 +30,21 @@ function Avatar({ src, name }: { src: unknown; name: string }) {
   const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   if (src) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={urlFor(src).width(96).height(96).fit('crop').auto('format').url()}
-        alt={name}
-        className="w-11 h-11 rounded-full object-cover flex-shrink-0 border-[1.5px] border-accent/30"
+        alt=""
+        width={44}
+        height={44}
+        className="h-11 w-11 flex-shrink-0 rounded-full border border-accent/30 object-cover"
       />
     )
   }
   return (
-    <div className="w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center font-display font-bold text-[0.82rem] text-accent-light border-[1.5px] border-accent/35"
-      style={{ background: 'linear-gradient(135deg,rgba(14,165,233,0.3),rgba(56,189,248,0.2))' }}>
+    <div
+      aria-hidden="true"
+      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-accent/35 bg-gradient-to-br from-accent/30 to-accent-light/20 font-display text-[0.85rem] font-bold text-accent-light"
+    >
       {initials}
     </div>
   )
@@ -48,60 +56,53 @@ export default function Testimonials() {
 
   useEffect(() => {
     sanity.fetch(TESTIMONIALS_QUERY)
-      // Only real testimonials from Sanity — the section hides itself when there are none
+      // Only real testimonials from Sanity: the section hides itself when there are none
       .then((data: Testimonial[]) => { setItems(data ?? []); setLoading(false) })
       .catch(() => { setItems([]); setLoading(false) })
   }, [])
 
   if (loading || items.length === 0) return null
 
-  const cols = Math.min(items.length, 3)
+  // Responsive columns: never force 3 columns onto a phone
+  const gridCols =
+    items.length === 1
+      ? 'mx-auto max-w-2xl grid-cols-1'
+      : items.length === 2
+      ? 'grid-cols-1 md:grid-cols-2'
+      : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
 
   return (
-    <section className="relative w-full py-20 overflow-hidden max-md:py-16">
-      {/* Background */}
-      <div className="absolute inset-0 z-0 border-t border-white/[0.06]"
-        style={{
-          background: 'rgba(10,12,22,0.97)',
-          backgroundImage: 'radial-gradient(ellipse 60% 40% at 20% 80%,rgba(14,165,233,0.06) 0%,transparent 70%),radial-gradient(ellipse 50% 35% at 80% 20%,rgba(14,165,233,0.04) 0%,transparent 70%)',
-        }}
-      />
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 max-md:px-4">
-        {/* Header */}
-        <div className="text-center mb-14 animate-[fadeInUp_0.7s_ease-out_both] max-md:mb-10">
-          <p className="font-body text-[0.72rem] font-bold tracking-[0.18em] uppercase text-accent-light mb-3">Testimonials</p>
-          <h2 className="font-display font-extrabold text-[clamp(1.75rem,3.5vw,2.5rem)] text-white tracking-[-0.025em] leading-[1.1] mb-3">What Clients Say</h2>
-          <p className="font-body text-[clamp(0.9rem,1.5vw,1.05rem)] text-white/50 font-light leading-[1.7]">Real feedback from people I've had the pleasure of working with.</p>
-        </div>
+    <section aria-labelledby="testimonials-title" className="section-y border-t border-line/15 bg-bg/60">
+      <div className="container-page">
+        <Reveal className="mx-auto mb-12 max-w-2xl text-center max-md:mb-10">
+          <p className="eyebrow">Testimonials</p>
+          <h2 id="testimonials-title" className="mt-3 text-h2 text-fg">
+            What clients say
+          </h2>
+          <p className="lead mt-3">Real feedback from people I've had the pleasure of working with.</p>
+        </Reveal>
 
-        {/* Grid */}
-        <div
-          className="grid gap-6"
-          style={{ gridTemplateColumns: `repeat(${cols},1fr)` }}
-        >
-          {items.map((t) => (
-            <article
-              key={t._id}
-              className="relative flex flex-col gap-4 p-7 bg-white/[0.04] border border-white/[0.08] rounded-2xl backdrop-blur-xl transition-all duration-[250ms] hover:border-accent/25 hover:bg-accent/5 hover:-translate-y-1 animate-[fadeInUp_0.7s_ease-out_both] max-md:p-6"
-            >
-              <Stars rating={t.rating} />
-              <blockquote className="font-body text-[clamp(0.9rem,1.2vw,1rem)] font-light leading-[1.75] text-white/82 m-0 flex-1">
-                {t.quote}
-              </blockquote>
-              <div className="flex items-center gap-[0.85rem] mt-auto pt-5 border-t border-white/[0.07]">
-                <Avatar src={t.avatar} name={t.name} />
-                <div className="min-w-0">
-                  <p className="font-body text-[0.9rem] font-semibold text-white m-0 truncate">{t.name}</p>
-                  {(t.role || t.company) && (
-                    <p className="font-body text-[0.78rem] text-white/45 font-normal mt-0.5 m-0 truncate">
-                      {[t.role, t.company].filter(Boolean).join(' · ')}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </article>
+        <ul className={`m-0 grid list-none gap-6 p-0 ${gridCols}`}>
+          {items.map((t, i) => (
+            <Reveal as="li" key={t._id} delay={Math.min(i, 5) * 0.07} className="h-full">
+              <figure className="card-interactive m-0 flex h-full flex-col gap-4 p-7 max-md:p-6">
+                <Stars rating={t.rating} />
+                <blockquote className="m-0 flex-1 text-body text-fg/90">&ldquo;{t.quote}&rdquo;</blockquote>
+                <figcaption className="mt-auto flex items-center gap-3.5 border-t border-line/15 pt-5">
+                  <Avatar src={t.avatar} name={t.name} />
+                  <div className="min-w-0">
+                    <p className="m-0 truncate font-semibold text-fg">{t.name}</p>
+                    {(t.role || t.company) && (
+                      <p className="m-0 mt-0.5 truncate text-[0.8rem] text-subtle">
+                        {[t.role, t.company].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                </figcaption>
+              </figure>
+            </Reveal>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   )
