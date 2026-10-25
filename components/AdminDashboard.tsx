@@ -454,6 +454,11 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
         fetch('/api/stripe/balance',  { headers: { 'x-admin-key': adminKey } }),
         fetch('/api/stripe/accounts', { headers: { 'x-admin-key': adminKey } }),
       ])
+      // A stored key that no longer matches ADMIN_SECRET — send back to the gate
+      if (balRes.status === 401 || accRes.status === 401) {
+        onLogout()
+        return
+      }
       const [balData, accData] = await Promise.all([balRes.json(), accRes.json()])
       setBalance(balData)
       setAccounts(accData.accounts || [])
@@ -461,7 +466,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
       setLoading(false)
       setRefreshing(false)
     }
-  }, [adminKey])
+  }, [adminKey, onLogout])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -605,10 +610,10 @@ export default function AdminDashboard() {
     setAdminKey(key)
   }
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     sessionStorage.removeItem('admin_key')
     setAdminKey('')
-  }
+  }, [])
 
   // Don't flash the gate before sessionStorage is read
   if (!hydrated) return null

@@ -555,7 +555,7 @@ export default function AboutContent() {
                 aria-hidden="true"
               >
                 <div className="w-full max-w-[320px] flex flex-col gap-3 pt-1">
-                  <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>// skill_matrix.exe</p>
+                  <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
                   <div className="grid gap-[0.6rem]" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     {dashCells.map((cell, i) => (
                       <DashCell key={cell.label} {...cell} delay={`${i * 0.08}s`} />
@@ -635,7 +635,7 @@ export default function AboutContent() {
                       <p className="text-[0.6rem] font-bold tracking-[0.17em] uppercase m-0" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: "var(--font-body,'DM Sans',system-ui,sans-serif)" }}>Tech stack</p>
                       <h2 className="font-extrabold text-white leading-[1.1] m-0 overflow-visible" style={{ fontFamily: "var(--font-display,'Syne',system-ui,sans-serif)", fontSize: 'clamp(0.95rem,3vw,2.2rem)' }}>Tools I use.</h2>
                       <div className="w-full max-w-full flex flex-col gap-3 pt-1">
-                        <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>// skill_matrix.exe</p>
+                        <p className="text-[0.68rem] m-0 mb-1" style={{ fontFamily: "var(--font-mono,'JetBrains Mono',monospace)", color: 'rgba(56,189,248,0.45)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
                         <motion.div
                           variants={staggerContainer}
                           initial="hidden"

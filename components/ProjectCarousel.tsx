@@ -22,7 +22,6 @@ export interface SanityProject {
   place?: string
   githubUrl?: string
   liveUrl?: string
-  tags?: string[]
   image?: unknown // raw Sanity image reference for urlFor()
   mainImage?: { asset: { _id: string; url: string }; alt?: string }
 }
@@ -308,9 +307,9 @@ function CarouselCard({ project, position, direction, layoutKey, sideX, filter }
           )}
 
           {/* Tags — hidden on mobile */}
-          {project.tags && project.tags.length > 0 && (
+          {project.techStack && project.techStack.length > 0 && (
             <div className="flex flex-wrap gap-[0.3rem] mt-[0.15rem] overflow-hidden max-h-14 max-[768px]:max-h-8 max-[600px]:hidden">
-              {project.tags.map((tag, i) => (
+              {project.techStack.map((tag, i) => (
                 <span
                   key={i}
                   className="bg-[rgba(14,165,233,0.10)] border border-[rgba(14,165,233,0.22)] text-white/75 px-[0.55rem] py-[0.22rem] rounded-md text-[0.67rem] font-medium tracking-[0.02em]"
@@ -386,10 +385,12 @@ export default function ProjectCarousel({ initialProjects }: ProjectCarouselProp
 
   const length = projectData.length
 
-  // Reset index when filter changes
-  useEffect(() => {
+  // Reset index in the same update as the filter, so a stale index never
+  // points past the end of the shorter filtered list
+  const changeFilter = (value: ProjectFilter) => {
+    setProjectTypeFilter(value)
     setCurrentIndex(0)
-  }, [projectTypeFilter])
+  }
 
   const goNext = useCallback(() => {
     setDirection(1)
@@ -436,7 +437,7 @@ export default function ProjectCarousel({ initialProjects }: ProjectCarouselProp
         </p>
       </header>
 
-      <FilterUI projectTypeFilter={projectTypeFilter} setProjectTypeFilter={setProjectTypeFilter} />
+      <FilterUI projectTypeFilter={projectTypeFilter} setProjectTypeFilter={changeFilter} />
 
       {/* Carousel */}
       <div

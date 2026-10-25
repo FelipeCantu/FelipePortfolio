@@ -33,3 +33,5 @@ yarn-error.log*
 
 # Claude Code agent memory (internal)
 .claude/
+
+.env.bak

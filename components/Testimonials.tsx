@@ -12,12 +12,6 @@ interface Testimonial {
   avatar?: unknown
 }
 
-const MOCK: Testimonial[] = [
-  { _id: 'mock-1', name: 'Sarah Mitchell', role: 'Founder', company: 'Bloom Studio', quote: 'Felipe built our entire site from scratch in under three weeks. Clean code, fast delivery, and he actually listened to what we wanted. Our bounce rate dropped 40% after launch.', rating: 5, avatar: null },
-  { _id: 'mock-2', name: 'Marcus T.', role: 'CEO', company: 'TradeRight', quote: 'We needed a developer who could handle both design and code. Felipe delivered on both. The site looks professional and runs fast — exactly what we asked for.', rating: 5, avatar: null },
-  { _id: 'mock-3', name: 'Jasmine Reyes', role: 'Marketing Director', company: 'Apex Health', quote: 'Responsive, detail-oriented, and great at communicating throughout the project. I would hire Felipe again without hesitation.', rating: 5, avatar: null },
-]
-
 function Stars({ rating }: { rating?: number }) {
   if (!rating) return null
   return (
@@ -54,8 +48,9 @@ export default function Testimonials() {
 
   useEffect(() => {
     sanity.fetch(TESTIMONIALS_QUERY)
-      .then((data: Testimonial[]) => { setItems(data.length > 0 ? data : MOCK); setLoading(false) })
-      .catch(() => { setItems(MOCK); setLoading(false) })
+      // Only real testimonials from Sanity — the section hides itself when there are none
+      .then((data: Testimonial[]) => { setItems(data ?? []); setLoading(false) })
+      .catch(() => { setItems([]); setLoading(false) })
   }, [])
 
   if (loading || items.length === 0) return null

@@ -183,23 +183,26 @@ interface Props {
 export default function SingleProjectContent({ project }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
 
-  const openLightbox = (src: string, alt: string) => {
-    setLightbox({ src, alt })
-    document.body.style.overflow = 'hidden'
-  }
-  const closeLightbox = () => {
-    setLightbox(null)
-    document.body.style.overflow = ''
-  }
+  const openLightbox = (src: string, alt: string) => setLightbox({ src, alt })
+  const closeLightbox = () => setLightbox(null)
 
+  // Scroll lock lives in the effect so it is released on unmount too
+  // (e.g. navigating away while the lightbox is open)
   useEffect(() => {
     if (!lightbox) return
+    document.body.style.overflow = 'hidden'
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox()
+      if (e.key === 'Escape') setLightbox(null)
     }
     window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+      document.body.style.overflow = ''
+    }
   }, [lightbox])
+
+  // Sanity allows gallery entries with no uploaded asset — skip them
+  const gallery = (project.gallery ?? []).filter((img) => img.asset?.url)
 
   const types = Array.isArray(project.projectType)
     ? project.projectType
@@ -660,7 +663,7 @@ export default function SingleProjectContent({ project }: Props) {
               Rhythmic grid: 3 columns, every 4th item spans 2 columns for
               visual relief. Lightbox on click, keyboard Escape to close.
           ══════════════════════════════════════════════════════════════ */}
-          {project.gallery && project.gallery.length > 0 && (
+          {gallery.length > 0 && (
             <div className="mt-14 pt-12 border-t border-white/[0.06]">
               <div className="flex items-baseline gap-4 mb-8">
                 <h2
@@ -670,15 +673,15 @@ export default function SingleProjectContent({ project }: Props) {
                   Gallery
                 </h2>
                 <span className="text-white/20 text-sm">
-                  {project.gallery.length} image{project.gallery.length !== 1 ? 's' : ''}
+                  {gallery.length} image{gallery.length !== 1 ? 's' : ''}
                 </span>
               </div>
 
               {/* Grid — 2 cols sm, 3 cols lg, with span-2 promotion via CSS class */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 auto-rows-[260px]">
-                {project.gallery.map((img, i) => (
+                {gallery.map((img, i) => (
                   <div
-                    key={img.asset._id}
+                    key={`${img.asset._id}-${i}`}
                     className="spc-gallery-item relative overflow-hidden rounded-2xl cursor-pointer group border border-white/[0.06]"
                     style={{ background: 'rgba(255,255,255,0.03)' }}
                     onClick={() =>

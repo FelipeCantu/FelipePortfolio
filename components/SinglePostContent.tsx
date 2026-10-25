@@ -136,25 +136,23 @@ export default function SinglePostContent({ post, slug }: Props) {
             {/* Author + meta */}
             <div className="flex items-center gap-4 mb-6">
               {!!post.authorImage && post.name && (
-                <>
-                  <div className="w-[50px] h-[50px] rounded-full overflow-hidden border-[3px] border-gray-100 flex-shrink-0">
-                    <img src={urlFor(post.authorImage as never).url()} alt={post.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <h3 className="text-[#1f2937] text-[1.1rem] font-semibold m-0">{post.name}</h3>
-                    <div className="flex gap-6 flex-wrap">
-                      <span className="flex items-center gap-[0.4rem] text-gray-500 text-[0.9rem]">
-                        <FiCalendar size={14} className="text-[#667eea]" />
-                        {new Date(displayDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      </span>
-                      <span className="flex items-center gap-[0.4rem] text-gray-500 text-[0.9rem]">
-                        <FiClock size={14} className="text-[#667eea]" />
-                        {readingTime} min read
-                      </span>
-                    </div>
-                  </div>
-                </>
+                <div className="w-[50px] h-[50px] rounded-full overflow-hidden border-[3px] border-gray-100 flex-shrink-0">
+                  <img src={urlFor(post.authorImage as never).url()} alt={post.name} className="w-full h-full object-cover" />
+                </div>
               )}
+              <div className="flex flex-col gap-2">
+                {post.name && <h3 className="text-[#1f2937] text-[1.1rem] font-semibold m-0">{post.name}</h3>}
+                <div className="flex gap-6 flex-wrap">
+                  <span className="flex items-center gap-[0.4rem] text-gray-500 text-[0.9rem]">
+                    <FiCalendar size={14} className="text-[#667eea]" />
+                    {new Date(displayDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                  <span className="flex items-center gap-[0.4rem] text-gray-500 text-[0.9rem]">
+                    <FiClock size={14} className="text-[#667eea]" />
+                    {readingTime} min read
+                  </span>
+                </div>
+              </div>
             </div>
             <h1 className="text-[#1f2937] text-[2.5rem] font-extrabold leading-tight m-0 max-md:text-[2rem] max-[480px]:text-[1.75rem]">
               {post.title}

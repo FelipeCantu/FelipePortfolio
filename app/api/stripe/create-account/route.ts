@@ -1,12 +1,8 @@
 import Stripe from 'stripe'
-
-function unauthorized() {
-  return Response.json({ error: 'Unauthorized' }, { status: 401 })
-}
+import { isAdmin, unauthorized, safeBaseUrl } from '@/lib/adminAuth'
 
 export async function POST(request: Request) {
-  const adminKey = request.headers.get('x-admin-key')
-  if (!adminKey || adminKey !== process.env.ADMIN_SECRET) return unauthorized()
+  if (!isAdmin(request)) return unauthorized()
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   const { clientName, clientEmail, appUrl } = await request.json()
@@ -22,7 +18,7 @@ export async function POST(request: Request) {
       },
     })
 
-    const baseUrl = appUrl ?? 'https://felipecantujr.com'
+    const baseUrl = safeBaseUrl(appUrl)
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: `${baseUrl}/admin?refresh=${account.id}`,

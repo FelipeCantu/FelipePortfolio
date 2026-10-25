@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Syne, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
-import Sidebar from '@/components/Sidebar'
 import SidebarShell from '@/components/SidebarShell'
 
 const syne = Syne({

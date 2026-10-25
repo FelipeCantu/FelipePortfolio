@@ -1,12 +1,8 @@
 import Stripe from 'stripe'
-
-function unauthorized() {
-  return Response.json({ error: 'Unauthorized' }, { status: 401 })
-}
+import { isAdmin, unauthorized } from '@/lib/adminAuth'
 
 export async function GET(request: Request) {
-  const adminKey = request.headers.get('x-admin-key')
-  if (!adminKey || adminKey !== process.env.ADMIN_SECRET) return unauthorized()
+  if (!isAdmin(request)) return unauthorized()
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   try {
