@@ -45,7 +45,8 @@ export default function ContactContent() {
           </p>
         </motion.header>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-8">
+        {/* grid-cols-1 = minmax(0,1fr): lets the column shrink below the email's width on small phones */}
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-8">
           {/* ── Form ── */}
           <motion.section variants={rise} aria-labelledby="contact-form-title" className="card p-6 sm:p-8 lg:p-10">
             <h2 id="contact-form-title" className="text-h3 text-fg">
@@ -95,7 +96,7 @@ export default function ContactContent() {
                       </span>
                       <span className="min-w-0">
                         <span className="eyebrow block !text-[0.7rem]">{item.label}</span>
-                        <span className="mt-0.5 block break-words text-fg">{item.value}</span>
+                        <span className="mt-0.5 block text-fg [overflow-wrap:anywhere]">{item.value}</span>
                       </span>
                     </>
                   )

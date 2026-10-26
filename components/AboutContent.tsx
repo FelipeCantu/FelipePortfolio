@@ -323,7 +323,8 @@ export default function AboutContent() {
        * Uses scroll-snap-type: y mandatory for snap behavior.
        */}
       <div
-        className="relative z-10 overflow-y-scroll"
+        /* overflow-x-hidden: sections slide in from ±52px, which otherwise lets the page wiggle sideways on phones */
+        className="relative z-10 overflow-y-scroll overflow-x-hidden"
         style={{
           height: 'calc(100dvh - var(--navbar-h))',
           marginTop: 'var(--navbar-h)',

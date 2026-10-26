@@ -9,7 +9,7 @@ export default function HamburgerButton({ open, onClick }: Props) {
   return (
     <button
       type="button"
-      className="glass fixed right-[max(var(--gutter),0.75rem)] top-[10px] z-[1400] flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-[5px] rounded-control border border-line/25 shadow-card transition-[background-color,border-color] duration-200 hover:border-accent-light/60 hover:bg-accent/15 md:hidden"
+      className="glass fixed right-[max(var(--gutter),0.75rem)] top-[10px] z-[1400] flex h-11 w-11 cursor-pointer flex-col items-center justify-center gap-[5px] rounded-control border border-line/25 shadow-card transition-[background-color,border-color] duration-200 hover:border-accent-light/60 hover:bg-accent/15 lg:hidden"
       aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
       aria-expanded={open}
       aria-controls="mobile-sidebar"

@@ -199,9 +199,10 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }: Carous
         // tablet
         'max-[768px]:w-[70vw] max-[768px]:h-[calc(70vw*9/16)]',
         'max-[768px]:[margin-left:-35vw] max-[768px]:[margin-top:calc(-70vw*9/32)]',
-        // mobile
-        'max-[600px]:w-[88vw] max-[600px]:h-[calc(88vw*3/4)]',
-        'max-[600px]:[margin-left:-44vw] max-[600px]:[margin-top:calc(-88vw*3/8)]',
+        // mobile: taller portrait card so the image stays visible above the info panel,
+        // narrow enough that the arrow buttons sit beside it instead of on top of it
+        'max-[600px]:w-[80vw] max-[600px]:h-[calc(80vw*11/10)]',
+        'max-[600px]:[margin-left:-40vw] max-[600px]:[margin-top:calc(-80vw*11/20)]',
         // hide side cards on mobile
         hiddenOnMobile ? 'max-[600px]:hidden' : '',
       ].join(' ')}
@@ -265,9 +266,9 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }: Carous
             {project.title}
           </p>
 
-          {/* Description: hidden on tablet */}
+          {/* Description: hidden on tablet only (short landscape card); phones get a portrait card with room for 2 lines */}
           {(project.excerpt ?? project.description) && (
-            <p className="m-0 line-clamp-2 text-[0.85rem] leading-[1.5] text-muted max-[768px]:hidden max-[600px]:line-clamp-1 max-[600px]:block max-[600px]:text-[0.8rem]">
+            <p className="m-0 line-clamp-2 text-[0.85rem] leading-[1.5] text-muted min-[601px]:max-[768px]:hidden max-[600px]:text-[0.8rem]">
               {project.excerpt ?? project.description}
             </p>
           )}
@@ -351,8 +352,8 @@ function ArrowButton({ side, onClick }: { side: 'left' | 'right'; onClick: () =>
       className={[
         'glass absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-line/30 text-fg shadow-lift',
         'transition-[background-color,border-color,box-shadow] duration-200 hover:border-accent-light/70 hover:bg-accent/30',
-        'max-[768px]:h-10 max-[768px]:w-10',
-        isLeft ? 'left-3 max-[768px]:left-2' : 'right-3 max-[768px]:right-2',
+        'max-[768px]:h-10 max-[768px]:w-10 max-[600px]:h-9 max-[600px]:w-9',
+        isLeft ? 'left-3 max-[768px]:left-2 max-[600px]:left-1' : 'right-3 max-[768px]:right-2 max-[600px]:right-1',
       ].join(' ')}
     >
       {isLeft ? <FiChevronLeft size={26} aria-hidden="true" /> : <FiChevronRight size={26} aria-hidden="true" />}
@@ -447,25 +448,17 @@ export default function ProjectCarousel({ initialProjects }: ProjectCarouselProp
         ) : (
           <>
             {/* Perspective stage */}
+            {/* Stage height tracks the card size so the dots and footer never sit under it */}
             <div
-              className="relative left-1/2 w-screen -translate-x-1/2"
-              style={{
-                perspective: '1200px',
-                perspectiveOrigin: '50% 50%',
-                height: 'min(calc(44vw * 9 / 16), 420px)',
-              }}
+              className={[
+                'relative left-1/2 w-screen -translate-x-1/2',
+                'h-[min(calc(44vw*9/16),420px)]',
+                'max-[768px]:h-[calc(70vw*9/16)]',
+                'max-[600px]:h-[calc(80vw*11/10)]',
+              ].join(' ')}
+              style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}
             >
-              {/* Stage height tracks the card size on tablet / mobile */}
-              <style>{`
-                @media (max-width: 768px) {
-                  .carousel-stage { height: calc(70vw * 9 / 16) !important; }
-                }
-                @media (max-width: 600px) {
-                  .carousel-stage { height: calc(88vw * 3 / 4) !important; }
-                }
-              `}</style>
-
-              <div className="carousel-stage relative h-full w-full">
+              <div className="relative h-full w-full">
                 <AnimatePresence custom={{ direction, sideX }}>
                   {length > 1 && (
                     <CarouselCard

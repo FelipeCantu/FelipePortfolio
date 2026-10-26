@@ -18,12 +18,28 @@ export default function SidebarShell({ children }: { children: React.ReactNode }
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  // While the drawer is open: freeze the page behind it, and close it if the
+  // viewport grows to the desktop layout (lg), where the drawer no longer exists
+  useEffect(() => {
+    if (!open) return
+    const root = document.documentElement
+    const prevOverflow = root.style.overflow
+    root.style.overflow = 'hidden'
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const onChange = () => { if (desktop.matches) setOpen(false) }
+    desktop.addEventListener('change', onChange)
+    return () => {
+      root.style.overflow = prevOverflow
+      desktop.removeEventListener('change', onChange)
+    }
+  }, [open])
+
   return (
     <>
       {/* Scrim behind the mobile drawer */}
       <div
         aria-hidden="true"
-        className={`fixed inset-0 z-[1299] bg-black/60 backdrop-blur-[2px] transition-opacity duration-300 md:hidden ${open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`fixed inset-0 z-[1299] bg-black/60 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={() => setOpen(false)}
       />
 

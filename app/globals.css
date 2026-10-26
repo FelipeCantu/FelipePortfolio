@@ -253,7 +253,9 @@ p { text-wrap: pretty; }
   textarea.field { @apply min-h-[7.5rem] resize-y leading-relaxed; }
 
   /* Portable Text / long-form reading (blog posts + case studies) */
-  .prose-pt { @apply text-[1.0625rem] leading-[1.8] text-muted; }
+  /* overflow-wrap: long URLs / inline code would otherwise push the page wider than a phone */
+  .prose-pt { @apply text-[1.0625rem] leading-[1.8] text-muted [overflow-wrap:anywhere]; }
+  .prose-pt pre { overflow-wrap: normal; }
   .prose-pt > * + * { margin-top: 1.4em; }
   .prose-pt > :first-child { margin-top: 0; }
   .prose-pt h1, .prose-pt h2, .prose-pt h3, .prose-pt h4 { @apply text-fg; }
