@@ -1,20 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef } from 'react'
-import {
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-  type Variants,
-} from 'framer-motion'
+import { motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa'
 import { FiArrowRight } from 'react-icons/fi'
 import { trackEvent } from '@/lib/analytics'
-import Typewriter, { type TypewriterPhrase } from '@/components/ui/Typewriter'
+import Typewriter from '@/components/ui/Typewriter'
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -25,11 +16,8 @@ const socialLinks = [
   { href: 'https://facebook.com/profile.php?id=100064306140476', icon: FaFacebook, label: 'Facebook profile' },
 ]
 
-// Headline endings the typewriter cycles through, after a fixed "I build "
-const headlinePhrases: TypewriterPhrase[] = [
-  { text: 'web apps that ', highlight: 'grow your business' },
-  { text: 'websites that ', highlight: 'turn visitors into clients' },
-]
+// Headline endings the typewriter cycles through, after a fixed "I build websites that"
+const headlinePhrases = ['grow your business', 'bring in new clients']
 
 // ─── Motion ───────────────────────────────────────────────────────────────────
 
@@ -92,51 +80,15 @@ function OrbitRing({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HomeHero() {
-  // Parallax, two inputs. Scroll: as the hero scrolls away the orbit lags most,
-  // the avatar a little, and the copy drifts up and fades. Pointer (mouse only):
-  // layers shift against the cursor at different depths. Static for reduced motion.
-  const sectionRef = useRef<HTMLElement>(null)
-  const reduceMotion = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] })
-
-  // Pointer position relative to the hero centre, -0.5..0.5, eased with a spring
-  const pointerX = useSpring(useMotionValue(0), { stiffness: 60, damping: 20 })
-  const pointerY = useSpring(useMotionValue(0), { stiffness: 60, damping: 20 })
-  const onPointerMove = (e: React.PointerEvent<HTMLElement>) => {
-    if (reduceMotion || e.pointerType !== 'mouse') return
-    const rect = e.currentTarget.getBoundingClientRect()
-    pointerX.set((e.clientX - rect.left) / rect.width - 0.5)
-    pointerY.set((e.clientY - rect.top) / rect.height - 0.5)
-  }
-  const onPointerLeave = () => {
-    pointerX.set(0)
-    pointerY.set(0)
-  }
-
-  const orbitX = useTransform(pointerX, (p) => p * -60)
-  const orbitY = useTransform([scrollYProgress, pointerY], ([s, p]: number[]) => s * 480 + p * -60)
-  const avatarX = useTransform(pointerX, (p) => p * 24)
-  const avatarY = useTransform([scrollYProgress, pointerY], ([s, p]: number[]) => s * 200 + p * 24)
-  const copyY = useTransform(scrollYProgress, [0, 1], [0, -140])
-  const copyOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0.15])
-
   return (
-    <section
-      ref={sectionRef}
-      onPointerMove={onPointerMove}
-      onPointerLeave={onPointerLeave}
-      className="relative isolate flex min-h-dvh w-full items-center overflow-hidden pb-16 pt-[calc(var(--navbar-h)+2rem)]"
-    >
+    <section className="relative isolate flex min-h-svh w-full items-center overflow-hidden pb-16 pt-[calc(var(--navbar-h)+2rem)]">
       {/* Ambient orbit decoration */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        <motion.div
-          className="absolute left-1/2 top-1/2 h-0 w-0 lg:left-[28%]"
-          style={reduceMotion ? undefined : { x: orbitX, y: orbitY }}
-        >
+        <div className="absolute left-1/2 top-1/2 h-0 w-0 lg:left-[28%]">
           <OrbitRing size="min(70vw, 420px)" duration="60s" dot="accent" />
           <OrbitRing size="min(100vw, 640px)" duration="90s" reverse dot="gold" />
           <OrbitRing size="min(140vw, 900px)" duration="140s" dot="white" />
-        </motion.div>
+        </div>
         {/* Soft vignette so text always sits on a calm field */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgb(var(--c-bg)/0.7)_100%)]" />
       </div>
@@ -149,7 +101,7 @@ export default function HomeHero() {
       >
         {/* Hexagonal avatar */}
         <motion.div variants={avatarIn} className="mx-auto lg:mx-0">
-          <motion.div className="relative" style={reduceMotion ? undefined : { x: avatarX, y: avatarY }}>
+          <div className="relative">
             <div
               className="absolute -inset-4 rounded-full bg-accent/20 blur-3xl motion-safe:animate-pulse"
               aria-hidden="true"
@@ -157,28 +109,26 @@ export default function HomeHero() {
             <div className="hex-clip relative h-[190px] w-[170px] bg-gradient-to-br from-accent-light/70 via-accent/30 to-accent-dark/10 p-[3px] sm:h-[250px] sm:w-[220px] lg:h-[330px] lg:w-[290px]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/avatarpic.png"
+                src="/images/avatarpic.webp"
                 alt="Felipe Cantu Jr"
                 width={290}
                 height={330}
                 className="hex-clip h-full w-full bg-surface object-cover"
               />
             </div>
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* Copy */}
-        <motion.div
-          className="text-center lg:text-left"
-          style={reduceMotion ? undefined : { y: copyY, opacity: copyOpacity }}
-        >
+        <div className="text-center lg:text-left">
           <motion.p variants={rise} className="eyebrow">
             Full-stack developer &middot; Dallas, TX
           </motion.p>
 
           <motion.h1 variants={rise} className="mt-4 text-display text-fg">
-            <span className="sr-only">I build web apps that grow your business</span>
-            <Typewriter prefix="I build " phrases={headlinePhrases} />
+            <span className="sr-only">I build websites that grow your business and bring in new clients</span>
+            <span aria-hidden="true">I build websites that </span>
+            <Typewriter phrases={headlinePhrases} />
           </motion.h1>
 
           <motion.p variants={rise} className="lead mx-auto mt-6 max-w-xl lg:mx-0">
@@ -223,7 +173,7 @@ export default function HomeHero() {
               </li>
             ))}
           </motion.ul>
-        </motion.div>
+        </div>
       </motion.div>
     </section>
   )

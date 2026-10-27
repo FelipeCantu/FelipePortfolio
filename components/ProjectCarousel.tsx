@@ -253,7 +253,7 @@ function CarouselCard({ project, position, direction, layoutKey, sideX }: Carous
                 .map((t, i) => (
                   <span
                     key={i}
-                    className={`inline-flex items-center rounded-pill border px-2 py-0.5 font-mono text-[0.65rem] font-medium uppercase tracking-[0.1em] ${TYPE_BADGE[t]}`}
+                    className={`inline-flex items-center rounded-pill border px-2 py-0.5 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${TYPE_BADGE[t]}`}
                   >
                     {TYPE_LABELS[t]}
                   </span>

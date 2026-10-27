@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiArrowRight, FiCode, FiLayout, FiZap, FiMessageSquare } from 'react-icons/fi'
+import { FiArrowRight, FiCode, FiLayout, FiMessageSquare } from 'react-icons/fi'
 import {
   SiReact, SiNextdotjs, SiTypescript, SiNodedotjs, SiDjango,
   SiFirebase, SiMongodb, SiFigma, SiTailwindcss, SiThreedotjs,
@@ -12,17 +12,18 @@ import {
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 
+// Short vertical rises only: sideways slides pushed content past the viewport edge on phones
 const fromLeft = {
-  hidden:  { opacity: 0, x: -52, filter: 'blur(4px)' },
-  visible: { opacity: 1, x: 0,   filter: 'blur(0px)', transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] } },
+  hidden:  { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
 }
 const fromRight = {
-  hidden:  { opacity: 0, x: 52,  filter: 'blur(4px)' },
-  visible: { opacity: 1, x: 0,   filter: 'blur(0px)', transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] } },
+  hidden:  { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] } },
 }
 const fromBottom = {
-  hidden:  { opacity: 0, y: 32,  filter: 'blur(4px)' },
-  visible: { opacity: 1, y: 0,   filter: 'blur(0px)', transition: { duration: 0.7,  ease: [0.22, 1, 0.36, 1] } },
+  hidden:  { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7,  ease: [0.22, 1, 0.36, 1] } },
 }
 const staggerContainer = {
   hidden:  {},
@@ -94,29 +95,30 @@ function CollagePiece({ w, h, top, left, rotate, z, delay, radius, src, alt = ''
 
   return (
     <div
-      className="absolute overflow-hidden group"
+      // Gentle float on desktop only (see the about-float rule); phones get a still collage
+      className="about-float absolute overflow-hidden group"
       style={{
         width: w, height: h, top, left,
         borderRadius: radius,
         zIndex: parseInt(z),
-        ['--rot' as string]: rotate,
-        transform: 'rotate(var(--rot))',
+        rotate,
         boxShadow: '0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)',
-        animation: `${animName} ${animDuration} ease-in-out infinite`,
-        animationDelay: delay,
-        transition: 'transform 0.4s ease, box-shadow 0.4s ease',
-      }}
+        '--float': `${animName} ${animDuration} ease-in-out ${delay} infinite`,
+        transition: 'rotate 0.4s ease, scale 0.4s ease, box-shadow 0.4s ease',
+      } as React.CSSProperties}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement
         el.style.zIndex = '10'
         el.style.boxShadow = '0 16px 48px rgba(0,0,0,0.7), 0 0 0 2px var(--color-accent, #0ea5e9)'
-        el.style.transform = 'rotate(0deg) scale(1.06)'
+        el.style.rotate = '0deg'
+        el.style.scale = '1.06'
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement
         el.style.zIndex = z
         el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)'
-        el.style.transform = 'rotate(var(--rot))'
+        el.style.rotate = rotate
+        el.style.scale = ''
       }}
     >
       <img
@@ -136,19 +138,14 @@ function CollagePiece({ w, h, top, left, rotate, z, delay, radius, src, alt = ''
 
 // ─── Dashboard cell ───────────────────────────────────────────────────────────
 
-function DashCell({ label, color, glow, delay, Icon }: { label: string; color: string; glow: number; delay: string; Icon: React.ComponentType<{ size?: number }> }) {
-  const d = parseFloat(delay)
-  const animDuration = `${3 + d * 4}s`
-
+function DashCell({ label, color, glow, Icon }: { label: string; color: string; glow: number; Icon: React.ComponentType<{ size?: number }> }) {
   return (
     <div
-      className="relative rounded-[8px] md:rounded-[10px] flex flex-col gap-[0.45rem] overflow-hidden transition-[background,border-color,transform] duration-300 hover:bg-[rgba(14,165,233,0.10)] hover:border-[rgba(56,189,248,0.50)] hover:-translate-y-0.5 focus:bg-[rgba(14,165,233,0.10)] focus:border-[rgba(56,189,248,0.50)] focus:-translate-y-0.5 focus:outline-none group"
+      className="relative rounded-[8px] md:rounded-[10px] flex flex-col gap-[0.45rem] overflow-hidden transition-[background,border-color,transform] duration-300 hover:bg-[rgba(14,165,233,0.10)] hover:border-[rgba(56,189,248,0.50)] hover:-translate-y-0.5 focus-visible:bg-[rgba(14,165,233,0.10)] focus-visible:border-[rgba(56,189,248,0.50)] focus-visible:-translate-y-0.5 group"
       style={{
         background: 'rgba(255,255,255,0.04)',
         border: `1px solid ${color}22`,
         padding: '0.35rem 0.3rem 0.3rem',
-        animation: `cellPulse ${animDuration} ease-in-out infinite`,
-        animationDelay: delay,
       }}
       tabIndex={0}
     >
@@ -199,13 +196,12 @@ function DashCell({ label, color, glow, delay, Icon }: { label: string; color: s
 function SectionGlass({ children, tall }: { children: React.ReactNode; tall?: boolean }) {
   return (
     <div
-      className="relative w-full max-w-[1200px] rounded-[26px] flex items-stretch overflow-visible"
+      // Near-opaque fill instead of backdrop-blur: re-blurring the page behind a
+      // near-full-screen card on every scroll frame made this page stutter
+      className="relative w-full max-w-[1200px] rounded-[26px] flex items-stretch overflow-visible bg-[rgba(8,10,20,0.9)]"
       style={{
         minHeight: tall ? 'min(75vh, 620px)' : undefined,
         isolation: 'isolate',
-        background: 'rgba(8,10,20,0.72)',
-        backdropFilter: 'blur(28px) saturate(1.3)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.3)',
         boxShadow: '0 40px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03) inset, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.40)',
       }}
     >
@@ -226,8 +222,6 @@ function SectionGlass({ children, tall }: { children: React.ReactNode; tall?: bo
         className="absolute inset-0 rounded-[26px] pointer-events-none z-[1]"
         style={{
           backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(255,255,255,0.014) 3px, rgba(255,255,255,0.014) 4px)',
-          backgroundSize: '200% 200%',
-          animation: 'grainDrift 28s linear infinite alternate',
         }}
       />
       <div className="relative z-[3] w-full flex items-stretch">{children}</div>
@@ -235,10 +229,57 @@ function SectionGlass({ children, tall }: { children: React.ReactNode; tall?: bo
   )
 }
 
+// ─── Section dot navigation ───────────────────────────────────────────────────
+// Owns the active-section state so a section change re-renders only the dots
+
+function SectionDots({ sectionRefs }: { sectionRefs: React.MutableRefObject<(HTMLElement | null)[]> }) {
+  const [activeSection, setActiveSection] = useState(0)
+
+  // IntersectionObserver — the active dot is whichever section crosses the
+  // viewport's middle line (works for sections of any height)
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => {
+        if (entry.isIntersecting) setActiveSection(sectionRefs.current.indexOf(entry.target as HTMLElement))
+      }),
+      { rootMargin: '-50% 0px -50% 0px' }
+    )
+    sectionRefs.current.forEach((el) => el && observer.observe(el))
+    return () => observer.disconnect()
+  }, [sectionRefs])
+
+  const scrollToSection = (index: number) => {
+    sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  return (
+    <nav
+      className="fixed right-5 z-[100] hidden flex-col gap-[0.55rem] xl:flex"
+      style={{ top: '50%', transform: 'translateY(-50%)', marginTop: 'calc(var(--navbar-h) / 2)' }}
+      aria-label="Page sections"
+    >
+      {SECTION_IDS.map((id, i) => (
+        <button
+          key={id}
+          onClick={() => scrollToSection(i)}
+          aria-label={`Go to ${SECTION_LABELS[i]} section`}
+          aria-current={activeSection === i ? 'true' : undefined}
+          className="rounded-full border-none cursor-pointer p-0 transition-[background,width,height,box-shadow] duration-[250ms] hover:bg-white/65 focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
+          style={{
+            width:  activeSection === i ? '10px' : '7px',
+            height: activeSection === i ? '10px' : '7px',
+            background: activeSection === i ? 'var(--color-accent-light, #38bdf8)' : 'rgba(255,255,255,0.28)',
+            boxShadow: activeSection === i ? '0 0 10px var(--color-accent-light, #38bdf8)' : 'none',
+          }}
+        />
+      ))}
+    </nav>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function AboutContent() {
-  const [activeSection, setActiveSection] = useState(0)
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
   const [skillTab,  setSkillTab]  = useState(0)
   const [skillDir,  setSkillDir]  = useState(1)
@@ -248,90 +289,37 @@ export default function AboutContent() {
     setSkillTab(tab)
   }
 
-  // IntersectionObserver — update active dot when a section crosses 51% visibility
-  useEffect(() => {
-    const observers: IntersectionObserver[] = []
-
-    sectionRefs.current.forEach((el, i) => {
-      if (!el) return
-      const observer = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(i) },
-        { threshold: 0.51 }
-      )
-      observer.observe(el)
-      observers.push(observer)
-    })
-
-    return () => observers.forEach(o => o.disconnect())
-  }, [])
-
-  const scrollToSection = (index: number) => {
-    sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   const sectionRef = (index: number) => (el: HTMLElement | null) => {
     sectionRefs.current[index] = el
   }
 
-  // Shared inline classes for the scroll-snap sections
+  // Shared classes for the page sections. On desktop each one fills the screen
+  // below the navbar; on phones they size to their content.
   const snapSectionClass = [
-    'relative min-h-full scroll-snap-align-start flex items-center justify-center p-1.5',
-    'sm:p-3 md:p-5 lg:px-12 lg:py-10',
+    'relative flex items-center justify-center px-3 py-3',
+    'sm:px-4 md:p-5 lg:min-h-[calc(100svh-var(--navbar-h))] lg:px-12 lg:py-10',
   ].join(' ')
 
   return (
     <>
       <style>{`
-        @keyframes grainDrift   { 0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; } }
-        @keyframes seamPulse    { 0%,100% { opacity:0.60; } 50% { opacity:1; } }
-        @keyframes floatA       { 0%,100% { transform: translateY(0px)   rotate(var(--rot)); } 50% { transform: translateY(-8px)  rotate(calc(var(--rot) + 1.5deg)); } }
-        @keyframes floatB       { 0%,100% { transform: translateY(0px)   rotate(var(--rot)); } 50% { transform: translateY(-12px) rotate(calc(var(--rot) - 1deg)); } }
-        @keyframes floatC       { 0%,100% { transform: translateY(0px)   rotate(var(--rot)); } 60% { transform: translateY(-6px)  rotate(calc(var(--rot) + 2deg)); } }
-        @keyframes cellPulse    { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
-        @keyframes shimmerSweep { 0%   { left:-100%; } 100% { left:200%; } }
-        @media (prefers-reduced-motion: reduce) {
-          [data-float] { animation: none !important; transform: rotate(var(--rot)) !important; }
-          [data-orbit]  { animation: none !important; }
+        @keyframes floatA { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+        @keyframes floatB { 0%,100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+        @keyframes floatC { 0%,100% { translate: 0 0; } 60% { translate: 0 -6px; } }
+        @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+          .about-float { animation: var(--float); }
         }
       `}</style>
 
       {/* Dot navigation */}
-      <nav
-        className="fixed right-5 z-[100] hidden flex-col gap-[0.55rem] lg:flex"
-        style={{ top: '50%', transform: 'translateY(-50%)', marginTop: 'calc(var(--navbar-h) / 2)' }}
-        aria-label="Page sections"
-      >
-        {SECTION_IDS.map((id, i) => (
-          <button
-            key={id}
-            onClick={() => scrollToSection(i)}
-            aria-label={`Go to ${SECTION_LABELS[i]} section`}
-            aria-current={activeSection === i ? 'true' : undefined}
-            className="rounded-full border-none cursor-pointer p-0 transition-[background,width,height,box-shadow] duration-[250ms] hover:bg-white/65 focus-visible:outline-2 focus-visible:outline-[var(--color-accent,#0ea5e9)] focus-visible:outline-offset-[3px]"
-            style={{
-              width:  activeSection === i ? '10px' : '7px',
-              height: activeSection === i ? '10px' : '7px',
-              background: activeSection === i ? 'var(--color-accent-light, #38bdf8)' : 'rgba(255,255,255,0.28)',
-              boxShadow: activeSection === i ? '0 0 10px var(--color-accent-light, #38bdf8)' : 'none',
-            }}
-          />
-        ))}
-      </nav>
+      <SectionDots sectionRefs={sectionRefs} />
 
       {/*
-       * Scroll-snap container — sits below the fixed navbar.
-       * Uses scroll-snap-type: y mandatory for snap behavior.
+       * Sections scroll with the page itself. (They used to live in their own
+       * scroll-snap container, a nested scroller that fought touch momentum
+       * and the mobile address bar.)
        */}
-      <div
-        /* overflow-x-hidden: sections slide in from ±52px, which otherwise lets the page wiggle sideways on phones */
-        className="relative z-10 overflow-y-scroll overflow-x-hidden"
-        style={{
-          height: 'calc(100dvh - var(--navbar-h))',
-          marginTop: 'var(--navbar-h)',
-          scrollSnapType: 'y proximity',
-          scrollBehavior: 'smooth',
-        }}
-      >
+      <div className="relative z-10 pb-8 pt-[var(--navbar-h)]">
 
         {/* ── Section 1: INTRO ── */}
         <section
@@ -339,7 +327,6 @@ export default function AboutContent() {
           id="intro"
           aria-label="Introduction"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass tall>
             <div className="flex flex-col md:flex-row w-full">
@@ -348,7 +335,7 @@ export default function AboutContent() {
                 variants={fromLeft}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 flex flex-col items-center text-center justify-center p-2 sm:p-3 md:p-12 md:pr-10"
               >
                 <p className="text-[0.75rem] md:text-[0.8rem] font-bold tracking-[0.17em] uppercase text-accent-light m-0 mb-1 md:mb-[0.9rem]" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-accent-light, #38bdf8)' }}>
@@ -400,11 +387,11 @@ export default function AboutContent() {
                 variants={fromRight}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 flex items-center justify-center p-2 overflow-visible"
                 aria-hidden="true"
               >
-                <div className="relative w-[480px] h-[460px] max-[899px]:w-full max-[899px]:h-full flex-shrink-0">
+                <div className="relative w-full max-w-[480px] h-[460px] max-[899px]:max-w-none max-[899px]:h-full flex-shrink-0">
                   {/* Connector lines */}
                   {[
                     { top: '38%', left: '32%', w: '80px', angle: '-25deg' },
@@ -440,7 +427,6 @@ export default function AboutContent() {
           id="story"
           aria-label="Personal story"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(95vw,560px)]">
@@ -449,7 +435,7 @@ export default function AboutContent() {
                 variants={fromLeft}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-[0_0_50%] p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
@@ -470,7 +456,7 @@ export default function AboutContent() {
                 variants={fromRight}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 flex flex-col items-center text-center justify-center p-2 sm:p-3 md:px-10 md:py-12 max-[899px]:relative max-[899px]:z-[2] max-[899px]:w-full max-[899px]:px-5 max-[899px]:py-6"
                 style={{ fontSize: '0.8em', background: 'linear-gradient(to bottom, rgba(4,4,14,0.55) 0%, rgba(4,4,14,0.85) 100%)' } as React.CSSProperties}
               >
@@ -498,7 +484,6 @@ export default function AboutContent() {
           id="skills"
           aria-label="Technical skills"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             {/* Desktop: two-column */}
@@ -508,7 +493,7 @@ export default function AboutContent() {
                 variants={fromLeft}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-[0_0_50%] flex flex-col justify-start overflow-y-auto px-12 py-10"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(14,165,233,0.2) transparent' }}
               >
@@ -520,7 +505,7 @@ export default function AboutContent() {
                   variants={staggerContainer}
                   initial="hidden"
                   whileInView="visible"
-                  viewport={{ once: false, amount: 0.3 }}
+                  viewport={{ once: true, amount: 0.3 }}
                   className="list-none m-0 pb-4 grid gap-2"
                   style={{ gridTemplateColumns: '1fr 1fr', alignItems: 'stretch' }}
                 >
@@ -545,15 +530,15 @@ export default function AboutContent() {
                 variants={fromRight}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 flex flex-col items-center justify-center px-10 py-12"
                 aria-hidden="true"
               >
                 <div className="w-full max-w-[320px] flex flex-col gap-3 pt-1">
                   <p className="text-[0.8rem] m-0 mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'rgba(56,189,248,0.8)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
                   <div className="grid gap-[0.6rem]" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                    {dashCells.map((cell, i) => (
-                      <DashCell key={cell.label} {...cell} delay={`${i * 0.08}s`} />
+                    {dashCells.map((cell) => (
+                      <DashCell key={cell.label} {...cell} />
                     ))}
                   </div>
                 </div>
@@ -593,9 +578,9 @@ export default function AboutContent() {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={skillTab}
-                  initial={{ x: skillDir * 44, opacity: 0, scale: 0.94, filter: 'blur(14px)' }}
-                  animate={{ x: 0, opacity: 1, scale: 1, filter: 'blur(0px)', transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
-                  exit={{ x: skillDir * -44, opacity: 0, scale: 0.94, filter: 'blur(14px)', transition: { duration: 0.2, ease: [0.55, 0, 1, 0.45] } }}
+                  initial={{ x: skillDir * 44, opacity: 0, scale: 0.94 }}
+                  animate={{ x: 0, opacity: 1, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }}
+                  exit={{ x: skillDir * -44, opacity: 0, scale: 0.94, transition: { duration: 0.2, ease: [0.55, 0, 1, 0.45] } }}
                   className="flex-1 overflow-y-auto flex flex-col gap-[0.65rem] touch-pan-y cursor-grab active:cursor-grabbing select-none"
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
@@ -638,9 +623,9 @@ export default function AboutContent() {
                           className="grid gap-[0.3rem]"
                           style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
                         >
-                          {dashCells.map((cell, i) => (
+                          {dashCells.map((cell) => (
                             <motion.div key={cell.label} variants={chipVariant}>
-                              <DashCell {...cell} delay={`${i * 0.08}s`} />
+                              <DashCell {...cell} />
                             </motion.div>
                           ))}
                         </motion.div>
@@ -657,7 +642,9 @@ export default function AboutContent() {
                     key={i}
                     onClick={() => goToSkillTab(i)}
                     aria-label={i === 0 ? 'Process tab' : 'Skills tab'}
-                    className="h-1.5 rounded-[3px] border-none cursor-pointer p-0 transition-[width,background] duration-300"
+                    aria-pressed={skillTab === i}
+                    // The visible pill is 6px tall; the pseudo-element gives it a 24px touch target
+                    className="relative h-1.5 rounded-[3px] border-none cursor-pointer p-0 transition-[width,background] duration-300 before:absolute before:-inset-x-1.5 before:-inset-y-[9px] before:content-['']"
                     style={{
                       width: skillTab === i ? '22px' : '6px',
                       background: skillTab === i
@@ -678,7 +665,6 @@ export default function AboutContent() {
           id="values"
           aria-label="Work philosophy"
           className={snapSectionClass}
-          style={{ scrollSnapAlign: 'start' }}
         >
           <SectionGlass>
             <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(115vw,680px)]">
@@ -687,7 +673,7 @@ export default function AboutContent() {
                 variants={staggerContainer}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.35 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-[0_0_50%] flex flex-col items-start justify-center px-6 py-6 md:px-10 md:py-12 max-[899px]:relative max-[899px]:z-[2] max-[899px]:w-full max-[899px]:px-5 max-[899px]:py-6 max-[899px]:items-center max-[899px]:text-center max-[899px]:justify-center"
                 style={{ background: 'linear-gradient(to bottom, rgba(4,4,14,0.55) 0%, rgba(4,4,14,0.85) 100%)' } as React.CSSProperties}
               >
@@ -754,7 +740,7 @@ export default function AboutContent() {
                 variants={fromRight}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: false, amount: 0.4 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
@@ -772,15 +758,11 @@ export default function AboutContent() {
           id="cta"
           aria-label="Call to action"
           className={`${snapSectionClass} relative`}
-          style={{ scrollSnapAlign: 'start' }}
         >
           <div className="relative z-[2] w-full max-w-[900px] flex items-center justify-center">
             <div
-              className="relative w-full rounded-[26px] text-center"
+              className="relative w-full rounded-[26px] text-center bg-[rgba(8,10,20,0.9)]"
               style={{
-                background: 'rgba(8,10,20,0.72)',
-                backdropFilter: 'blur(28px) saturate(1.3)',
-                WebkitBackdropFilter: 'blur(28px) saturate(1.3)',
                 padding: '3rem 2.5rem',
                 isolation: 'isolate',
                 boxShadow: '0 32px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -800,7 +782,7 @@ export default function AboutContent() {
               />
 
               <div className="relative z-[3]">
-                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }}>
+                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }}>
                   <p className="text-[0.8rem] font-bold tracking-[0.18em] uppercase m-0 mb-2" style={{ color: 'var(--color-accent-light, #38bdf8)', fontFamily: 'var(--font-body)' }}>
                     Let's work together
                   </p>
@@ -810,19 +792,19 @@ export default function AboutContent() {
                   </div>
                 </motion.div>
 
-                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.1 }}>
+                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} transition={{ delay: 0.1 }}>
                   <h2 className="font-extrabold text-fg tracking-[-0.03em] leading-[1.1] m-0 mb-3 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem,6vw,2.8rem)' }}>
                     Ready to build something?
                   </h2>
                 </motion.div>
 
-                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.2 }}>
+                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} transition={{ delay: 0.2 }}>
                   <p className="font-light text-muted leading-[1.65] max-w-[46ch] mx-auto m-0 mb-5 sm:mb-9" style={{ fontFamily: 'var(--font-body)', fontSize: 'clamp(0.95rem,2.5vw,1.1rem)' }}>
                     Whether you have a full brief or just a rough idea, let's talk. I'll tell you what's possible and how we can get started.
                   </p>
                 </motion.div>
 
-                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.5 }} transition={{ delay: 0.3 }}>
+                <motion.div variants={fromBottom} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.5 }} transition={{ delay: 0.3 }}>
                   <nav className="flex flex-col items-stretch gap-[0.65rem] py-1 sm:flex-row sm:items-center sm:justify-center sm:py-3 sm:gap-3">
                     {[
                       { href: '/contact',   label: 'Get in touch', primary: true },

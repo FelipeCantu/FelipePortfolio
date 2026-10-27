@@ -58,7 +58,7 @@ function Toast({
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="-mr-1 -mt-1 flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-subtle transition-colors hover:bg-white/[0.08] hover:text-fg"
+        className="-mr-2 -mt-2 flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-subtle transition-colors hover:bg-white/[0.08] hover:text-fg"
       >
         <FiX size={16} aria-hidden="true" />
       </button>

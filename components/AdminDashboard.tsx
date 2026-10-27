@@ -129,7 +129,7 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               autoFocus
-              className="w-full px-4 py-[0.8rem] rounded-[10px] text-white text-[0.95rem] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-white/30"
+              className="w-full px-4 py-[0.8rem] rounded-[10px] text-white text-[0.95rem] transition-[border-color,box-shadow] duration-200 placeholder:text-subtle"
               style={{
                 background: 'rgba(255,255,255,0.07)',
                 border: '1px solid rgba(255,255,255,0.12)',
@@ -201,7 +201,7 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const inputClass = 'w-full px-4 py-[0.8rem] rounded-[10px] text-white text-[0.95rem] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-white/30'
+  const inputClass = 'w-full px-4 py-[0.8rem] rounded-[10px] text-white text-[0.95rem] transition-[border-color,box-shadow] duration-200 placeholder:text-subtle'
   const inputStyle = { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: 'var(--font-body)' }
 
   return (
@@ -379,7 +379,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
 
             {/* Account ID row */}
             <div className="flex items-center gap-4 mb-[0.4rem]">
-              <span className="text-[0.68rem] font-bold tracking-[0.12em] uppercase text-white/35 w-[110px] flex-shrink-0">Account ID</span>
+              <span className="text-[0.68rem] font-bold tracking-[0.12em] uppercase text-subtle w-24 flex-shrink-0 max-sm:w-auto">Account ID</span>
               <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)', wordBreak: 'break-all' }}>
                 {account.id}
               </code>
@@ -387,7 +387,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
 
             {account.country && (
               <div className="flex items-center gap-4 mb-[0.4rem]">
-                <span className="text-[0.68rem] font-bold tracking-[0.12em] uppercase text-white/35 w-[110px] flex-shrink-0">Country</span>
+                <span className="text-[0.68rem] font-bold tracking-[0.12em] uppercase text-subtle w-24 flex-shrink-0 max-sm:w-auto">Country</span>
                 <span className="text-[0.82rem] text-white/65">{account.country.toUpperCase()}</span>
               </div>
             )}
@@ -546,14 +546,14 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
 
         {loading ? (
           <div
-            className="rounded-[14px] py-12 px-4 text-center text-[0.9rem] text-white/35"
+            className="rounded-[14px] py-12 px-4 text-center text-[0.9rem] text-subtle"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)' }}
           >
             Loading clients…
           </div>
         ) : accounts.length === 0 ? (
           <div
-            className="rounded-[14px] py-12 px-4 text-center text-[0.9rem] text-white/35"
+            className="rounded-[14px] py-12 px-4 text-center text-[0.9rem] text-subtle"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)' }}
           >
             No clients yet.{' '}

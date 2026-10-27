@@ -75,14 +75,6 @@ const config: Config = {
         'out-expo': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
       keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-4px)' },
-        },
-        fadeInUp: {
-          from: { opacity: '0', transform: 'translateY(20px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
@@ -97,8 +89,6 @@ const config: Config = {
         },
       },
       animation: {
-        float: 'float 4s ease-in-out infinite',
-        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.22,1,0.36,1) both',
         shimmer: 'shimmer 2s linear infinite',
         'pulse-ring': 'pulseRing 2.4s ease-out infinite',
       },

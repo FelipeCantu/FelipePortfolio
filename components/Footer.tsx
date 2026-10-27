@@ -45,10 +45,10 @@ export default function Footer() {
 
         <nav aria-label="Footer">
           <p className="eyebrow mb-4">Explore</p>
-          <ul className="grid gap-2.5">
+          <ul className="grid gap-1">
             {NAV.map(({ href, label }) => (
               <li key={href}>
-                <Link href={href} className="text-small text-muted no-underline transition-colors hover:text-fg">
+                <Link href={href} className="inline-flex min-h-6 items-center text-small text-muted no-underline transition-colors hover:text-fg">
                   {label}
                 </Link>
               </li>
@@ -75,7 +75,7 @@ export default function Footer() {
           </ul>
           <a
             href="mailto:cantujr.felipe@gmail.com"
-            className="mt-4 inline-block break-all text-small text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white"
+            className="mt-3 inline-block break-all py-0.5 text-small text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white"
           >
             cantujr.felipe@gmail.com
           </a>

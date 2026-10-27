@@ -43,7 +43,7 @@ export default function Sidebar({ open, onClose }: Props) {
         {/* Mobile drawer brand header */}
         <li className="mb-2 hidden w-full items-center gap-3 border-b border-line/15 px-6 pb-5 max-lg:flex">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/mainwlogo.png" alt="" width={36} height={36} className="h-9 w-9 flex-shrink-0 object-contain" />
+          <img src="/images/mainwlogo-96.png" alt="" width={36} height={36} className="h-9 w-9 flex-shrink-0 object-contain" />
           <span className="font-display text-base font-bold tracking-tight text-fg">Felipe Cantu Jr</span>
         </li>
 

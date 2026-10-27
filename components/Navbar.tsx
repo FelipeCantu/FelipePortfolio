@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
 
 /**
@@ -10,7 +10,6 @@ export default function Navbar() {
   const [isHovered, setIsHovered] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [logoError, setLogoError] = useState(false)
-  const [imageLoaded, setImageLoaded] = useState(false)
   const textRef = useRef<HTMLDivElement>(null)
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -19,21 +18,6 @@ export default function Navbar() {
       setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
     }
   }
-
-  useEffect(() => {
-    const preload = (src: string) =>
-      new Promise<void>((resolve, reject) => {
-        const img = new Image()
-        img.onload = () => resolve()
-        img.onerror = () => reject()
-        img.src = src
-      })
-
-    preload('/images/mainwlogo.png')
-      .then(() => preload('/images/mainblogo.png'))
-      .then(() => { setImageLoaded(true); setLogoError(false) })
-      .catch(() => { setLogoError(true); setImageLoaded(false) })
-  }, [])
 
   return (
     <header
@@ -46,23 +30,35 @@ export default function Navbar() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Logo image / fallback monogram */}
+        {/* Logo image / fallback monogram. Both variants are stacked and
+            cross-faded so the hover logo is already loaded when it's needed. */}
         {!logoError ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={isHovered ? '/images/mainblogo.png' : '/images/mainwlogo.png'}
-            alt=""
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full border border-line/30 object-cover transition-[transform,box-shadow,opacity] duration-300 ease-out-expo"
+          <span
+            className="relative block h-10 w-10 overflow-hidden rounded-full border border-line/30 transition-[transform,box-shadow] duration-300 ease-out-expo"
             style={{
-              opacity: imageLoaded ? 1 : 0,
               transform: isHovered ? 'scale(1.08)' : 'scale(1)',
               boxShadow: isHovered ? '0 0 0 3px rgb(var(--c-accent) / 0.35)' : 'none',
             }}
-            onLoad={() => { setImageLoaded(true); setLogoError(false) }}
-            onError={() => { setLogoError(true); setImageLoaded(false) }}
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/mainwlogo-96.png"
+              alt=""
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
+              onError={() => setLogoError(true)}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/mainblogo-96.png"
+              alt=""
+              width={40}
+              height={40}
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+              style={{ opacity: isHovered ? 1 : 0 }}
+            />
+          </span>
         ) : (
           <div
             className="flex h-10 w-10 items-center justify-center rounded-full border border-accent/40 bg-accent/10 text-accent-light transition-transform duration-300"

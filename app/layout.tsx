@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, DM_Sans, JetBrains_Mono } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import SidebarShell from '@/components/SidebarShell'
 import Footer from '@/components/Footer'
 import MotionProvider from '@/components/MotionProvider'
-import ScrollParallax from '@/components/ScrollParallax'
+import Backdrop from '@/components/Backdrop'
 
 // Display: variable font, so one file covers every weight we use (500-800)
 const bricolage = Bricolage_Grotesque({
@@ -68,13 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://cdn.sanity.io" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        {/* Google Analytics */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-DRHEYW3LR9" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DRHEYW3LR9');`,
-          }}
-        />
         {/* JSON-LD: Person + WebSite */}
         <script
           type="application/ld+json"
@@ -115,13 +109,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="font-body">
+        {/* Google Analytics: loaded after hydration so it never blocks first paint */}
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-DRHEYW3LR9" strategy="afterInteractive" />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DRHEYW3LR9');`}
+        </Script>
         <a
           href="#main"
           className="fixed left-4 top-4 z-[2000] -translate-y-24 rounded-pill bg-accent px-5 py-2.5 font-semibold text-accent-ink no-underline transition-transform focus:translate-y-0"
         >
           Skip to content
         </a>
-        <ScrollParallax />
+        <Backdrop />
         <MotionProvider>
           <SidebarShell>
             <div className="flex min-h-dvh flex-col">

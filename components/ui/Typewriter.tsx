@@ -3,23 +3,16 @@
 import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
-export interface TypewriterPhrase {
-  /** Plain lead-in, typed first (e.g. "web apps that "). */
-  text: string
-  /** Emphasised ending, rendered with the brand gradient. */
-  highlight: string
-}
-
 interface TypewriterProps {
-  /** Fixed text before the typed part; never erased. */
-  prefix?: string
-  phrases: TypewriterPhrase[]
+  /** Phrases typed in turn, each rendered with the brand gradient. */
+  phrases: string[]
   typeMs?: number
   deleteMs?: number
   /** How long a finished phrase stays on screen before erasing. */
   holdMs?: number
   /** Delay before the first keystroke (lets the hero entrance play first). */
   startMs?: number
+  className?: string
 }
 
 /**
@@ -30,32 +23,37 @@ interface TypewriterProps {
  * shift while typing. Reduced-motion visitors see the first phrase, static.
  */
 export default function Typewriter({
-  prefix = '',
   phrases,
-  typeMs = 55,
-  deleteMs = 28,
-  holdMs = 2600,
-  startMs = 700,
+  typeMs = 60,
+  deleteMs = 30,
+  holdMs = 2400,
+  startMs = 900,
+  className = '',
 }: TypewriterProps) {
-  const reduceMotion = useReducedMotion()
+  const prefersReducedMotion = useReducedMotion()
+  const [mounted, setMounted] = useState(false)
   const [index, setIndex] = useState(0)
   const [count, setCount] = useState(0)
   const [deleting, setDeleting] = useState(false)
   const [started, setStarted] = useState(false)
 
-  const phrase = phrases[index]
-  const full = phrase.text + phrase.highlight
+  // The server can't know the motion preference; treat it as "no preference"
+  // until after hydration so the first client render matches the server HTML.
+  useEffect(() => setMounted(true), [])
+  const reduceMotion = mounted && !!prefersReducedMotion
+
+  const phrase = phrases[index % Math.max(phrases.length, 1)] ?? ''
 
   useEffect(() => {
-    if (reduceMotion) return
+    if (reduceMotion || phrases.length === 0) return
     if (!started) {
       const t = setTimeout(() => setStarted(true), startMs)
       return () => clearTimeout(t)
     }
 
-    const finished = !deleting && count === full.length
+    const finished = !deleting && count === phrase.length
     const emptied = deleting && count === 0
-    const delay = finished ? holdMs : emptied ? 350 : deleting ? deleteMs : typeMs
+    const delay = finished ? holdMs : emptied ? 400 : deleting ? deleteMs : typeMs
 
     const t = setTimeout(() => {
       if (finished) setDeleting(true)
@@ -65,39 +63,27 @@ export default function Typewriter({
       } else setCount((c) => c + (deleting ? -1 : 1))
     }, delay)
     return () => clearTimeout(t)
-  }, [reduceMotion, started, count, deleting, full.length, phrases.length, typeMs, deleteMs, holdMs, startMs])
+  }, [reduceMotion, started, count, deleting, phrase.length, phrases.length, typeMs, deleteMs, holdMs, startMs])
+
+  const typed = reduceMotion ? phrase.length : count
+  // Caret stays solid while keys are moving and only blinks when idle
+  const idle = !started || (!deleting && count === phrase.length) || (deleting && count === 0)
 
   // The whole phrase is always laid out; untyped characters are just hidden.
-  // Line breaks are therefore fixed from the first keystroke: no words
-  // jumping between lines as they grow, and the gradient never re-stretches.
-  const typed = reduceMotion ? full.length : count
-  const caret = reduceMotion ? null : <span className="typewriter-caret" />
-  const reveal = (part: string, offset: number) => {
-    const n = Math.min(Math.max(typed - offset, 0), part.length)
-    const caretHere = typed >= offset && (typed < offset + part.length || offset + part.length === full.length)
-    return (
-      <>
-        {part.slice(0, n)}
-        {caretHere && caret}
-        <span className="invisible">{part.slice(n)}</span>
-      </>
-    )
-  }
-
+  // Line breaks are therefore fixed from the first keystroke, and the gradient
+  // sits on the full-width cell, so it never re-stretches as letters appear.
   return (
-    <span className="grid" aria-hidden="true">
+    <span className={`grid ${className}`} aria-hidden="true">
       {/* Every phrase, invisible, in one cell: reserves the tallest one */}
       {phrases.map((p) => (
-        <span key={p.text + p.highlight} className="invisible col-start-1 row-start-1">
-          {prefix}
-          {p.text}
-          {p.highlight}
+        <span key={p} className="invisible col-start-1 row-start-1">
+          {p}
         </span>
       ))}
-      <span className="col-start-1 row-start-1">
-        {prefix}
-        {reveal(phrase.text, 0)}
-        <span className="text-gradient">{reveal(phrase.highlight, phrase.text.length)}</span>
+      <span className="text-gradient col-start-1 row-start-1">
+        {phrase.slice(0, typed)}
+        {!reduceMotion && <span className={idle ? 'typewriter-caret is-idle' : 'typewriter-caret'} />}
+        <span className="invisible">{phrase.slice(typed)}</span>
       </span>
     </span>
   )
