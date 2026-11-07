@@ -22,7 +22,8 @@ function sanityImage(url: string, width: number) {
 /**
  * Home page "Selected work": the first three projects from Sanity, so visitors
  * see real work without leaving the landing page. The first card spans wider
- * on large screens to give the strongest project the most room.
+ * on large screens (two columns, two rows) to give the strongest project the
+ * most room, with the other two stacked beside it.
  */
 export default function FeaturedWork({ projects }: { projects: FeaturedProject[] }) {
   if (!projects?.length) return null
@@ -55,18 +56,22 @@ export default function FeaturedWork({ projects }: { projects: FeaturedProject[]
             const wide = i === 0 && projects.length === 3
 
             return (
-              <Reveal as="li" key={project._id} delay={i * 0.08} className={wide ? 'md:col-span-2 lg:col-span-2' : ''}>
+              <Reveal as="li" key={project._id} delay={i * 0.08} className={wide ? 'md:col-span-2 lg:row-span-2' : ''}>
                 <Link
                   href={href}
                   className="card-interactive group flex h-full flex-col overflow-hidden no-underline"
                 >
-                  <div className={`relative overflow-hidden bg-raised ${wide ? 'aspect-[16/9]' : 'aspect-[4/3]'}`}>
+                  <div
+                    className={`relative overflow-hidden bg-raised ${
+                      wide ? 'aspect-[16/9] lg:aspect-auto lg:min-h-[20rem] lg:flex-1' : 'aspect-[4/3]'
+                    }`}
+                  >
                     {img ? (
                       <Image
                         src={sanityImage(img, wide ? 1200 : 800)}
                         alt={project.mainImage?.alt || `${project.title} screenshot`}
                         fill
-                        sizes={wide ? '(min-width: 1024px) 66vw, (min-width: 768px) 100vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw'}
+                        sizes={wide ? '(min-width: 1024px) 66vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw'}
                         className="object-cover object-top outline outline-1 -outline-offset-1 outline-white/10 transition-transform duration-500 ease-out-expo group-hover:scale-[1.03]"
                       />
                     ) : (
@@ -76,7 +81,7 @@ export default function FeaturedWork({ projects }: { projects: FeaturedProject[]
                     )}
                   </div>
 
-                  <div className="flex flex-1 flex-col gap-3 p-6">
+                  <div className={`flex flex-col gap-3 p-6 ${wide ? 'lg:flex-none' : 'flex-1'}`}>
                     {types.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {types.map((t) => (
