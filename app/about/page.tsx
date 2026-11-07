@@ -2,15 +2,15 @@ import type { Metadata } from 'next'
 import AboutContent from '@/components/AboutContent'
 
 export const metadata: Metadata = {
-  title: 'About',
+  title: 'About — Dallas Full-Stack Developer',
   description:
-    'Learn about Felipe Cantu Jr — full-stack developer in Dallas, TX. My story, skills, and values.',
+    'Meet Felipe Cantu Jr, a full-stack developer and designer in Dallas, TX: my story, the tools I use, and how I take websites from idea to launch.',
   alternates: { canonical: 'https://felipecantujr.com/about' },
   openGraph: {
-    title: 'About | Felipe Cantu Jr',
+    title: 'About — Dallas Full-Stack Developer | Felipe Cantu Jr',
     description: 'Learn about Felipe Cantu Jr — full-stack developer in Dallas, TX.',
     url: 'https://felipecantujr.com/about',
-    images: [{ url: '/images/felipe.jpg' }],
+    images: [{ url: '/images/og.jpg', width: 1200, height: 630 }],
   },
 }
 

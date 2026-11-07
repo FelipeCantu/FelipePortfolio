@@ -57,6 +57,7 @@ export default function Navbar() {
               height={40}
               className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
               style={{ opacity: isHovered ? 1 : 0 }}
+              onError={() => setLogoError(true)}
             />
           </span>
         ) : (

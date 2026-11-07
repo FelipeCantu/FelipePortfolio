@@ -48,13 +48,13 @@ export const metadata: Metadata = {
     title: 'Felipe Cantu Jr — Full Stack Web Developer',
     description:
       'Full-stack developer in Dallas, TX helping businesses launch fast, modern websites.',
-    images: [{ url: '/images/avatarpic.png' }],
+    images: [{ url: '/images/og.jpg', width: 1200, height: 630, alt: 'Felipe Cantu Jr, full-stack developer in Dallas, TX' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Felipe Cantu Jr — Full Stack Web Developer',
     description: 'Full-stack developer in Dallas, TX. Building fast, modern web apps for businesses.',
-    images: ['/images/avatarpic.png'],
+    images: ['/images/og.jpg'],
   },
   authors: [{ name: 'Felipe Cantu Jr', url: 'https://felipecantujr.com' }],
   robots: { index: true, follow: true },

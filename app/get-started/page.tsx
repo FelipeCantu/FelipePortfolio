@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import ClientIntakeWizard from '@/components/ClientIntakeWizard'
 
 export const metadata: Metadata = {
-  title: 'Get Started',
+  title: 'Start Your Website Project',
   description:
-    "Ready to build something? Fill out the project intake form and let's get started.",
+    "Planning a new website or web app? Answer a few quick questions about your project, goals and timeline, and I'll follow up within 24 hours.",
   alternates: { canonical: 'https://felipecantujr.com/get-started' },
 }
 

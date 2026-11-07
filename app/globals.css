@@ -97,7 +97,7 @@ body {
 }
 
 /* One shared ambient backdrop for every page: replaces the per-page
-   mainbg.jpg + overlay stacks (one fewer large image on the critical path).
+   background image + overlay stacks (one fewer large image on the critical path).
    Layers, back to front: film grain (html) -> glows (.backdrop-glows)
    -> faded dot grid (.backdrop-dots). All pure CSS, no image requests. */
 html {

@@ -3,15 +3,15 @@ import { sanity, ALL_POSTS_QUERY } from '@/lib/sanity'
 import BlogGrid from '@/components/BlogGrid'
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: 'Web Development & Design Blog',
   description:
-    'Explore insightful articles about web development, technology trends, and programming best practices.',
+    'Practical articles on web development, React and Next.js, design and building websites that win clients, from a Dallas full-stack developer.',
   alternates: { canonical: 'https://felipecantujr.com/blog' },
   openGraph: {
-    title: 'Blog | Felipe Cantu Jr',
+    title: 'Web Development & Design Blog | Felipe Cantu Jr',
     description: 'Articles about web development, technology trends, and programming best practices.',
     url: 'https://felipecantujr.com/blog',
-    images: [{ url: '/images/felipe.jpg' }],
+    images: [{ url: '/images/og.jpg', width: 1200, height: 630 }],
   },
 }
 

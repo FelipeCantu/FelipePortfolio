@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: 'Felipe Cantu Jr — Full Stack Web Developer',
     description: 'Full-stack developer in Dallas, TX helping businesses launch fast, modern websites.',
     url: 'https://felipecantujr.com/',
-    images: [{ url: '/images/felipe.jpg' }],
+    images: [{ url: '/images/og.jpg', width: 1200, height: 630 }],
   },
 }
 

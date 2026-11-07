@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiArrowRight, FiCode, FiLayout, FiMessageSquare } from 'react-icons/fi'
 import {
@@ -121,10 +122,12 @@ function CollagePiece({ w, h, top, left, rotate, z, delay, radius, src, alt = ''
         el.style.scale = ''
       }}
     >
-      <img
+      <Image
         src={src}
         alt={alt}
-        className="w-full h-full object-cover block transition-transform duration-500 ease-in-out group-hover:scale-[1.08]"
+        fill
+        sizes="(min-width: 900px) 240px, 45vw"
+        className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-[1.08]"
         style={{ objectPosition: pos }}
       />
       {/* Accent border */}
@@ -439,11 +442,13 @@ export default function AboutContent() {
                 className="flex-[0_0_50%] p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
-                <div className="w-full h-full overflow-hidden rounded-[0_25px_25px_0] max-[899px]:rounded-none">
-                  <img
+                <div className="relative w-full h-full overflow-hidden rounded-[0_25px_25px_0] max-[899px]:rounded-none">
+                  <Image
                     src="/images/big.jpg"
                     alt="Felipe Cantu Jr"
-                    className="w-full h-full object-cover object-top block"
+                    fill
+                    sizes="(min-width: 900px) 50vw, 100vw"
+                    className="object-cover object-top"
                     style={{ filter: 'saturate(0.88) contrast(1.05)', transition: 'filter 0.4s ease' }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = 'saturate(1) contrast(1)' }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = 'saturate(0.88) contrast(1.05)' }}
@@ -744,8 +749,8 @@ export default function AboutContent() {
                 className="flex-1 p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
-                <div className="w-full h-full overflow-hidden rounded-[25px_0_0_25px] max-[899px]:rounded-none">
-                  <img src="/images/big2.jpg" alt="" className="w-full h-full object-cover object-top block" style={{ filter: 'saturate(0.88) contrast(1.05)' }} />
+                <div className="relative w-full h-full overflow-hidden rounded-[25px_0_0_25px] max-[899px]:rounded-none">
+                  <Image src="/images/big2.jpg" alt="" fill sizes="(min-width: 900px) 50vw, 100vw" className="object-cover object-top" style={{ filter: 'saturate(0.88) contrast(1.05)' }} />
                 </div>
               </motion.div>
             </div>

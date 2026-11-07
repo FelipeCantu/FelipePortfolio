@@ -3,15 +3,15 @@ import { sanity, ALL_PROJECTS_QUERY } from '@/lib/sanity'
 import ProjectCarousel from '@/components/ProjectCarousel'
 
 export const metadata: Metadata = {
-  title: 'Portfolio',
+  title: 'Web Developer Portfolio & Case Studies',
   description:
-    'Browse my web development portfolio — React, Next.js, Node.js, and full-stack projects built for real businesses.',
+    'Web development portfolio of Felipe Cantu Jr: React, Next.js and full-stack websites and apps built for real businesses, with case studies for each project.',
   alternates: { canonical: 'https://felipecantujr.com/portfolio' },
   openGraph: {
-    title: 'Portfolio | Felipe Cantu Jr',
+    title: 'Web Developer Portfolio & Case Studies | Felipe Cantu Jr',
     description: 'Web development portfolio — React, Next.js, Node.js projects.',
     url: 'https://felipecantujr.com/portfolio',
-    images: [{ url: '/images/felipe.jpg' }],
+    images: [{ url: '/images/og.jpg', width: 1200, height: 630 }],
   },
 }
 
