@@ -1,13 +1,18 @@
 import Stripe from 'stripe'
-import { isAdmin, unauthorized, safeBaseUrl } from '@/lib/adminAuth'
+import { requireAdmin, serverError, safeBaseUrl, isStripeAccountId } from '@/lib/adminAuth'
 
 export async function POST(request: Request) {
-  if (!isAdmin(request)) return unauthorized()
+  const denied = requireAdmin(request)
+  if (denied) return denied
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
-  const { accountId, appUrl } = await request.json()
+  const body = await request.json().catch(() => null)
+  const accountId = body?.accountId
+  const appUrl = body?.appUrl
 
-  if (!accountId) return Response.json({ error: 'accountId is required' }, { status: 400 })
+  if (!isStripeAccountId(accountId)) {
+    return Response.json({ error: 'A valid accountId is required' }, { status: 400 })
+  }
 
   try {
     const baseUrl = safeBaseUrl(appUrl)
@@ -19,6 +24,6 @@ export async function POST(request: Request) {
     })
     return Response.json({ onboardingUrl: accountLink.url })
   } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 500 })
+    return serverError('account-link', err)
   }
 }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
 import { INTAKE_EMAILJS } from '@/lib/emailjs'
+import { HoneypotField, isLikelyBot } from '@/components/ui/Honeypot'
 import {
   FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart,
   FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
@@ -471,6 +472,9 @@ export default function ClientIntakeWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error,        setError]        = useState('')
   const [showErrors,   setShowErrors]   = useState(false)
+  const trapRef    = useRef('')
+  const renderedAt = useRef(0)
+  useEffect(() => { renderedAt.current = Date.now() }, [])
   const stepRef = useRef<HTMLDivElement>(null)
   const [data,         setData]         = useState<WizardData>({
     name: '', email: '', company: '',
@@ -519,6 +523,12 @@ export default function ClientIntakeWizard() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     setError('')
+    // Silent bot check: pretend success, send nothing
+    if (isLikelyBot(trapRef.current, renderedAt.current)) {
+      setSubmitted(true)
+      setIsSubmitting(false)
+      return
+    }
     try {
       await emailjs.send(
         INTAKE_EMAILJS.serviceId,
@@ -541,7 +551,8 @@ export default function ClientIntakeWizard() {
   if (submitted) return <SuccessScreen firstName={firstName} />
 
   return (
-    <div className="flex w-full flex-col">
+    <div className="relative flex w-full flex-col">
+      <HoneypotField onChange={(v) => { trapRef.current = v }} />
       <ProgressBar step={step} />
 
       {/* Step area */}

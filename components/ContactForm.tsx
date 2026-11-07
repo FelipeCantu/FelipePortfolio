@@ -1,11 +1,12 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
 import { CONTACT_EMAILJS } from '@/lib/emailjs'
+import { HoneypotField, isLikelyBot, trapValueOf } from '@/components/ui/Honeypot'
 
 // ─── Validation messages ──────────────────────────────────────────────────────
 
@@ -70,6 +71,10 @@ function Toast({
 
 export default function ContactForm() {
   const form = useRef<HTMLFormElement>(null)
+  const renderedAt = useRef(0)
+  useEffect(() => {
+    renderedAt.current = Date.now()
+  }, [])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
@@ -111,16 +116,26 @@ export default function ContactForm() {
         message: HTMLTextAreaElement
       }
 
-      const userName = formElements.user_name.value
-      const userEmail = formElements.user_email.value
-      const userMessage = formElements.message.value
+      const userName = formElements.user_name.value.trim().slice(0, 80)
+      const userEmail = formElements.user_email.value.trim()
+
+      // Bot check: real people never fill the hidden field, and can't finish
+      // the form within a couple of seconds of it rendering. Pretend it worked
+      // so the bot gets no signal, but send nothing.
+      if (isLikelyBot(trapValueOf(form.current), renderedAt.current)) {
+        setShowSuccess(true)
+        form.current.reset()
+        return
+      }
 
       const { serviceId, publicKey } = CONTACT_EMAILJS
 
       // 1. Send the main email (to you)
       await emailjs.sendForm(serviceId, CONTACT_EMAILJS.templateId, form.current, publicKey)
 
-      // 2. Send thank-you email to the user
+      // 2. Send a fixed thank-you to the visitor. It deliberately does NOT echo
+      //    their message: an auto-reply that repeats visitor text to any address
+      //    they type can be used to send spam through this EmailJS account.
       await emailjs.send(
         serviceId,
         CONTACT_EMAILJS.replyTemplateId,
@@ -128,7 +143,6 @@ export default function ContactForm() {
           to_email: userEmail,
           to_name: userName,
           from_name: 'Felipe Cantu Jr',
-          user_message: userMessage,
         },
         publicKey
       )
@@ -151,7 +165,8 @@ export default function ContactForm() {
 
   return (
     <div className="relative w-full">
-      <form ref={form} onSubmit={sendEmail} className="grid w-full gap-5">
+      <form ref={form} onSubmit={sendEmail} className="relative grid w-full gap-5">
+        <HoneypotField />
         <div>
           <label htmlFor="cf-name" className="field-label">
             Name
@@ -161,6 +176,7 @@ export default function ContactForm() {
             type="text"
             name="user_name"
             required
+            maxLength={80}
             autoComplete="name"
             placeholder="Your name"
             className="field"
@@ -187,6 +203,7 @@ export default function ContactForm() {
             type="email"
             name="user_email"
             required
+            maxLength={254}
             autoComplete="email"
             placeholder="your@email.com"
             className="field"
@@ -212,6 +229,7 @@ export default function ContactForm() {
             id="cf-message"
             name="message"
             required
+            maxLength={5000}
             rows={5}
             placeholder="Tell me about your project..."
             className="field"

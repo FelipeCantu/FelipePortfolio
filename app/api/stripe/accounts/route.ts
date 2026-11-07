@@ -1,8 +1,9 @@
 import Stripe from 'stripe'
-import { isAdmin, unauthorized } from '@/lib/adminAuth'
+import { requireAdmin, serverError } from '@/lib/adminAuth'
 
 export async function GET(request: Request) {
-  if (!isAdmin(request)) return unauthorized()
+  const denied = requireAdmin(request)
+  if (denied) return denied
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
   try {
@@ -19,6 +20,6 @@ export async function GET(request: Request) {
     }))
     return Response.json({ accounts: enriched })
   } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 500 })
+    return serverError('accounts', err)
   }
 }
