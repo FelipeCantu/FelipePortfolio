@@ -32,10 +32,17 @@ async function safeFetch<T>(query: string): Promise<T[]> {
 }
 
 export default async function HomePage() {
-  const [projects, testimonials] = await Promise.all([
-    safeFetch<FeaturedProject>(FEATURED_PROJECTS_QUERY),
+  const [picked, testimonials] = await Promise.all([
+    sanity
+      .fetch<{ featured: FeaturedProject[]; latest: FeaturedProject[] }>(FEATURED_PROJECTS_QUERY)
+      .catch((err) => {
+        console.error('[home] Sanity fetch failed', err)
+        return { featured: [], latest: [] }
+      }),
     safeFetch<Testimonial>(TESTIMONIALS_QUERY),
   ])
+  // Featured projects first (in Studio order), topped up with the newest ones
+  const projects = [...(picked?.featured ?? []), ...(picked?.latest ?? [])].slice(0, 3)
 
   return (
     <>

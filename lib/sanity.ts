@@ -46,7 +46,9 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
   "authorImage": author->image
 }`
 
-export const ALL_PROJECTS_QUERY = `*[_type == "project"] | order(featured desc, order asc, date desc) {
+// coalesce(): in GROQ, null sorts ahead of true in a desc sort, so projects
+// without the field would otherwise outrank the featured ones.
+export const ALL_PROJECTS_QUERY = `*[_type == "project"] | order(coalesce(featured, false) desc, coalesce(order, 999) asc, date desc) {
   _id,
   title,
   slug,
@@ -95,13 +97,16 @@ export const TESTIMONIALS_QUERY = `*[_type == "testimonial" && featured == true]
   avatar { asset->{ _id, url } }
 }`
 
-// Home page: the three projects to lead with (featured first, then curated order)
-export const FEATURED_PROJECTS_QUERY = `*[_type == "project" && defined(slug.current)] | order(featured desc, order asc, date desc)[0...3] {
-  _id,
-  title,
-  slug,
-  excerpt,
-  projectType,
-  "techStack": tags,
-  "mainImage": image { asset->{ _id, url }, alt }
+// Home page "Recent projects": the projects ticked "Featured" in Sanity Studio,
+// in their "order" (1 = the large card). Falls back to the newest projects
+// when fewer than three are featured, so the section never looks empty.
+export const FEATURED_PROJECTS_QUERY = `{
+  "featured": *[_type == "project" && featured == true && defined(slug.current)] | order(coalesce(order, 999) asc, date desc)[0...3] {
+    _id, title, slug, excerpt, projectType, "techStack": tags,
+    "mainImage": image { asset->{ _id, url }, alt }
+  },
+  "latest": *[_type == "project" && featured != true && defined(slug.current)] | order(date desc)[0...3] {
+    _id, title, slug, excerpt, projectType, "techStack": tags,
+    "mainImage": image { asset->{ _id, url }, alt }
+  }
 }`
