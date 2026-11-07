@@ -94,3 +94,14 @@ export const TESTIMONIALS_QUERY = `*[_type == "testimonial" && featured == true]
   rating,
   avatar { asset->{ _id, url } }
 }`
+
+// Home page: the three projects to lead with (featured first, then curated order)
+export const FEATURED_PROJECTS_QUERY = `*[_type == "project" && defined(slug.current)] | order(featured desc, order asc, date desc)[0...3] {
+  _id,
+  title,
+  slug,
+  excerpt,
+  projectType,
+  "techStack": tags,
+  "mainImage": image { asset->{ _id, url }, alt }
+}`

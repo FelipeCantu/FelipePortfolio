@@ -1,9 +1,7 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { sanity, urlFor, TESTIMONIALS_QUERY } from '@/lib/sanity'
+import { urlFor } from '@/lib/sanity'
 import Reveal from '@/components/ui/Reveal'
 
-interface Testimonial {
+export interface Testimonial {
   _id: string
   name: string
   role?: string
@@ -50,18 +48,13 @@ function Avatar({ src, name }: { src: unknown; name: string }) {
   )
 }
 
-export default function Testimonials() {
-  const [items, setItems] = useState<Testimonial[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    sanity.fetch(TESTIMONIALS_QUERY)
-      // Only real testimonials from Sanity: the section hides itself when there are none
-      .then((data: Testimonial[]) => { setItems(data ?? []); setLoading(false) })
-      .catch(() => { setItems([]); setLoading(false) })
-  }, [])
-
-  if (loading || items.length === 0) return null
+/**
+ * Client testimonials. Data is fetched on the server by the page and passed in,
+ * so the section is in the initial HTML (no client fetch, no layout pop-in).
+ * Only real testimonials from Sanity: the section hides itself when there are none.
+ */
+export default function Testimonials({ items }: { items: Testimonial[] }) {
+  if (!items?.length) return null
 
   // Responsive columns: never force 3 columns onto a phone
   const gridCols =
