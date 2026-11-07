@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa'
 import { FiArrowRight } from 'react-icons/fi'
 import { trackEvent } from '@/lib/analytics'
@@ -18,25 +17,6 @@ const socialLinks = [
 
 // Headline endings the typewriter cycles through, after a fixed "I build websites that"
 const headlinePhrases = ['grow your business', 'bring in new clients']
-
-// ─── Motion ───────────────────────────────────────────────────────────────────
-
-const EASE = [0.22, 1, 0.36, 1] as const
-
-const stack: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } },
-}
-
-const rise: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
-}
-
-const avatarIn: Variants = {
-  hidden: { opacity: 0, scale: 0.85 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.9, ease: EASE } },
-}
 
 // ─── Decorative orbit ─────────────────────────────────────────────────────────
 // Three slow, low-contrast rings with a few travelling dots. Purely decorative
@@ -93,14 +73,9 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgb(var(--c-bg)/0.7)_100%)]" />
       </div>
 
-      <motion.div
-        className="container-page grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-20"
-        variants={stack}
-        initial="hidden"
-        animate="show"
-      >
+      <div className="container-page grid items-center gap-10 lg:grid-cols-[auto_1fr] lg:gap-20">
         {/* Hexagonal avatar */}
-        <motion.div variants={avatarIn} className="mx-auto lg:mx-0">
+        <div className="hero-settle mx-auto lg:mx-0">
           <div className="relative">
             <div
               className="absolute -inset-4 rounded-full bg-accent/20 blur-3xl motion-safe:animate-pulse"
@@ -114,29 +89,31 @@ export default function HomeHero() {
                 width={290}
                 height={330}
                 className="hex-clip h-full w-full bg-surface object-cover"
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Copy */}
         <div className="text-center lg:text-left">
-          <motion.p variants={rise} className="eyebrow">
+          <p className="hero-rise eyebrow" style={{ '--delay': '0.05s' } as React.CSSProperties}>
             Full-stack developer &middot; Dallas, TX
-          </motion.p>
+          </p>
 
-          <motion.h1 variants={rise} className="mt-4 text-display text-fg">
+          <h1 className="hero-settle mt-4 text-display text-fg">
             <span className="sr-only">I build websites that grow your business and bring in new clients</span>
             <span aria-hidden="true">I build websites that </span>
             <Typewriter phrases={headlinePhrases} />
-          </motion.h1>
+          </h1>
 
-          <motion.p variants={rise} className="lead mx-auto mt-6 max-w-xl lg:mx-0">
+          <p className="hero-rise lead mx-auto mt-6 max-w-xl lg:mx-0" style={{ '--delay': '0.15s' } as React.CSSProperties}>
             I help businesses and entrepreneurs launch fast, polished websites that attract clients and deliver real
             results.
-          </motion.p>
+          </p>
 
-          <motion.div variants={rise} className="mt-9 flex flex-wrap justify-center gap-3 lg:justify-start">
+          <div className="hero-rise mt-9 flex flex-wrap justify-center gap-3 lg:justify-start" style={{ '--delay': '0.25s' } as React.CSSProperties}>
             <Link
               href="/portfolio"
               onClick={() => trackEvent('cta_click', { label: 'view_work' })}
@@ -155,9 +132,9 @@ export default function HomeHero() {
                 className="transition-transform duration-200 group-hover:translate-x-1"
               />
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.ul variants={rise} className="mt-10 flex justify-center gap-3 lg:justify-start">
+          <ul className="hero-rise mt-10 flex justify-center gap-3 lg:justify-start" style={{ '--delay': '0.35s' } as React.CSSProperties}>
             {socialLinks.map(({ href, icon: Icon, label }) => (
               <li key={label}>
                 <a
@@ -172,9 +149,9 @@ export default function HomeHero() {
                 </a>
               </li>
             ))}
-          </motion.ul>
+          </ul>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }
