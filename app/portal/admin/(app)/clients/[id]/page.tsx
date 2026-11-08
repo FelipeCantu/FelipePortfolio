@@ -6,6 +6,7 @@ import { INVOICE_STATUS, PROJECT_STATUS, fmtDate, money, timeAgo } from '@/lib/p
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import CredentialForm from '@/components/portal/admin/CredentialForm'
+import { emailEnabled } from '@/lib/portal/notify'
 import { createProjectAction, deleteClientAction, resetCodeAction, updateClientAction } from '@/app/portal/admin/actions'
 
 export default async function AdminClientPage({ params }: { params: Promise<{ id: string }> }) {
@@ -106,10 +107,16 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
 
         <div className="grid content-start gap-6">
           <Panel title="Portal access">
-            <p className="mb-3 text-small text-muted">
-              Generates a new access code and sign-in link. Their old code stops working and they&apos;re signed out everywhere.
+            <p className="mb-3 flex items-center gap-2 text-small">
+              <span className={`h-2 w-2 rounded-full ${client.passwordHash ? 'bg-success' : 'bg-warning'}`} aria-hidden="true" />
+              <span className="text-fg">{client.passwordHash ? 'Password set' : 'Waiting for client to create a password'}</span>
             </p>
-            <CredentialForm action={resetCodeAction.bind(null, id)} submitLabel="Generate new access code" emailEnabled={!!process.env.RESEND_API_KEY} />
+            <p className="mb-3 text-small text-muted">
+              {client.passwordHash
+                ? 'Clients can reset their own password with “Forgot password?”. If they’re stuck, send a new invite: it clears their password and signs them out everywhere.'
+                : 'Lost the invite? Send a new one. The previous code stops working.'}
+            </p>
+            <CredentialForm action={resetCodeAction.bind(null, id)} submitLabel={client.passwordHash ? 'Reset & send new invite' : 'Send new invite'} emailEnabled={emailEnabled()} />
           </Panel>
 
           <Panel title="Details">

@@ -3,7 +3,8 @@ import { authenticateClient, rateLimit } from '@/lib/portal/db'
 import { startClientSession } from '@/lib/portal/session'
 
 /**
- * One-click sign-in link Felipe sends to a client:
+ * One-click invite link Felipe sends to a client. Works until they've set a
+ * password, then it's retired (they sign in with email + password):
  *   /portal/access?email=jane@acme.com&code=ABCD-2345
  */
 export async function GET(request: Request) {
@@ -17,9 +18,9 @@ export async function GET(request: Request) {
   fail.searchParams.set('error', 'link')
 
   if (!(await rateLimit(`login:${ip}`, 10, 15 * 60))) return NextResponse.redirect(fail, 303)
-  const client = email && code ? await authenticateClient(email, code) : null
-  if (!client) return NextResponse.redirect(fail, 303)
+  const result = email && code ? await authenticateClient(email, code) : null
+  if (!result) return NextResponse.redirect(fail, 303)
 
-  await startClientSession(client.id, client.sessionVersion)
-  return NextResponse.redirect(new URL('/portal', url), 303)
+  await startClientSession(result.client.id, result.client.sessionVersion)
+  return NextResponse.redirect(new URL(result.needsPassword ? '/portal/set-password' : '/portal', url), 303)
 }

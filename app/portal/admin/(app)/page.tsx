@@ -6,6 +6,7 @@ import {
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, PageHeader, Panel, ProgressBar, Stat } from '@/components/portal/ui'
 import CredentialForm from '@/components/portal/admin/CredentialForm'
+import { emailEnabled } from '@/lib/portal/notify'
 import { createClientAction } from '@/app/portal/admin/actions'
 
 export const metadata = { title: 'Admin' }
@@ -143,7 +144,7 @@ export default async function AdminHome() {
 
         <div className="grid content-start gap-6">
           <Panel title={<span className="flex items-center gap-2"><FiUserPlus aria-hidden="true" /> New client</span>}>
-            <CredentialForm action={createClientAction} submitLabel="Create client & access code" emailEnabled={!!process.env.RESEND_API_KEY}>
+            <CredentialForm action={createClientAction} submitLabel="Create client & invite" emailEnabled={emailEnabled()}>
               <div className="grid gap-3">
                 <input name="name" required placeholder="Full name" className="field" aria-label="Client name" />
                 <input name="email" type="email" required placeholder="Email" className="field" aria-label="Client email" />

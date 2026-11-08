@@ -1,4 +1,6 @@
-import { FiLogOut } from 'react-icons/fi'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { FiLogOut, FiUser } from 'react-icons/fi'
 import PortalTabs from '@/components/portal/PortalTabs'
 import { requireClient } from '@/lib/portal/session'
 import { listInvoices, listProjects } from '@/lib/portal/db'
@@ -8,6 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function ClientPortalLayout({ children }: { children: React.ReactNode }) {
   const client = await requireClient()
+  if (!client.passwordHash) redirect('/portal/set-password')
   const [projects, invoices] = await Promise.all([listProjects(client.id), listInvoices(client.id)])
   const dueCount = invoices.filter((i) => i.status === 'open').length
 
@@ -22,10 +25,10 @@ export default async function ClientPortalLayout({ children }: { children: React
           ]}
         />
         <div className="flex items-center gap-3">
-          <span className="hidden text-small text-muted sm:inline">
-            {client.name}
-            {client.company ? ` · ${client.company}` : ''}
-          </span>
+          <Link href="/portal/account" className="btn btn-ghost btn-sm" title="Account settings">
+            <FiUser aria-hidden="true" />
+            <span className="max-w-[12rem] truncate">{client.name}</span>
+          </Link>
           <form action={logoutAction}>
             <button type="submit" className="btn btn-ghost btn-sm">
               <FiLogOut aria-hidden="true" /> Sign out

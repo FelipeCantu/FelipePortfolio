@@ -6,9 +6,11 @@ export interface Client {
   email: string
   company?: string
   phone?: string
-  /** scrypt hash of the client's access code */
-  codeHash: string
-  /** bumped when the code is reset, which signs out existing sessions */
+  /** scrypt hash of the one-time setup code (cleared once a password is set) */
+  codeHash?: string
+  /** scrypt hash of the password the client chose */
+  passwordHash?: string
+  /** bumped on code reset or password change, which signs out other sessions */
   sessionVersion: number
   createdAt: string
   lastLoginAt?: string

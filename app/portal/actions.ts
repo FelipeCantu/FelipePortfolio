@@ -4,13 +4,14 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
-  addFile, addMessage, authenticateClient, getFile, logActivity, rateLimit, saveFile, saveProject,
+  addFile, addMessage, authenticateClient, checkClientPassword, consumeResetToken, createResetToken, getClientByEmail,
+  getFile, logActivity, passwordProblem, rateLimit, saveFile, saveProject, setClientPassword,
 } from '@/lib/portal/db'
 import { createCheckoutUrl } from '@/lib/portal/payments'
 import {
-  endSession, requireClientInvoice, requireClientProject, siteOrigin, startClientSession,
+  currentClient, endSession, requireClientInvoice, requireClientProject, siteOrigin, startClientSession,
 } from '@/lib/portal/session'
-import { notifyAdmin } from '@/lib/portal/notify'
+import { emailEnabled, notifyAdmin, sendEmail } from '@/lib/portal/notify'
 import { isBlobUrl } from '@/lib/portal/blob'
 
 export type FormState = { error?: string; ok?: string } | undefined
@@ -24,16 +25,76 @@ async function clientIp() {
 
 export async function loginAction(_: FormState, form: FormData): Promise<FormState> {
   const email = String(form.get('email') ?? '').trim()
-  const code = String(form.get('code') ?? '')
-  if (!email || !code) return { error: 'Enter your email and access code.' }
+  const secret = String(form.get('password') ?? '')
+  if (!email || !secret) return { error: 'Enter your email and password.' }
 
   if (!(await rateLimit(`login:${await clientIp()}`, 10, 15 * 60))) {
     return { error: 'Too many attempts. Please wait 15 minutes and try again.' }
   }
-  const client = await authenticateClient(email, code)
-  if (!client) return { error: "That email and access code don't match. Check the code Felipe sent you." }
+  const result = await authenticateClient(email, secret)
+  if (!result) return { error: "That email and password don't match." }
 
-  await startClientSession(client.id, client.sessionVersion)
+  await startClientSession(result.client.id, result.client.sessionVersion)
+  redirect(result.needsPassword ? '/portal/set-password' : '/portal')
+}
+
+/** First sign-in: the client picks the password they'll use from now on. */
+export async function setPasswordAction(_: FormState, form: FormData): Promise<FormState> {
+  const client = await currentClient()
+  if (!client) redirect('/portal/login')
+  const password = String(form.get('password') ?? '')
+  const problem = passwordProblem(password, String(form.get('confirm') ?? ''))
+  if (problem) return { error: problem }
+
+  const updated = await setClientPassword(client.id, password)
+  await startClientSession(updated.id, updated.sessionVersion)
+  redirect('/portal')
+}
+
+export async function changePasswordAction(_: FormState, form: FormData): Promise<FormState> {
+  const client = await currentClient()
+  if (!client) redirect('/portal/login')
+  if (!(await rateLimit(`pwchange:${client.id}`, 10, 15 * 60))) return { error: 'Too many attempts. Try again later.' }
+  if (!checkClientPassword(client, String(form.get('current') ?? ''))) return { error: 'Your current password is incorrect.' }
+  const password = String(form.get('password') ?? '')
+  const problem = passwordProblem(password, String(form.get('confirm') ?? ''))
+  if (problem) return { error: problem }
+
+  const updated = await setClientPassword(client.id, password)
+  await startClientSession(updated.id, updated.sessionVersion)
+  return { ok: 'Password updated. Other devices have been signed out.' }
+}
+
+export async function forgotPasswordAction(_: FormState, form: FormData): Promise<FormState> {
+  const email = String(form.get('email') ?? '').trim()
+  if (!/^\S+@\S+\.\S+$/.test(email)) return { error: 'Enter the email you use for the portal.' }
+  if (!emailEnabled()) return { error: 'Password reset by email isn’t available. Please contact Felipe for a new access code.' }
+  if (!(await rateLimit(`forgot:${await clientIp()}`, 5, 15 * 60))) return { error: 'Too many requests. Try again in 15 minutes.' }
+
+  const client = await getClientByEmail(email)
+  if (client) {
+    const token = await createResetToken(client.id)
+    await sendEmail(
+      client.email,
+      'Reset your portal password',
+      `Hi ${client.name.split(' ')[0]},\n\nSomeone (hopefully you) asked to reset your client portal password. Use the button below within the next hour to choose a new one.\n\nIf you didn't ask for this, you can ignore this email.`,
+      `${await siteOrigin()}/portal/reset?token=${token}`,
+      'Choose a new password'
+    )
+  }
+  // Same answer either way, so this can't be used to discover who is a client
+  return { ok: 'If that email has a portal account, a reset link is on its way. Check your inbox (and spam).' }
+}
+
+export async function resetPasswordAction(token: string, _: FormState, form: FormData): Promise<FormState> {
+  const password = String(form.get('password') ?? '')
+  const problem = passwordProblem(password, String(form.get('confirm') ?? ''))
+  if (problem) return { error: problem }
+  const client = await consumeResetToken(token)
+  if (!client) return { error: 'This reset link has expired or was already used. Request a new one.' }
+
+  const updated = await setClientPassword(client.id, password)
+  await startClientSession(updated.id, updated.sessionVersion)
   redirect('/portal')
 }
 

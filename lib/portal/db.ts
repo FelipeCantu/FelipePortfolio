@@ -1,5 +1,5 @@
 import 'server-only'
-import { randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
+import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
 import { kv } from './kv'
 import type {
   Activity, Client, ClientTask, FileItem, Invoice, InvoiceItem, Message, Milestone, Project, Role,
@@ -18,16 +18,26 @@ export function generateAccessCode() {
 }
 const normalizeCode = (code: string) => code.toUpperCase().replace(/[^A-Z0-9]/g, '')
 
-function hashCode(code: string) {
+function hashSecret(secret: string) {
   const salt = randomBytes(16).toString('hex')
-  return `${salt}:${scryptSync(normalizeCode(code), salt, 32).toString('hex')}`
+  return `${salt}:${scryptSync(secret, salt, 32).toString('hex')}`
 }
-function verifyCode(code: string, stored: string) {
-  const [salt, hash] = stored.split(':')
+function verifySecret(secret: string, stored: string | undefined) {
+  const [salt, hash] = (stored ?? `${'0'.repeat(32)}:${'0'.repeat(64)}`).split(':')
   if (!salt || !hash) return false
-  const a = scryptSync(normalizeCode(code), salt, 32)
+  const a = scryptSync(secret, salt, 32)
   const b = Buffer.from(hash, 'hex')
-  return a.length === b.length && timingSafeEqual(a, b)
+  return a.length === b.length && timingSafeEqual(a, b) && stored !== undefined
+}
+const hashCode = (code: string) => hashSecret(normalizeCode(code))
+const verifyCode = (code: string, stored: string | undefined) => verifySecret(normalizeCode(code), stored)
+
+export const PASSWORD_MIN = 8
+export function passwordProblem(password: string, confirm?: string) {
+  if (password.length < PASSWORD_MIN) return `Use at least ${PASSWORD_MIN} characters.`
+  if (password.length > 200) return 'That password is too long.'
+  if (confirm !== undefined && password !== confirm) return "The two passwords don't match."
+  return null
 }
 
 const K = {
@@ -45,6 +55,7 @@ const K = {
   clientInvoices: (clientId: string) => `portal:client:${clientId}:invoices`,
   invoiceSeq: 'portal:seq:invoice',
   rateLimit: (bucket: string) => `portal:rl:${bucket}`,
+  resetToken: (tokenHash: string) => `portal:reset:${tokenHash}`,
 }
 
 const byDateDesc = <T extends { createdAt: string }>(a: T, b: T) => b.createdAt.localeCompare(a.createdAt)
@@ -105,13 +116,67 @@ export async function updateClient(id: string, patch: Partial<Pick<Client, 'name
   return next
 }
 
-/** New access code; signs the client out everywhere. */
+/**
+ * New one-time setup code. Clears the client's password and signs them out
+ * everywhere, so they pick a new password on their next sign-in.
+ */
 export async function resetClientCode(id: string) {
   const client = await getClient(id)
   if (!client) throw new Error('Client not found')
   const code = generateAccessCode()
-  await kv().set(K.client(id), { ...client, codeHash: hashCode(code), sessionVersion: client.sessionVersion + 1 })
+  await kv().set(K.client(id), {
+    ...client,
+    codeHash: hashCode(code),
+    passwordHash: undefined,
+    sessionVersion: client.sessionVersion + 1,
+  })
   return code
+}
+
+/** Sets the client's password, retires the setup code and signs out other sessions. */
+export async function setClientPassword(id: string, password: string) {
+  const client = await getClient(id)
+  if (!client) throw new Error('Client not found')
+  const next: Client = {
+    ...client,
+    passwordHash: hashSecret(password),
+    codeHash: undefined,
+    sessionVersion: client.sessionVersion + 1,
+  }
+  await kv().set(K.client(id), next)
+  return next
+}
+
+export function checkClientPassword(client: Client, password: string) {
+  return verifySecret(password, client.passwordHash)
+}
+
+export async function getClientByEmail(email: string) {
+  const id = await kv().get<string>(K.clientByEmail(email.trim().toLowerCase()))
+  return id ? getClient(id) : null
+}
+
+/* password reset links (single use, 1 hour) */
+const sha256 = (s: string) => createHash('sha256').update(s).digest('hex')
+
+export async function createResetToken(clientId: string) {
+  const token = randomBytes(32).toString('base64url')
+  const key = K.resetToken(sha256(token))
+  await kv().set(key, clientId)
+  await kv().expire(key, 60 * 60)
+  return token
+}
+
+export async function peekResetToken(token: string) {
+  if (!token) return null
+  const id = await kv().get<string>(K.resetToken(sha256(token)))
+  return id ? getClient(id) : null
+}
+
+export async function consumeResetToken(token: string) {
+  const client = await peekResetToken(token)
+  if (client) await kv().del(K.resetToken(sha256(token)))
+  return client
 }
 
 export async function deleteClient(id: string) {
@@ -126,14 +191,20 @@ export async function deleteClient(id: string) {
   await kv().del(K.client(id))
 }
 
-export async function authenticateClient(email: string, code: string) {
-  const id = await kv().get<string>(K.clientByEmail(email.trim().toLowerCase()))
-  const client = id ? await getClient(id) : null
-  // Always run a hash so response time doesn't reveal whether the email exists
-  const ok = client ? verifyCode(code, client.codeHash) : (verifyCode(code, `${'0'.repeat(32)}:${'0'.repeat(64)}`), false)
-  if (!client || !ok) return null
-  await kv().set(K.client(client.id), { ...client, lastLoginAt: now() })
-  return client
+/**
+ * Signs a client in with their password, or with the one-time setup code
+ * from their invite (only until they've chosen a password).
+ * `needsPassword` tells the caller to send them to "create your password".
+ */
+export async function authenticateClient(email: string, secret: string) {
+  const client = await getClientByEmail(email)
+  // Always run the hashes so response time doesn't reveal whether the email exists
+  const byPassword = verifySecret(secret, client?.passwordHash)
+  const byCode = !byPassword && verifyCode(secret, client?.passwordHash ? undefined : client?.codeHash)
+  if (!client || (!byPassword && !byCode)) return null
+  const updated = { ...client, lastLoginAt: now() }
+  await kv().set(K.client(client.id), updated)
+  return { client: updated, needsPassword: !client.passwordHash }
 }
 
 /* ───────────────────────── projects ───────────────────────── */

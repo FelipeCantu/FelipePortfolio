@@ -25,11 +25,7 @@ export default async function PortalLogin({ searchParams }: { searchParams: Prom
           <LoginForm defaultEmail={email} linkError={error === 'link'} />
         </div>
         <p className="mt-6 text-center text-small text-muted">
-          Don&apos;t have an access code?{' '}
-          <Link href="/contact" className="text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
-            Contact Felipe
-          </Link>
-          {' · '}
+          Not a client yet?{' '}
           <Link href="/get-started" className="text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
             Start a project
           </Link>
