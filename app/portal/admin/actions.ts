@@ -74,9 +74,9 @@ async function sendInvite(name: string, email: string, code: string, link: strin
   await sendEmail(
     email,
     'Your client portal is ready',
-    `Hi ${name.split(' ')[0]},\n\nI've set up a private portal for our project. You can follow progress, review and approve work, share files, message me and pay invoices there.\n\nClick the button below to create your password. After that, you'll sign in at ${link.split('/portal')[0]}/portal with your email and password.\n\nIf the button doesn't work, go to the sign-in page and enter:\nEmail: ${email}\nOne-time code: ${code}\n\nTalk soon,\nFelipe`,
+    `Hi ${name.split(' ')[0]},\n\nI've set up a private portal for our project. You can follow progress, review and approve work, share files, message me and pay invoices there.\n\nClick "Open your portal" below. The first time, you'll create your own password, and after that you'll sign in at ${link.split('/portal')[0]}/portal with your email and password.\n\nIf the button doesn't work, go to the sign-in page and enter:\nEmail: ${email}\nOne-time code: ${code}\n\nTalk soon,\nFelipe`,
     link,
-    'Create your password'
+    'Open your portal'
   )
 }
 

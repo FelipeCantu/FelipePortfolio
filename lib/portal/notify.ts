@@ -1,4 +1,5 @@
 import 'server-only'
+import { emailHtml } from './emailTemplate'
 
 /**
  * Optional email notifications via Resend (https://resend.com, free tier).
@@ -27,11 +28,7 @@ export async function sendEmail(to: string, subject: string, text: string, link?
         to: [to],
         subject,
         text: body,
-        html: `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#0f172a">
-          ${escapeHtml(text).replace(/\n/g, '<br>')}
-          ${link ? `<p style="margin-top:24px"><a href="${link}" style="background:#0ea5e9;color:#03111c;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600">${escapeHtml(linkLabel)}</a></p>` : ''}
-          <p style="margin-top:32px;color:#64748b;font-size:13px">Felipe Cantu Jr &middot; felipecantujr.com</p>
-        </div>`,
+        html: emailHtml({ subject, text, link, linkLabel }),
       }),
       signal: AbortSignal.timeout(5000),
     })
@@ -43,6 +40,3 @@ export async function sendEmail(to: string, subject: string, text: string, link?
 
 export const notifyAdmin = (subject: string, text: string, link?: string) => sendEmail(ADMIN_EMAIL, subject, text, link)
 
-function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
-}
