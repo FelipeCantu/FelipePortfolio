@@ -6,15 +6,17 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { del } from '@vercel/blob'
 import {
-  addFile, addMessage, createClient, createInvoice, createProject, deleteClient, deleteInvoice, deleteProject,
-  getClient, getFile, getInvoice, getProject, invoiceTotal, logActivity, newClientTask, newMilestone, rateLimit,
-  listFiles, removeFile, resetClientCode, saveFile, saveInvoice, saveProject, updateClient,
+  addFile, addMessage, billingSummary, createClient, createContract, createInvoice, createProject, deleteClient,
+  deleteContract, deleteInvoice, deleteProject, deleteReview, getClient, getContract, getFile, getInvoice, getProject,
+  getReview, getSettings, invoiceTotal, listFiles, listInvoices, logActivity, newClientTask, newMilestone, rateLimit,
+  removeFile, resetClientCode, saveContract, saveFile, saveInvoice, saveProject, saveReview, saveSettings, updateClient,
 } from '@/lib/portal/db'
+import { sendInvoiceReminder } from '@/lib/portal/reminders'
 import { endSession, requireAdmin, siteOrigin, startAdminSession } from '@/lib/portal/session'
 import { sendEmail } from '@/lib/portal/notify'
 import { isBlobUrl } from '@/lib/portal/blob'
 import { money } from '@/lib/portal/format'
-import type { InvoiceItem, InvoiceStatus, MilestoneStatus, ProjectStatus } from '@/lib/portal/types'
+import type { InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
 import type { FormState } from '@/app/portal/actions'
 
 export type CredentialState = { error?: string; email?: string; code?: string; link?: string } | undefined
@@ -142,11 +144,15 @@ export async function updateProjectAction(projectId: string, _: FormState, form:
   const project = await getProject(projectId)
   if (!project) return { error: 'Not found' }
   const status = str(form, 'status') as ProjectStatus
-  const next = await saveProject({
+  const priceRaw = str(form, 'price').replace(/[$,\s]/g, '')
+  const price = priceRaw ? Math.round(Number(priceRaw) * 100) : undefined
+  if (price !== undefined && (!Number.isFinite(price) || price < 0)) return { error: 'Enter the price as a number, e.g. 2400' }
+  let next = await saveProject({
     ...project,
     name: str(form, 'name') || project.name,
     summary: opt(form, 'summary'),
     status,
+    price,
     startDate: opt(form, 'startDate'),
     dueDate: opt(form, 'dueDate'),
     stagingUrl: opt(form, 'stagingUrl'),
@@ -154,10 +160,47 @@ export async function updateProjectAction(projectId: string, _: FormState, form:
   })
   if (status !== project.status) {
     await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: `Project status changed to ${status.replace('_', ' ')}` })
-    if (status === 'completed' || status === 'review') await emailClient(project.clientId, projectId, status === 'completed' ? `${next.name} is complete!` : `${next.name} is ready for your review`, status === 'completed' ? `Great news — ${next.name} is complete. Thank you for working with me!` : `${next.name} is ready for your review. Take a look in your portal and let me know what you think.`)
+    if (status === 'review') {
+      await emailClient(project.clientId, projectId, `${next.name} is ready for your review`, `${next.name} is ready for your review. Take a look in your portal and let me know what you think.`)
+    }
+    if (status === 'completed') next = await completeProject(next)
   }
   refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
   return { ok: 'saved' }
+}
+
+/** Thank the client and (once per project) ask for a review. */
+async function completeProject(project: Project) {
+  const ask = !project.reviewRequestedAt
+  const next = ask ? await saveProject({ ...project, reviewRequestedAt: new Date().toISOString() }) : project
+  await emailClient(
+    project.clientId,
+    project.id,
+    `${project.name} is complete!`,
+    ask
+      ? `Great news — ${project.name} is complete. Thank you for working with me!\n\nIf you have a minute, I'd really appreciate a quick review of how the project went. It's two questions and helps me a lot.`
+      : `Great news — ${project.name} is complete. Thank you for working with me!`,
+    ask ? '#review' : '',
+    ask ? 'Leave a quick review' : 'Open your portal'
+  )
+  return next
+}
+
+export async function requestReviewAction(projectId: string) {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project) return
+  await saveProject({ ...project, reviewRequestedAt: new Date().toISOString() })
+  await emailClient(
+    project.clientId,
+    projectId,
+    `How did ${project.name} go?`,
+    `I'd love to hear how working together on ${project.name} went. It's a quick rating and a few words, and it really helps me.`,
+    '#review',
+    'Leave a quick review'
+  )
+  await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: 'Felipe asked for your feedback' })
+  refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
 }
 
 export async function deleteProjectAction(projectId: string, form: FormData) {
@@ -385,8 +428,139 @@ export async function deleteInvoiceAction(invoiceId: string) {
 
 /* ───────────── helpers ───────────── */
 
-async function emailClient(clientId: string, projectId: string, subject: string, text: string, hash = '') {
+async function emailClient(clientId: string, projectId: string, subject: string, text: string, hash = '', label?: string) {
   const client = await getClient(clientId)
   if (!client) return
-  await sendEmail(client.email, subject, text, `${await siteOrigin()}/portal/projects/${projectId}${hash}`)
+  await sendEmail(client.email, subject, text, `${await siteOrigin()}/portal/projects/${projectId}${hash}`, label)
+}
+
+/* ───────────── billing shortcuts & reminders ───────────── */
+
+/** One click: deposit (settings %) or remaining balance, based on the project price. */
+export async function quickInvoiceAction(projectId: string, kind: 'deposit' | 'balance', form: FormData) {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project?.price) return
+  const settings = await getSettings()
+  const pct = Number(str(form, 'percent')) || settings.depositPercent || 50
+  const summary = billingSummary(project, await listInvoices(project.clientId))
+  const amount = kind === 'deposit' ? Math.round((project.price * pct) / 100) : summary.remaining
+  if (amount <= 0) return
+  const due = new Date(Date.now() + (kind === 'deposit' ? 3 : 7) * 86400000).toISOString().slice(0, 10)
+  const inv = await createInvoice({
+    clientId: project.clientId,
+    projectId,
+    title: kind === 'deposit' ? `${project.name} — ${pct}% deposit` : `${project.name} — remaining balance`,
+    items: [{ description: kind === 'deposit' ? `${pct}% deposit to begin work` : 'Remaining project balance', quantity: 1, unitAmount: amount }],
+    dueDate: due,
+    notes: kind === 'deposit' ? 'Work begins once the deposit is received. Thank you!' : 'Thank you for working with me!',
+    send: form.get('intent') === 'send',
+  })
+  if (inv.status === 'open') await afterInvoiceSent(inv.id)
+  redirect(`/portal/admin/invoices/${inv.id}`)
+}
+
+export async function sendReminderNowAction(invoiceId: string) {
+  await requireAdmin()
+  const inv = await getInvoice(invoiceId)
+  if (!inv || inv.status !== 'open') return
+  await sendInvoiceReminder(inv, `manual:${new Date().toISOString()}`, await siteOrigin())
+  refresh(`/portal/admin/invoices/${invoiceId}`)
+}
+
+/* ───────────── contracts ───────────── */
+
+export async function createContractAction(projectId: string, _: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project) return { error: 'Project not found' }
+  const title = str(form, 'title')
+  const body = String(form.get('body') ?? '').trim()
+  if (!title || body.length < 20) return { error: 'Add a title and the agreement text.' }
+  const contract = await createContract({ clientId: project.clientId, projectId, title, body })
+  if (form.get('intent') === 'send') await sendContract(contract.id)
+  redirect(`/portal/admin/contracts/${contract.id}`)
+}
+
+export async function updateContractAction(contractId: string, _: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin()
+  const c = await getContract(contractId)
+  if (!c) return { error: 'Not found' }
+  if (c.status !== 'draft') return { error: 'Only drafts can be edited. Void this one and create a new version instead.' }
+  const title = str(form, 'title')
+  const body = String(form.get('body') ?? '').trim()
+  if (!title || body.length < 20) return { error: 'Add a title and the agreement text.' }
+  await saveContract({ ...c, title, body })
+  if (form.get('intent') === 'send') {
+    await sendContract(c.id)
+    refresh(`/portal/admin/contracts/${c.id}`)
+    return { ok: 'Sent to the client for signature.' }
+  }
+  refresh(`/portal/admin/contracts/${c.id}`)
+  return { ok: 'Draft saved.' }
+}
+
+async function sendContract(contractId: string) {
+  const c = await getContract(contractId)
+  if (!c || c.status !== 'draft') return
+  await saveContract({ ...c, status: 'sent', sentAt: new Date().toISOString() })
+  const client = await getClient(c.clientId)
+  await logActivity({ clientId: c.clientId, projectId: c.projectId, actor: 'admin', text: `Agreement ready to sign: ${c.title}` })
+  if (client) {
+    await sendEmail(
+      client.email,
+      `Please review and sign: ${c.title}`,
+      `Hi ${client.name.split(' ')[0]},\n\nOur project agreement is ready. Please read it over and sign it in your portal. If anything needs changing, just send me a message there before signing.`,
+      `${await siteOrigin()}/portal/contracts/${c.id}`,
+      'Review & sign'
+    )
+  }
+  refresh(`/portal/admin/projects/${c.projectId}`, `/portal/projects/${c.projectId}`, '/portal')
+}
+
+export async function voidContractAction(contractId: string) {
+  await requireAdmin()
+  const c = await getContract(contractId)
+  if (!c || c.status === 'void') return
+  await saveContract({ ...c, status: 'void' })
+  refresh(`/portal/admin/contracts/${contractId}`, `/portal/admin/projects/${c.projectId}`, `/portal/projects/${c.projectId}`)
+}
+
+export async function deleteContractAction(contractId: string) {
+  await requireAdmin()
+  const c = await getContract(contractId)
+  if (!c) return
+  if (c.status === 'signed') return // signed agreements are kept as a record; void instead
+  await deleteContract(contractId)
+  redirect(`/portal/admin/projects/${c.projectId}`)
+}
+
+/* ───────────── reviews ───────────── */
+
+export async function setReviewPublishedAction(reviewId: string, published: boolean) {
+  await requireAdmin()
+  const r = await getReview(reviewId)
+  if (!r) return
+  if (published && !r.allowPublish) return
+  await saveReview({ ...r, published })
+  refresh('/portal/admin/reviews')
+}
+
+export async function deleteReviewAction(reviewId: string) {
+  await requireAdmin()
+  await deleteReview(reviewId)
+  refresh('/portal/admin/reviews')
+}
+
+/* ───────────── settings ───────────── */
+
+export async function saveSettingsAction(_: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin()
+  const bookingUrl = str(form, 'bookingUrl')
+  if (bookingUrl && !/^https:\/\//i.test(bookingUrl)) return { error: 'Use a full https:// link (e.g. your Calendly page).' }
+  const pct = Number(str(form, 'depositPercent'))
+  if (!Number.isFinite(pct) || pct < 1 || pct > 100) return { error: 'Deposit must be between 1 and 100%.' }
+  await saveSettings({ bookingUrl: bookingUrl || undefined, depositPercent: Math.round(pct) })
+  refresh('/portal/admin/settings', '/portal')
+  return { ok: 'saved' }
 }

@@ -4,8 +4,9 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
-  addFile, addMessage, authenticateClient, checkClientPassword, consumeResetToken, createResetToken, getClientByEmail,
-  getFile, logActivity, passwordProblem, rateLimit, saveFile, saveProject, setClientPassword,
+  addFile, addMessage, authenticateClient, checkClientPassword, consumeResetToken, contractHash, createResetToken,
+  getClientByEmail, getContract, getFile, logActivity, passwordProblem, rateLimit, saveContract, saveFile,
+  saveProject, setClientPassword, upsertReview,
 } from '@/lib/portal/db'
 import { createCheckoutUrl } from '@/lib/portal/payments'
 import {
@@ -210,3 +211,82 @@ export async function payInvoiceAction(invoiceId: string) {
   const url = await createCheckoutUrl(invoice, client.email, await siteOrigin())
   redirect(url)
 }
+
+/* ───────────── agreements ───────────── */
+
+export async function signContractAction(contractId: string, _: FormState, form: FormData): Promise<FormState> {
+  const client = await currentClient()
+  if (!client) redirect('/portal/login')
+  const contract = await getContract(contractId)
+  if (!contract || contract.clientId !== client.id) return { error: 'Agreement not found.' }
+  if (contract.status === 'signed') return { ok: 'Already signed.' }
+  if (contract.status !== 'sent') return { error: 'This agreement is no longer open for signing.' }
+
+  const name = String(form.get('name') ?? '').trim().replace(/\s+/g, ' ')
+  if (form.get('agree') !== 'on') return { error: 'Tick the box to confirm you agree.' }
+  if (name.length < 3) return { error: 'Type your full name to sign.' }
+
+  const h = await headers()
+  const signedAt = new Date().toISOString()
+  await saveContract({
+    ...contract,
+    status: 'signed',
+    signedAt,
+    signature: {
+      name,
+      email: client.email,
+      ip: h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown',
+      userAgent: (h.get('user-agent') ?? '').slice(0, 300),
+      contentHash: contractHash(contract),
+    },
+  })
+  await logActivity({ clientId: client.id, projectId: contract.projectId, actor: 'client', text: `${client.name} signed “${contract.title}”`, href: `/portal/admin/contracts/${contract.id}` })
+  const link = `${await siteOrigin()}/portal/contracts/${contract.id}`
+  await notifyAdmin(`${client.name} signed ${contract.title}`, `${client.name} signed “${contract.title}” as “${name}”.`, `${await siteOrigin()}/portal/admin/contracts/${contract.id}`)
+  await sendEmail(
+    client.email,
+    `Signed: ${contract.title}`,
+    `Hi ${client.name.split(' ')[0]},\n\nThanks for signing “${contract.title}”. A copy is always available in your portal, where you can print it or save it as a PDF.`,
+    link,
+    'View signed agreement'
+  )
+  revalidatePath(`/portal/contracts/${contractId}`)
+  revalidatePath(`/portal/projects/${contract.projectId}`)
+  revalidatePath('/portal')
+  return { ok: 'signed' }
+}
+
+/* ───────────── reviews ───────────── */
+
+export async function submitReviewAction(projectId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  if (!project) return { error: 'Project not found.' }
+  const rating = Math.round(Number(form.get('rating')))
+  const text = String(form.get('text') ?? '').trim().slice(0, 1200)
+  if (!(rating >= 1 && rating <= 5)) return { error: 'Pick a star rating.' }
+  if (text.length < 10) return { error: 'Add a sentence or two about your experience.' }
+  if (!(await rateLimit(`review:${client.id}`, 10, 60 * 60))) return { error: 'Please try again later.' }
+
+  const allowPublish = form.get('allowPublish') === 'on'
+  const displayName = String(form.get('displayName') ?? '').trim().slice(0, 80) || client.name
+  await upsertReview({
+    clientId: client.id,
+    projectId,
+    rating,
+    text,
+    displayName,
+    role: String(form.get('role') ?? '').trim().slice(0, 80) || undefined,
+    company: client.company,
+    allowPublish,
+  })
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} left a ${rating}-star review`, href: '/portal/admin/reviews' })
+  await notifyAdmin(
+    `New ${rating}-star review from ${client.name}`,
+    `${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}\n\n“${text}”\n\n${allowPublish ? 'They are happy for it to appear on your website.' : 'They asked to keep it private.'}`,
+    `${await siteOrigin()}/portal/admin/reviews`
+  )
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath('/portal')
+  return { ok: 'thanks' }
+}
+

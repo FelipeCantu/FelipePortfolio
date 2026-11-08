@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiArrowLeft, FiCheck, FiSend, FiSlash, FiTrash2 } from 'react-icons/fi'
+import { FiArrowLeft, FiBell, FiCheck, FiSend, FiSlash, FiTrash2 } from 'react-icons/fi'
 import { getClient, getInvoice, getProject } from '@/lib/portal/db'
 import InvoiceDocument from '@/components/portal/InvoiceDocument'
 import PrintButton from '@/components/portal/PrintButton'
-import { deleteInvoiceAction, setInvoiceStatusAction } from '@/app/portal/admin/actions'
+import { deleteInvoiceAction, sendReminderNowAction, setInvoiceStatusAction } from '@/app/portal/admin/actions'
+import { reminderStage } from '@/lib/portal/reminders'
+import { fmtDate } from '@/lib/portal/format'
+
+const REMINDER_LABEL: Record<string, string> = { before: '3 days before due', due: 'On the due date', late3: '3 days overdue', late7: '7 days overdue' }
 
 export const metadata = { title: 'Invoice' }
 
@@ -28,6 +32,11 @@ export default async function AdminInvoicePage({ params }: { params: Promise<{ i
             </form>
           )}
           {invoice.status === 'open' && (
+            <form action={sendReminderNowAction.bind(null, id)}>
+              <button className="btn btn-ghost btn-sm"><FiBell aria-hidden="true" /> Send reminder now</button>
+            </form>
+          )}
+          {invoice.status === 'open' && (
             <form action={setInvoiceStatusAction.bind(null, id, 'paid')}>
               <button className="btn btn-secondary btn-sm" title="For cash, Zelle, check, etc."><FiCheck aria-hidden="true" /> Mark paid</button>
             </form>
@@ -46,6 +55,26 @@ export default async function AdminInvoicePage({ params }: { params: Promise<{ i
         </div>
       </div>
       {invoice.status === 'draft' && <p className="text-small text-muted print:hidden">Draft: the client can&apos;t see this until you send it.</p>}
+      {invoice.status === 'open' && (
+        <div className="card p-4 text-small print:hidden">
+          <p className="font-semibold text-fg">Payment reminders</p>
+          {invoice.dueDate ? (
+            <p className="mt-1 text-muted">
+              Sent automatically 3 days before the due date, on it, and 3 and 7 days after (each only once).
+              {reminderStage(invoice) ? ' The next one goes out with the next daily run (about 9–10am Central).' : ''}
+            </p>
+          ) : (
+            <p className="mt-1 text-muted">This invoice has no due date, so no automatic reminders. You can still send one now.</p>
+          )}
+          {!!invoice.reminders?.length && (
+            <ul className="mt-2 grid gap-0.5 text-subtle">
+              {invoice.reminders.map((r) => (
+                <li key={r}>✓ {r.startsWith('manual:') ? `Sent by you ${fmtDate(r.slice(7), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : REMINDER_LABEL[r] ?? r}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <InvoiceDocument invoice={invoice} client={client} project={project} />
     </div>
   )

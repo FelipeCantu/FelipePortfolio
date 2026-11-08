@@ -12,7 +12,11 @@ export default async function AdminPortalLayout({ children }: { children: React.
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-line/15 pb-4">
         <div className="flex items-center gap-3">
           <span className="chip chip-gold">Admin</span>
-          <PortalTabs label="Portal admin" tabs={[{ href: '/portal/admin', label: 'Dashboard', exact: true }]} />
+          <PortalTabs label="Portal admin" tabs={[
+              { href: '/portal/admin', label: 'Dashboard', exact: true },
+              { href: '/portal/admin/reviews', label: 'Reviews' },
+              { href: '/portal/admin/settings', label: 'Settings' },
+            ]} />
         </div>
         <form action={adminLogoutAction}>
           <button type="submit" className="btn btn-ghost btn-sm">

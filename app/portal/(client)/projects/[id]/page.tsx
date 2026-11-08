@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiCheckSquare, FiExternalLink, FiFolder, FiSquare, FiCheckCircle, FiMonitor } from 'react-icons/fi'
+import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, FiFolder, FiSquare, FiCheckCircle, FiMonitor } from 'react-icons/fi'
 import { requireClientProject } from '@/lib/portal/session'
-import { listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
+import { getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
+import FeedbackForm from '@/components/portal/FeedbackForm'
 import { PROJECT_STATUS, fmtDate } from '@/lib/portal/format'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
@@ -13,7 +15,7 @@ import ReviewForm from '@/components/portal/ReviewForm'
 import MessageThread from '@/components/portal/MessageThread'
 import Composer from '@/components/portal/Composer'
 import {
-  recordClientUploadAction, reviewFileAction, sendMessageAction, shareLinkAction, toggleClientTaskAction,
+  recordClientUploadAction, reviewFileAction, sendMessageAction, shareLinkAction, submitReviewAction, toggleClientTaskAction,
 } from '@/app/portal/actions'
 
 export default async function ClientProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +23,17 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
   const { client, project } = await requireClientProject(id)
   if (!project) notFound()
 
-  const [files, messages, unread] = await Promise.all([listFiles(id), listMessages(id), unreadCount(id, 'client')])
+  const [files, messages, unread, allContracts, review, settings] = await Promise.all([
+    listFiles(id),
+    listMessages(id),
+    unreadCount(id, 'client'),
+    listContracts(id),
+    getProjectReview(id),
+    getSettings(),
+  ])
+  const contracts = allContracts.filter((c) => c.status === 'sent' || c.status === 'signed')
+  const toSign = contracts.filter((c) => c.status === 'sent')
+  const askReview = project.status === 'completed' || !!project.reviewRequestedAt
   if (unread) await markRead(id, 'client')
 
   const st = PROJECT_STATUS[project.status]
@@ -37,6 +49,11 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
         title={project.name}
         action={
           <div className="flex flex-wrap gap-2">
+            {settings.bookingUrl && (
+              <a href={settings.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                <FiCalendar aria-hidden="true" /> Book a call
+              </a>
+            )}
             {project.stagingUrl && (
               <a href={project.stagingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
                 <FiMonitor aria-hidden="true" /> Preview site
@@ -58,9 +75,29 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
         {project.summary && <p className="mt-3 max-w-prose-lg whitespace-pre-line">{project.summary}</p>}
       </PageHeader>
 
+      {toSign.map((c) => (
+        <Link key={c.id} href={`/portal/contracts/${c.id}`} className="card-interactive group flex items-center gap-4 border-gold/40 bg-gold/[0.06] p-5 no-underline">
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold" aria-hidden="true">
+            <FiFileText size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-fg">Please review and sign: {c.title}</span>
+            <span className="block text-small text-muted">Takes about two minutes. Ask Felipe anything before you sign.</span>
+          </span>
+          <span className="btn btn-gold btn-sm">Review &amp; sign <FiArrowRight aria-hidden="true" /></span>
+        </Link>
+      ))}
+
       <div className="card p-5 sm:p-6">
         <ProgressBar value={progress} label="Overall progress" />
       </div>
+
+      {askReview && (
+        <Panel id="review" title={review ? 'Your review' : 'How did it go?'}>
+          {!review && <p className="mb-4 text-small text-muted">Your project is wrapped up. A quick rating and a few words would mean a lot.</p>}
+          <FeedbackForm action={submitReviewAction.bind(null, id)} existing={review} defaultName={client.name} />
+        </Panel>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-6">
@@ -143,6 +180,22 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
               </p>
             )}
           </Panel>
+
+          {contracts.length > 0 && (
+            <Panel title="Agreements">
+              <ul className="grid gap-2">
+                {contracts.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/portal/contracts/${c.id}`} className="flex items-center gap-3 rounded-control px-2 py-2 no-underline transition-colors hover:bg-white/[0.04]">
+                      <FiFileText className="flex-shrink-0 text-accent-light" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate text-small text-fg">{c.title}</span>
+                      <Badge tone={c.status === 'signed' ? 'success' : 'warning'}>{c.status === 'signed' ? `Signed ${fmtDate(c.signedAt, { month: 'short', day: 'numeric' })}` : 'To sign'}</Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
 
           <Panel id="messages" title="Messages">
             <div className="grid gap-4">

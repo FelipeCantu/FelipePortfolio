@@ -55,10 +55,18 @@ export default function Testimonials() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    sanity.fetch(TESTIMONIALS_QUERY)
-      // Only real testimonials from Sanity: the section hides itself when there are none
-      .then((data: Testimonial[]) => { setItems(data ?? []); setLoading(false) })
-      .catch(() => { setItems([]); setLoading(false) })
+    // Real testimonials only: hand-picked ones from Sanity, plus reviews clients
+    // left in the client portal that Felipe chose to publish. The section hides
+    // itself when there are none.
+    const fromSanity = sanity.fetch(TESTIMONIALS_QUERY).then((d: Testimonial[]) => d ?? []).catch(() => [])
+    const fromPortal = fetch('/api/portal/testimonials')
+      .then((r) => (r.ok ? r.json() : { testimonials: [] }))
+      .then((d: { testimonials?: Testimonial[] }) => d.testimonials ?? [])
+      .catch(() => [])
+    Promise.all([fromSanity, fromPortal]).then(([a, b]) => {
+      setItems([...a, ...b].slice(0, 6))
+      setLoading(false)
+    })
   }, [])
 
   if (loading || items.length === 0) return null

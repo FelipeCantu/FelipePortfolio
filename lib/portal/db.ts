@@ -2,7 +2,8 @@ import 'server-only'
 import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
 import { kv } from './kv'
 import type {
-  Activity, Client, ClientTask, FileItem, Invoice, InvoiceItem, Message, Milestone, Project, Role,
+  Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Message, Milestone, PortalSettings, Project,
+  Review, Role,
 } from './types'
 
 /* ───────────────────────── helpers ───────────────────────── */
@@ -56,6 +57,13 @@ const K = {
   invoiceSeq: 'portal:seq:invoice',
   rateLimit: (bucket: string) => `portal:rl:${bucket}`,
   resetToken: (tokenHash: string) => `portal:reset:${tokenHash}`,
+  contract: (id: string) => `portal:contract:${id}`,
+  projectContracts: (projectId: string) => `portal:project:${projectId}:contracts`,
+  review: (id: string) => `portal:review:${id}`,
+  reviews: 'portal:reviews',
+  projectReview: (projectId: string) => `portal:project:${projectId}:review`,
+  invoices: 'portal:invoices',
+  settings: 'portal:settings',
 }
 
 const byDateDesc = <T extends { createdAt: string }>(a: T, b: T) => b.createdAt.localeCompare(a.createdAt)
@@ -256,6 +264,14 @@ export async function deleteProject(id: string) {
     kv().del(K.readMark(id, 'client')),
     kv().del(K.readMark(id, 'admin')),
   ])
+  for (const c of await listContracts(id)) await kv().del(K.contract(c.id))
+  await kv().del(K.projectContracts(id))
+  const review = await getProjectReview(id)
+  if (review) {
+    await kv().srem(K.reviews, review.id)
+    await kv().del(K.review(review.id))
+  }
+  await kv().del(K.projectReview(id))
   await kv().srem(K.clientProjects(p.clientId), id)
   await kv().del(K.project(id))
 }
@@ -381,7 +397,16 @@ export async function createInvoice(input: {
   }
   await kv().set(K.invoice(inv.id), inv)
   await kv().sadd(K.clientInvoices(inv.clientId), inv.id)
+  await kv().sadd(K.invoices, inv.id)
   return inv
+}
+
+/** Every invoice across clients (used by the daily reminder job). */
+export async function listAllInvoices() {
+  const ids = new Set(await kv().smembers(K.invoices))
+  // Invoices created before this index existed
+  for (const c of await listClients()) for (const id of await kv().smembers(K.clientInvoices(c.id))) ids.add(id)
+  return compact(await Promise.all([...ids].map(getInvoice)))
 }
 
 export async function saveInvoice(inv: Invoice) {
@@ -393,6 +418,7 @@ export async function deleteInvoice(id: string) {
   const inv = await getInvoice(id)
   if (!inv) return
   await kv().srem(K.clientInvoices(inv.clientId), id)
+  await kv().srem(K.invoices, id)
   await kv().del(K.invoice(id))
 }
 
@@ -412,5 +438,102 @@ export async function markInvoicePaid(id: string, stripeSessionId?: string) {
     text: `Paid invoice ${inv.number}`,
     href: `/portal/admin/invoices/${inv.id}`,
   })
+  return next
+}
+
+/* ───────────────────────── billing helpers ───────────────────────── */
+
+/** Totals for a project's invoices (drafts and voids excluded). */
+export function billingSummary(project: Project, invoices: Invoice[]) {
+  const mine = invoices.filter((i) => i.projectId === project.id && i.status !== 'void' && i.status !== 'draft')
+  const invoiced = mine.reduce((s, i) => s + invoiceTotal(i), 0)
+  const paid = mine.filter((i) => i.status === 'paid').reduce((s, i) => s + invoiceTotal(i), 0)
+  const price = project.price ?? 0
+  return { price, invoiced, paid, outstanding: invoiced - paid, remaining: Math.max(0, price - invoiced) }
+}
+
+/* ───────────────────────── contracts ───────────────────────── */
+
+export async function getContract(id: string) {
+  return kv().get<Contract>(K.contract(id))
+}
+
+export async function listContracts(projectId: string) {
+  const ids = await kv().smembers(K.projectContracts(projectId))
+  return compact(await Promise.all(ids.map(getContract))).sort(byDateDesc)
+}
+
+export async function createContract(input: { clientId: string; projectId: string; title: string; body: string }) {
+  const c: Contract = { id: newId(), ...input, status: 'draft', createdAt: now() }
+  await kv().set(K.contract(c.id), c)
+  await kv().sadd(K.projectContracts(input.projectId), c.id)
+  return c
+}
+
+export async function saveContract(c: Contract) {
+  await kv().set(K.contract(c.id), c)
+  return c
+}
+
+export async function deleteContract(id: string) {
+  const c = await getContract(id)
+  if (!c) return
+  await kv().srem(K.projectContracts(c.projectId), id)
+  await kv().del(K.contract(id))
+}
+
+export const contractHash = (c: Pick<Contract, 'title' | 'body'>) =>
+  createHash('sha256').update(`${c.title}\n\n${c.body}`).digest('hex')
+
+/* ───────────────────────── reviews ───────────────────────── */
+
+export async function getReview(id: string) {
+  return kv().get<Review>(K.review(id))
+}
+
+export async function getProjectReview(projectId: string) {
+  const id = await kv().get<string>(K.projectReview(projectId))
+  return id ? getReview(id) : null
+}
+
+export async function listReviews() {
+  const ids = await kv().smembers(K.reviews)
+  return compact(await Promise.all(ids.map(getReview))).sort(byDateDesc)
+}
+
+/** One review per project; submitting again updates it. */
+export async function upsertReview(input: Omit<Review, 'id' | 'createdAt' | 'published'>) {
+  const existing = await getProjectReview(input.projectId)
+  const review: Review = existing
+    ? { ...existing, ...input, published: existing.published && input.allowPublish }
+    : { ...input, id: newId(), createdAt: now(), published: false }
+  await kv().set(K.review(review.id), review)
+  await kv().set(K.projectReview(input.projectId), review.id)
+  await kv().sadd(K.reviews, review.id)
+  return review
+}
+
+export async function saveReview(r: Review) {
+  await kv().set(K.review(r.id), r)
+  return r
+}
+
+export async function deleteReview(id: string) {
+  const r = await getReview(id)
+  if (!r) return
+  await kv().srem(K.reviews, id)
+  await kv().del(K.projectReview(r.projectId))
+  await kv().del(K.review(id))
+}
+
+/* ───────────────────────── settings ───────────────────────── */
+
+export async function getSettings(): Promise<PortalSettings> {
+  return (await kv().get<PortalSettings>(K.settings)) ?? {}
+}
+
+export async function saveSettings(patch: PortalSettings) {
+  const next = { ...(await getSettings()), ...patch }
+  await kv().set(K.settings, next)
   return next
 }

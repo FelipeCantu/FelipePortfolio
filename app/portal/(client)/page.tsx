@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { FiArrowRight, FiCheckSquare, FiCreditCard, FiEye, FiFolder, FiMessageCircle, FiCalendar, FiMail } from 'react-icons/fi'
+import { FiArrowRight, FiCheckSquare, FiCreditCard, FiEye, FiFolder, FiMessageCircle, FiCalendar, FiMail, FiPenTool, FiStar } from 'react-icons/fi'
 import { requireClient } from '@/lib/portal/session'
 import {
-  invoiceTotal, listFiles, listInvoices, listProjectActivity, listProjects, nextMilestone, projectProgress, unreadCount,
+  getProjectReview, getSettings, invoiceTotal, listContracts, listFiles, listInvoices, listProjectActivity, listProjects,
+  nextMilestone, projectProgress, unreadCount,
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, Panel, ProgressBar, Stat } from '@/components/portal/ui'
@@ -15,8 +16,14 @@ export default async function PortalHome() {
 
   const details = await Promise.all(
     projects.map(async (p) => {
-      const [files, unread, activity] = await Promise.all([listFiles(p.id), unreadCount(p.id, 'client'), listProjectActivity(p.id, 8)])
-      return { project: p, files, unread, activity }
+      const [files, unread, activity, contracts, review] = await Promise.all([
+        listFiles(p.id),
+        unreadCount(p.id, 'client'),
+        listProjectActivity(p.id, 8),
+        listContracts(p.id),
+        getProjectReview(p.id),
+      ])
+      return { project: p, files, unread, activity, contracts, review }
     })
   )
 
@@ -25,7 +32,15 @@ export default async function PortalHome() {
 
   type Todo = { key: string; icon: React.ReactNode; text: string; sub: string; href: string; urgent?: boolean }
   const todos: Todo[] = []
-  for (const { project, files, unread } of details) {
+  for (const { project, contracts } of details) {
+    for (const c of contracts.filter((c) => c.status === 'sent')) {
+      todos.push({ key: `c${c.id}`, icon: <FiPenTool />, text: `Sign “${c.title}”`, sub: `${project.name} · agreement`, href: `/portal/contracts/${c.id}` })
+    }
+  }
+  for (const { project, files, unread, review } of details) {
+    if (!review && (project.status === 'completed' || project.reviewRequestedAt)) {
+      todos.push({ key: `r${project.id}`, icon: <FiStar />, text: 'Leave a quick review', sub: `${project.name} · 1 minute`, href: `/portal/projects/${project.id}#review` })
+    }
     for (const f of files.filter((f) => f.approval?.status === 'pending')) {
       todos.push({ key: `f${f.id}`, icon: <FiEye />, text: `Review “${f.name}”`, sub: project.name, href: `/portal/projects/${project.id}#files` })
     }
@@ -54,7 +69,7 @@ export default async function PortalHome() {
 
   const active = projects.filter((p) => p.status !== 'completed')
   const firstName = client.name.split(' ')[0]
-  const booking = process.env.NEXT_PUBLIC_BOOKING_URL
+  const booking = (await getSettings()).bookingUrl
 
   return (
     <div className="grid gap-8">

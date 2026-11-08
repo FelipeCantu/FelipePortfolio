@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiArrowDown, FiArrowLeft, FiArrowUp, FiCheck, FiCheckSquare, FiPlay, FiRotateCcw, FiSquare, FiTrash2, FiPlus } from 'react-icons/fi'
+import { FiArrowDown, FiArrowLeft, FiArrowUp, FiCheck, FiCheckSquare, FiFileText, FiPlay, FiRotateCcw, FiSend, FiSquare, FiStar, FiTrash2, FiPlus } from 'react-icons/fi'
 import {
-  getClient, getProject, listFiles, listMessages, listProjectActivity, markRead, projectProgress, unreadCount,
+  billingSummary, getClient, getProject, getProjectReview, getSettings, invoiceTotal, listContracts, listFiles,
+  listInvoices, listMessages, listProjectActivity, markRead, projectProgress, unreadCount,
 } from '@/lib/portal/db'
-import { PROJECT_STATUS, timeAgo } from '@/lib/portal/format'
+import { INVOICE_STATUS, PROJECT_STATUS, fmtDate, money, timeAgo } from '@/lib/portal/format'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import type { ProjectStatus } from '@/lib/portal/types'
 import { Badge, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
@@ -18,8 +19,11 @@ import StateForm from '@/components/portal/admin/StateForm'
 import {
   addClientTaskAction, addMilestoneAction, adminMessageAction, adminRecordUploadAction, adminShareLinkAction,
   deleteClientTaskAction, deleteFileAction, deleteMilestoneAction, deleteProjectAction, moveMilestoneAction,
-  resetApprovalAction, setMilestoneStatusAction, updateProjectAction,
+  quickInvoiceAction, requestReviewAction, resetApprovalAction, setMilestoneStatusAction, updateProjectAction,
 } from '@/app/portal/admin/actions'
+
+const CONTRACT_TONE = { draft: 'muted', sent: 'warning', signed: 'success', void: 'muted' } as const
+const CONTRACT_LABEL = { draft: 'Draft', sent: 'Awaiting signature', signed: 'Signed', void: 'Void' } as const
 
 const iconBtn = 'inline-flex h-8 w-8 items-center justify-center rounded-full text-subtle transition-colors hover:bg-white/[0.06] hover:text-fg'
 
@@ -30,7 +34,19 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
   const client = await getClient(project.clientId)
   if (!client) notFound()
 
-  const [files, messages, activity, unread] = await Promise.all([listFiles(id), listMessages(id), listProjectActivity(id, 15), unreadCount(id, 'admin')])
+  const [files, messages, activity, unread, contracts, review, settings, clientInvoices] = await Promise.all([
+    listFiles(id),
+    listMessages(id),
+    listProjectActivity(id, 15),
+    unreadCount(id, 'admin'),
+    listContracts(id),
+    getProjectReview(id),
+    getSettings(),
+    listInvoices(project.clientId),
+  ])
+  const invoices = clientInvoices.filter((i) => i.projectId === id)
+  const billing = billingSummary(project, clientInvoices)
+  const depositPct = settings.depositPercent ?? 50
   if (unread) await markRead(id, 'admin')
 
   return (
@@ -125,6 +141,11 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
                   </select>
                 </label>
                 <label className="text-small text-muted">Summary (client sees this)<textarea name="summary" defaultValue={project.summary} className="field mt-1 !min-h-[5rem]" /></label>
+                <label className="text-small text-muted">
+                  Project price ($)
+                  <input name="price" inputMode="decimal" defaultValue={project.price ? (project.price / 100).toFixed(2) : ''} placeholder="e.g. 4800" className="field mt-1" />
+                  <span className="field-hint block">Used for one-click deposit and balance invoices, and pre-filled into agreements.</span>
+                </label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="text-small text-muted">Start date<input type="date" name="startDate" defaultValue={project.startDate} className="field mt-1" /></label>
                   <label className="text-small text-muted">Target launch<input type="date" name="dueDate" defaultValue={project.dueDate} className="field mt-1" /></label>
@@ -138,6 +159,101 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
         </div>
 
         <div className="grid content-start gap-6">
+          <Panel
+            title="Billing"
+            action={<Link href={`/portal/admin/clients/${client.id}/invoices/new`} className="btn btn-ghost btn-sm"><FiPlus aria-hidden="true" /> Custom invoice</Link>}
+          >
+            {project.price ? (
+              <>
+                <dl className="grid grid-cols-2 gap-3 text-small">
+                  <div><dt className="text-subtle">Project price</dt><dd className="font-display text-lg font-bold text-fg">{money(billing.price)}</dd></div>
+                  <div><dt className="text-subtle">Paid</dt><dd className="font-display text-lg font-bold text-success">{money(billing.paid)}</dd></div>
+                  <div><dt className="text-subtle">Invoiced, unpaid</dt><dd className="font-mono text-fg">{money(billing.outstanding)}</dd></div>
+                  <div><dt className="text-subtle">Not invoiced yet</dt><dd className="font-mono text-fg">{money(billing.remaining)}</dd></div>
+                </dl>
+                <ProgressBar value={billing.price ? Math.min(100, Math.round((billing.paid / billing.price) * 100)) : 0} />
+                <div className="mt-4 grid gap-2">
+                  {billing.invoiced === 0 && (
+                    <form action={quickInvoiceAction.bind(null, id, 'deposit')} className="flex flex-wrap items-center gap-2">
+                      <input type="hidden" name="intent" value="send" />
+                      <label className="sr-only" htmlFor="dep-pct">Deposit percent</label>
+                      <input id="dep-pct" name="percent" type="number" min={1} max={100} defaultValue={depositPct} className="field !min-h-[2.25rem] !w-20 !py-1 text-small" />
+                      <span className="text-small text-muted">%</span>
+                      <button className="btn btn-gold btn-sm"><FiSend aria-hidden="true" /> Send deposit invoice ({money(Math.round((billing.price * depositPct) / 100))})</button>
+                    </form>
+                  )}
+                  {billing.invoiced > 0 && billing.remaining > 0 && (
+                    <form action={quickInvoiceAction.bind(null, id, 'balance')}>
+                      <input type="hidden" name="intent" value="send" />
+                      <button className="btn btn-gold btn-sm"><FiSend aria-hidden="true" /> Send remaining balance ({money(billing.remaining)})</button>
+                    </form>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-small text-muted">Add a <strong className="text-fg">project price</strong> under Project details to get one-click deposit and balance invoices.</p>
+            )}
+            {invoices.length > 0 && (
+              <ul className="mt-4 grid gap-1 border-t border-line/10 pt-3">
+                {invoices.map((inv) => (
+                  <li key={inv.id}>
+                    <Link href={`/portal/admin/invoices/${inv.id}`} className="flex items-center gap-2 rounded-control px-2 py-1.5 text-small no-underline hover:bg-white/[0.04]">
+                      <span className="min-w-0 flex-1 truncate text-fg">{inv.title}</span>
+                      <Badge tone={INVOICE_STATUS[inv.status].tone}>{INVOICE_STATUS[inv.status].label}</Badge>
+                      <span className="w-20 text-right font-mono text-muted">{money(invoiceTotal(inv))}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
+          <Panel
+            title="Agreements"
+            action={<Link href={`/portal/admin/projects/${id}/contracts/new`} className="btn btn-secondary btn-sm"><FiPlus aria-hidden="true" /> New agreement</Link>}
+          >
+            {contracts.length ? (
+              <ul className="grid gap-1">
+                {contracts.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/portal/admin/contracts/${c.id}`} className="flex items-center gap-3 rounded-control px-2 py-2 no-underline hover:bg-white/[0.04]">
+                      <FiFileText className="flex-shrink-0 text-accent-light" aria-hidden="true" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-small text-fg">{c.title}</span>
+                        <span className="block text-[0.75rem] text-subtle">{c.signedAt ? `Signed by ${c.signature?.name} · ${fmtDate(c.signedAt)}` : `Created ${fmtDate(c.createdAt)}`}</span>
+                      </span>
+                      <Badge tone={CONTRACT_TONE[c.status]}>{CONTRACT_LABEL[c.status]}</Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-small text-muted">No agreement yet. Create one from your template, pre-filled with this project&apos;s price, dates and milestones.</p>
+            )}
+          </Panel>
+
+          <Panel title={<span className="flex items-center gap-2"><FiStar aria-hidden="true" /> Client review</span>}>
+            {review ? (
+              <div>
+                <p className="text-gold" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(review.rating)}<span className="text-line/30">{'★'.repeat(5 - review.rating)}</span></p>
+                <p className="mt-2 whitespace-pre-line text-small text-fg">“{review.text}”</p>
+                <p className="mt-2 text-[0.75rem] text-subtle">— {review.displayName}{review.role ? `, ${review.role}` : ''} · {review.allowPublish ? (review.published ? 'On your website' : 'OK to publish') : 'Private'}</p>
+                <Link href="/portal/admin/reviews" className="mt-3 inline-block text-small text-accent-light no-underline hover:text-white">Manage reviews →</Link>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                <p className="text-small text-muted">
+                  {project.reviewRequestedAt
+                    ? `Review requested ${timeAgo(project.reviewRequestedAt)}. It shows on their portal until they leave one.`
+                    : 'Clients are asked automatically when you mark the project Completed. You can also ask now.'}
+                </p>
+                <form action={requestReviewAction.bind(null, id)}>
+                  <button className="btn btn-secondary btn-sm"><FiSend aria-hidden="true" /> {project.reviewRequestedAt ? 'Ask again' : 'Ask for a review'}</button>
+                </form>
+              </div>
+            )}
+          </Panel>
+
           <Panel id="messages" title="Messages">
             <div className="grid gap-4">
               <MessageThread messages={messages} viewer="admin" clientName={client.name} />
