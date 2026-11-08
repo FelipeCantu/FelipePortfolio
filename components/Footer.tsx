@@ -10,6 +10,7 @@ const NAV = [
   { href: '/blog', label: 'Blog' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
+  { href: '/portal', label: 'Client Portal' },
 ]
 
 const SOCIAL = [

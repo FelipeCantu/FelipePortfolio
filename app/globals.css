@@ -316,3 +316,11 @@ p { text-wrap: pretty; }
   .pl-nav-gutter { padding-left: max(var(--gutter), calc((100vw - 72rem) / 2 + var(--gutter))); }
   .pr-nav-gutter { padding-right: max(var(--gutter), calc((100vw - 72rem) / 2 + var(--gutter))); }
 }
+
+/* Client portal: print only the invoice, on white paper */
+@media print {
+  html, body { background: #fff !important; }
+  body * { visibility: hidden; }
+  .invoice-doc, .invoice-doc * { visibility: visible; color: #0f172a !important; border-color: #cbd5e1 !important; }
+  .invoice-doc { position: absolute; inset: 0 auto auto 0; width: 100%; background: #fff !important; box-shadow: none !important; border: 0 !important; }
+}
