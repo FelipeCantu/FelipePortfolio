@@ -7,6 +7,7 @@ import {
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, Panel, ProgressBar, Stat } from '@/components/portal/ui'
+import { bookingHref } from '@/lib/portal/booking'
 
 export const metadata = { title: 'Overview' }
 
@@ -69,7 +70,7 @@ export default async function PortalHome() {
 
   const active = projects.filter((p) => p.status !== 'completed')
   const firstName = client.name.split(' ')[0]
-  const booking = (await getSettings()).bookingUrl
+  const booking = bookingHref(await getSettings(), client, active[0])
 
   return (
     <div className="grid gap-8">
@@ -167,15 +168,12 @@ export default async function PortalHome() {
                   <FiMessageCircle aria-hidden="true" /> Send a message
                 </Link>
               )}
-              {booking ? (
-                <a href={booking} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-                  <FiCalendar aria-hidden="true" /> Book a call
-                </a>
-              ) : (
-                <a href="mailto:cantujr.felipe@gmail.com" className="btn btn-secondary btn-sm">
-                  <FiMail aria-hidden="true" /> Email Felipe
-                </a>
-              )}
+              <a href={booking} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+                <FiCalendar aria-hidden="true" /> Book a call
+              </a>
+              <a href="mailto:cantujr.felipe@gmail.com" className="btn btn-ghost btn-sm">
+                <FiMail aria-hidden="true" /> Email Felipe
+              </a>
             </div>
           </Panel>
         </div>

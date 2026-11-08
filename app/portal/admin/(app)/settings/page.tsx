@@ -1,4 +1,5 @@
 import { getSettings } from '@/lib/portal/db'
+import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 import { PageHeader, Panel } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import { saveSettingsAction } from '@/app/portal/admin/actions'
@@ -13,9 +14,11 @@ export default async function SettingsPage() {
       <Panel title="Booking & billing">
         <StateForm action={saveSettingsAction}>
           <label className="text-small text-muted">
-            Booking link
-            <input name="bookingUrl" type="url" defaultValue={settings.bookingUrl} placeholder="https://calendly.com/your-name/30min" className="field mt-1" />
-            <span className="field-hint block">Your Calendly, Cal.com or Google Calendar booking page. Clients see a “Book a call” button on their overview and project pages. Leave empty to hide it.</span>
+            Booking link (optional)
+            <input name="bookingUrl" type="url" defaultValue={settings.bookingUrl} placeholder={DEFAULT_BOOKING_URL} className="field mt-1" />
+            <span className="field-hint block">
+              Already set up: clients&apos; “Book a call” button opens your Cal.com page ({DEFAULT_BOOKING_URL.replace('https://', '')}) with their name and email filled in. Only paste a link here if you want a different booking page.
+            </span>
           </label>
           <label className="text-small text-muted">
             Default deposit (%)

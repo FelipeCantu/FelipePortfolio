@@ -4,6 +4,7 @@ import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, Fi
 import { requireClientProject } from '@/lib/portal/session'
 import { getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
 import FeedbackForm from '@/components/portal/FeedbackForm'
+import { bookingHref } from '@/lib/portal/booking'
 import { PROJECT_STATUS, fmtDate } from '@/lib/portal/format'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
@@ -49,11 +50,9 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
         title={project.name}
         action={
           <div className="flex flex-wrap gap-2">
-            {settings.bookingUrl && (
-              <a href={settings.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
-                <FiCalendar aria-hidden="true" /> Book a call
-              </a>
-            )}
+            <a href={bookingHref(settings, client, project)} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+              <FiCalendar aria-hidden="true" /> Book a call
+            </a>
             {project.stagingUrl && (
               <a href={project.stagingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
                 <FiMonitor aria-hidden="true" /> Preview site
