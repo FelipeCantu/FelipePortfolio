@@ -73,16 +73,16 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
                   <div className="mt-2 flex flex-wrap items-center gap-1">
                     {m.status !== 'in_progress' && m.status !== 'done' && (
                       <form action={setMilestoneStatusAction.bind(null, id, m.id, 'in_progress')}>
-                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3"><FiPlay aria-hidden="true" /> Start</button>
+                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3 text-subtle" title="Change this milestone to In progress"><FiPlay aria-hidden="true" /> Mark as started</button>
                       </form>
                     )}
                     {m.status !== 'done' ? (
                       <form action={setMilestoneStatusAction.bind(null, id, m.id, 'done')}>
-                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3 text-success"><FiCheck aria-hidden="true" /> Complete</button>
+                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3 text-subtle" title="Change this milestone to Done"><FiCheck aria-hidden="true" /> Mark as done</button>
                       </form>
                     ) : (
                       <form action={setMilestoneStatusAction.bind(null, id, m.id, 'in_progress')}>
-                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3"><FiRotateCcw aria-hidden="true" /> Reopen</button>
+                        <button className="btn btn-ghost btn-sm !min-h-8 !px-3 text-subtle" title="Change this milestone back to In progress"><FiRotateCcw aria-hidden="true" /> Reopen</button>
                       </form>
                     )}
                     <form action={moveMilestoneAction.bind(null, id, m.id, -1)}><button className={iconBtn} aria-label={`Move ${m.title} up`}><FiArrowUp /></button></form>
