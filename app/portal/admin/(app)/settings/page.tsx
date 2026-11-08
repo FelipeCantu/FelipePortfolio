@@ -1,5 +1,6 @@
 import { getSettings } from '@/lib/portal/db'
 import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
+import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { PageHeader, Panel } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import { saveSettingsAction } from '@/app/portal/admin/actions'
@@ -19,6 +20,11 @@ export default async function SettingsPage() {
             <span className="field-hint block">
               Already set up: clients&apos; “Book a call” button opens your Cal.com page ({DEFAULT_BOOKING_URL.replace('https://', '')}) with their name and email filled in. Only paste a link here if you want a different booking page.
             </span>
+          </label>
+          <label className="text-small text-muted">
+            Email clients invite for access (optional)
+            <input name="accessEmail" type="email" defaultValue={settings.accessEmail} placeholder={DEFAULT_ACCESS_EMAIL} className="field mt-1" />
+            <span className="field-hint block">Shown in the “Accounts &amp; access” guides. Leave empty to use {DEFAULT_ACCESS_EMAIL}.</span>
           </label>
           <label className="text-small text-muted">
             Default deposit (%)

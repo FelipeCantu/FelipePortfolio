@@ -41,6 +41,9 @@ export default async function AdminHome() {
       for (const f of files.filter((f) => f.approval?.status === 'changes_requested')) {
         attention.push({ key: `f${f.id}`, text: `Changes requested on “${f.name}”`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#files`, tone: 'warning' })
       }
+      for (const a of (p.access ?? []).filter((a) => a.status === 'invited')) {
+        attention.push({ key: `a${a.id}`, text: `Accept access invite: ${a.name}`, sub: `${c.name} · ${p.name} · check your email`, href: `/portal/admin/projects/${p.id}#access`, tone: 'accent' })
+      }
       for (const m of p.milestones.filter((m) => m.status !== 'done' && isOverdue(m.dueDate))) {
         attention.push({ key: `ms${m.id}`, text: `Milestone past due: ${m.title}`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}`, tone: 'danger' })
       }

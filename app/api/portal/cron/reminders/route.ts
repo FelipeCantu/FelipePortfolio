@@ -1,10 +1,11 @@
 import { timingSafeEqual } from 'crypto'
 import { runReminders } from '@/lib/portal/reminders'
+import { runCarePlans } from '@/lib/portal/carePlans'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Daily payment reminders (scheduled in vercel.json). Vercel sends
+ * Daily job: monthly care-plan invoices, then payment reminders (scheduled in vercel.json). Vercel sends
  * `Authorization: Bearer $CRON_SECRET` when CRON_SECRET is set; without it,
  * the job only runs for Vercel's cron user agent. Safe to re-run: each
  * reminder stage is sent at most once per invoice.
@@ -22,6 +23,7 @@ function authorized(request: Request) {
 export async function GET(request: Request) {
   if (!authorized(request)) return new Response('Unauthorized', { status: 401 })
   const origin = process.env.PORTAL_BASE_URL?.replace(/\/$/, '') ?? 'https://felipecantujr.com'
+  const billed = await runCarePlans(origin)
   const sent = await runReminders(origin)
-  return Response.json({ sent })
+  return Response.json({ billed, sent })
 }

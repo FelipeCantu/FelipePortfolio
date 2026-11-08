@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import HomeHero from '@/components/HomeHero'
+import Services from '@/components/Services'
 
 export const metadata: Metadata = {
   title: 'Felipe Cantu Jr — Full Stack Web Developer in Dallas, TX',
@@ -15,5 +16,10 @@ export const metadata: Metadata = {
 }
 
 export default function HomePage() {
-  return <HomeHero />
+  return (
+    <>
+      <HomeHero />
+      <Services />
+    </>
+  )
 }

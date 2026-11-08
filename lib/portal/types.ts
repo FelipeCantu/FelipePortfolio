@@ -53,6 +53,11 @@ export interface Project {
   price?: number
   /** set when the client has been asked for a review (avoids asking twice) */
   reviewRequestedAt?: string
+  /** services the client gives Felipe access to (no passwords) */
+  access?: AccessItem[]
+  /** when Felipe emailed the "you own all your accounts" handoff summary */
+  handoffSentAt?: string
+  carePlan?: CarePlan
   /** the Get Started answers this project was created from */
   brief?: IntakeData & { submittedAt: string }
   createdAt: string
@@ -92,6 +97,22 @@ export interface InvoiceItem {
 }
 
 export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'void'
+
+/** Monthly maintenance ("care plan"): an invoice is created and emailed automatically each month. */
+export interface CarePlan {
+  active: boolean
+  /** cents per month */
+  amount: number
+  /** 1–28: day of the month the invoice goes out */
+  billingDay: number
+  /** what's included, one per line (client sees this) */
+  includes: string[]
+  /** YYYY-MM: automatic billing starts this month (so turning a plan on mid-month doesn't bill that day) */
+  startsFrom?: string
+  /** YYYY-MM of the last month billed */
+  lastBilled?: string
+  startedAt: string
+}
 
 export interface Invoice {
   id: string
@@ -160,7 +181,26 @@ export interface Review {
   createdAt: string
 }
 
+export type AccessStatus = 'todo' | 'invited' | 'confirmed' | 'removed'
+
+export interface AccessItem {
+  id: string
+  /** key into ACCESS_SERVICES, or 'custom' */
+  key: string
+  name: string
+  status: AccessStatus
+  /** domain items: DNS records for the client to add instead of inviting Felipe */
+  records?: { type: string; name: string; value: string }[]
+  /** a short note from Felipe shown with the guide (e.g. which role exactly) */
+  note?: string
+  invitedAt?: string
+  confirmedAt?: string
+  removedAt?: string
+}
+
 export interface PortalSettings {
+  /** email clients should invite (defaults to Felipe's admin email) */
+  accessEmail?: string
   bookingUrl?: string
   /** default deposit percentage for one-click deposit invoices */
   depositPercent?: number

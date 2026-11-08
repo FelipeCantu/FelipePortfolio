@@ -2,7 +2,7 @@ import 'server-only'
 import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
 import { kv } from './kv'
 import type {
-  Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Lead, Message, Milestone, PortalSettings,
+  AccessItem, Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Lead, Message, Milestone, PortalSettings,
   Project, Review, Role,
 } from './types'
 import type { IntakeData } from './intake'
@@ -222,7 +222,7 @@ export async function authenticateClient(email: string, secret: string) {
 
 export async function getProject(id: string) {
   const p = await kv().get<Project>(K.project(id))
-  return p ? { ...p, milestones: p.milestones ?? [], clientTasks: p.clientTasks ?? [] } : null
+  return p ? { ...p, milestones: p.milestones ?? [], clientTasks: p.clientTasks ?? [], access: p.access ?? [] } : null
 }
 
 export async function listProjects(clientId: string) {
@@ -245,6 +245,8 @@ export async function createProject(clientId: string, input: Partial<Project> & 
     clientTasks: input.clientTasks ?? [],
     price: input.price,
     brief: input.brief,
+    access: input.access,
+    carePlan: input.carePlan,
     createdAt: now(),
     updatedAt: now(),
   }
@@ -294,6 +296,7 @@ export function nextMilestone(p: Project): Milestone | undefined {
 
 export const newMilestone = (title: string, dueDate?: string): Milestone => ({ id: newId(), title, dueDate, status: 'todo' })
 export const newClientTask = (title: string): ClientTask => ({ id: newId(), title, done: false })
+export const newAccessItem = (key: string, name: string): AccessItem => ({ id: newId(), key, name, status: 'todo' })
 
 /* ───────────────────────── files ───────────────────────── */
 

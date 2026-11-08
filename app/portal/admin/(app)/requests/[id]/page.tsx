@@ -81,7 +81,7 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
                   <label className="text-small text-muted">Company<input name="company" defaultValue={d.company} className="field mt-1" /></label>
                   <label className="text-small text-muted">Project name<input name="projectName" required defaultValue={suggestedName} className="field mt-1" /></label>
                   <label className="text-small text-muted">
-                    Project price ($, optional)
+                    {d.projectType === 'care' ? 'Monthly care plan price ($, optional)' : 'Project price ($, optional)'}
                     <input name="price" inputMode="decimal" placeholder={d.budget ? `They said: ${d.budget}` : 'e.g. 4800'} className="field mt-1" />
                   </label>
                   <fieldset className="grid gap-1.5">

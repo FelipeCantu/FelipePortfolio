@@ -1,13 +1,16 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, FiFolder, FiSquare, FiCheckCircle, FiMonitor } from 'react-icons/fi'
+import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, FiFolder, FiSquare, FiCheckCircle, FiMonitor, FiHeart, FiCheck } from 'react-icons/fi'
 import { requireClientProject } from '@/lib/portal/session'
 import { getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import { bookingHref } from '@/lib/portal/booking'
 import BriefView from '@/components/portal/BriefView'
+import AccessSection from '@/components/portal/AccessSection'
+import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { taskHint } from '@/lib/portal/intake'
-import { PROJECT_STATUS, fmtDate } from '@/lib/portal/format'
+import { PROJECT_STATUS, fmtDate, money } from '@/lib/portal/format'
+import { nextBillingDate } from '@/lib/portal/carePlans'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
 import Timeline from '@/components/portal/Timeline'
@@ -110,6 +113,8 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
             )}
           </Panel>
 
+          <AccessSection project={project} inviteEmail={settings.accessEmail || DEFAULT_ACCESS_EMAIL} />
+
           {project.brief && (
             <details className="card group p-5 sm:p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-lg font-bold text-fg">
@@ -200,6 +205,20 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
             )}
           </Panel>
 
+          {project.carePlan?.active && (
+            <Panel id="care" title={<span className="flex items-center gap-2"><FiHeart aria-hidden="true" /> Monthly care plan</span>} action={<Badge tone="success">{money(project.carePlan.amount)}/month</Badge>}>
+              <p className="mb-3 text-small text-muted">Felipe keeps your site healthy every month. Here’s what’s included:</p>
+              <ul className="grid gap-1.5">
+                {project.carePlan.includes.map((line) => (
+                  <li key={line} className="flex items-start gap-2 text-small text-fg">
+                    <FiCheck className="mt-0.5 flex-shrink-0 text-success" aria-hidden="true" /> {line}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[0.8rem] text-subtle">Next invoice {fmtDate(nextBillingDate(project))}, emailed to you automatically. Need a change? Just send a message.</p>
+            </Panel>
+          )}
+
           {contracts.length > 0 && (
             <Panel title="Agreements">
               <ul className="grid gap-2">
@@ -219,7 +238,7 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
           <Panel id="messages" title="Messages">
             <div className="grid gap-4">
               <MessageThread messages={messages} viewer="client" clientName={client.name} />
-              <Composer action={sendMessageAction.bind(null, id)} placeholder="Ask a question or share feedback…" />
+              <Composer action={sendMessageAction.bind(null, id)} placeholder="Ask a question or share feedback…" warnPasswords />
             </div>
           </Panel>
         </div>

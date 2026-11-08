@@ -17,6 +17,8 @@ import MessageThread from '@/components/portal/MessageThread'
 import Composer from '@/components/portal/Composer'
 import StateForm from '@/components/portal/admin/StateForm'
 import BriefView from '@/components/portal/BriefView'
+import AdminAccessPanel from '@/components/portal/admin/AdminAccessPanel'
+import AdminCarePlanPanel from '@/components/portal/admin/AdminCarePlanPanel'
 import {
   addClientTaskAction, addMilestoneAction, adminMessageAction, adminRecordUploadAction, adminShareLinkAction,
   deleteClientTaskAction, deleteFileAction, deleteMilestoneAction, deleteProjectAction, moveMilestoneAction,
@@ -197,6 +199,8 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
                   )}
                 </div>
               </>
+            ) : project.carePlan ? (
+              <p className="text-small text-muted">Monthly invoices for this project are set under <a href="#care" className="text-accent-light">Monthly care plan</a>.</p>
             ) : (
               <p className="text-small text-muted">Add a <strong className="text-fg">project price</strong> under Project details to get one-click deposit and balance invoices.</p>
             )}
@@ -214,6 +218,10 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
               </ul>
             )}
           </Panel>
+
+          <AdminCarePlanPanel project={project} />
+
+          <AdminAccessPanel project={project} />
 
           <Panel
             title="Agreements"

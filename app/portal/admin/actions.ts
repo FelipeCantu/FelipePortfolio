@@ -10,15 +10,17 @@ import {
   deleteContract, deleteInvoice, deleteProject, deleteReview, getClient, getContract, getFile, getInvoice, getProject,
   getReview, getSettings, invoiceTotal, listFiles, listInvoices, logActivity, newClientTask, newMilestone, rateLimit,
   removeFile, resetClientCode, saveContract, saveFile, saveInvoice, saveProject, saveReview, saveSettings, updateClient,
-  getClientByEmail, getLead, saveLead, deleteLead,
+  getClientByEmail, getLead, saveLead, deleteLead, newAccessItem,
 } from '@/lib/portal/db'
 import { milestonesFor } from '@/lib/portal/intake'
+import { ACCESS_BY_KEY, parseRecords, suggestAccess } from '@/lib/portal/access'
 import { sendInvoiceReminder } from '@/lib/portal/reminders'
+import { CARE_DEFAULT_INCLUDES, billCarePlan, firstBillingMonth } from '@/lib/portal/carePlans'
 import { endSession, requireAdmin, siteOrigin, startAdminSession } from '@/lib/portal/session'
 import { emailEnabled, sendEmail } from '@/lib/portal/notify'
 import { isBlobUrl } from '@/lib/portal/blob'
 import { money } from '@/lib/portal/format'
-import type { InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
+import type { AccessStatus, InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
 import type { FormState } from '@/app/portal/actions'
 
 export type CredentialState =
@@ -564,7 +566,9 @@ export async function saveSettingsAction(_: FormState, form: FormData): Promise<
   if (bookingUrl && !/^https:\/\//i.test(bookingUrl)) return { error: 'Use a full https:// link (e.g. your Calendly page).' }
   const pct = Number(str(form, 'depositPercent'))
   if (!Number.isFinite(pct) || pct < 1 || pct > 100) return { error: 'Deposit must be between 1 and 100%.' }
-  await saveSettings({ bookingUrl: bookingUrl || undefined, depositPercent: Math.round(pct) })
+  const accessEmail = str(form, 'accessEmail')
+  if (accessEmail && !/^\S+@\S+\.\S+$/.test(accessEmail)) return { error: 'Enter a valid email for client invites.' }
+  await saveSettings({ bookingUrl: bookingUrl || undefined, depositPercent: Math.round(pct), accessEmail: accessEmail || undefined })
   refresh('/portal/admin/settings', '/portal')
   return { ok: 'saved' }
 }
@@ -603,11 +607,16 @@ export async function convertLeadAction(leadId: string, _: CredentialState, form
     name: projectName,
     summary,
     status: 'planning',
-    price,
+    // For a care plan, the price entered is the monthly amount; billing starts when Felipe turns it on
+    price: d.projectType === 'care' ? undefined : price,
+    carePlan: d.projectType === 'care'
+      ? { active: false, amount: price ?? 0, billingDay: 1, includes: CARE_DEFAULT_INCLUDES, startedAt: new Date().toISOString() }
+      : undefined,
     dueDate: d.deadline || undefined,
     milestones: milestonesFor(d.projectType).map((t) => newMilestone(t)),
     clientTasks: [...tasks, ...extra].slice(0, 30).map(newClientTask),
     brief: { ...d, submittedAt: lead.createdAt },
+    access: suggestAccess(d).map((k) => newAccessItem(k, ACCESS_BY_KEY[k].name)),
   })
   await saveLead({ ...lead, status: 'converted', clientId: client.id, projectId: project.id, convertedAt: new Date().toISOString() })
   await logActivity({ clientId: client.id, projectId: project.id, actor: 'admin', text: `Project “${projectName}” was set up from your request` })
@@ -644,3 +653,148 @@ export async function deleteLeadAction(leadId: string) {
   redirect('/portal/admin/requests')
 }
 
+
+/* ───────────── accounts & access ───────────── */
+
+async function updateAccess(projectId: string, fn: (p: Project) => Project['access']) {
+  const project = await getProject(projectId)
+  if (!project) return null
+  const next = await saveProject({ ...project, access: fn(project) })
+  refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`, '/portal')
+  return next
+}
+
+export async function addAccessAction(projectId: string, form: FormData) {
+  await requireAdmin()
+  const key = str(form, 'key')
+  const custom = str(form, 'customName')
+  const svc = ACCESS_BY_KEY[key]
+  if (!svc && !custom) return
+  await updateAccess(projectId, (p) => [...(p.access ?? []), newAccessItem(svc ? key : 'custom', svc ? svc.name : custom.slice(0, 80))])
+}
+
+export async function suggestAccessAction(projectId: string) {
+  await requireAdmin()
+  await updateAccess(projectId, (p) => {
+    if (!p.brief) return p.access
+    const have = new Set((p.access ?? []).map((a) => a.key))
+    return [...(p.access ?? []), ...suggestAccess(p.brief).filter((k) => !have.has(k)).map((k) => newAccessItem(k, ACCESS_BY_KEY[k].name))]
+  })
+}
+
+export async function setAccessStatusAction(projectId: string, itemId: string, status: AccessStatus) {
+  await requireAdmin()
+  const now = new Date().toISOString()
+  const project = await updateAccess(projectId, (p) =>
+    (p.access ?? []).map((a) =>
+      a.id === itemId
+        ? {
+            ...a,
+            status,
+            confirmedAt: status === 'confirmed' ? now : a.confirmedAt,
+            removedAt: status === 'removed' ? now : undefined,
+            invitedAt: status === 'todo' ? undefined : a.invitedAt,
+          }
+        : a
+    )
+  )
+  const item = project?.access?.find((a) => a.id === itemId)
+  if (project && item && (status === 'confirmed' || status === 'removed')) {
+    await logActivity({
+      clientId: project.clientId,
+      projectId,
+      actor: 'admin',
+      text: status === 'confirmed' ? `Felipe confirmed access to ${item.name}` : `Felipe removed his access to ${item.name}`,
+    })
+  }
+}
+
+export async function deleteAccessAction(projectId: string, itemId: string) {
+  await requireAdmin()
+  await updateAccess(projectId, (p) => (p.access ?? []).filter((a) => a.id !== itemId))
+}
+
+export async function saveAccessDetailsAction(projectId: string, itemId: string, _: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin()
+  const note = String(form.get('note') ?? '').trim().slice(0, 500) || undefined
+  const recordsText = String(form.get('records') ?? '')
+  const records = parseRecords(recordsText)
+  if (recordsText.trim() && !records.length) return { error: 'Use one record per line: TYPE NAME VALUE (e.g. A @ 76.76.21.21)' }
+  await updateAccess(projectId, (p) => (p.access ?? []).map((a) => (a.id === itemId ? { ...a, note, records: records.length ? records : undefined } : a)))
+  return { ok: 'saved' }
+}
+
+/** Launch handoff: tells the client they own everything and Felipe has stepped out. */
+export async function sendHandoffSummaryAction(projectId: string) {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project) return
+  const client = await getClient(project.clientId)
+  if (!client) return
+  const items = project.access ?? []
+  const lines = items.map((a) => `• ${a.name}: ${a.status === 'removed' ? 'Felipe’s access removed' : 'Felipe still has access (ask any time to remove it)'}`)
+  await sendEmail(
+    client.email,
+    `Handoff: you own all your accounts for ${project.name}`,
+    `Hi ${client.name.split(' ')[0]},\n\nThanks again for working with me on ${project.name}. A quick handoff note so you know everything is in your hands:\n\nYou are the owner of every account used for your site. I only ever had my own limited login, never your passwords.\n\n${lines.join('\n') || '• No outside accounts were needed.'}\n\nIf you ever want help again, just send a message in your portal.`,
+    `${await siteOrigin()}/portal/projects/${projectId}#access`
+  )
+  await saveProject({ ...project, handoffSentAt: new Date().toISOString() })
+  await logActivity({ clientId: client.id, projectId, actor: 'admin', text: 'Handoff summary sent: you own all your accounts' })
+  refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
+}
+
+/* ───────────── monthly care plans ───────────── */
+
+export async function saveCarePlanAction(projectId: string, _: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project) return { error: 'Project not found.' }
+  const amount = Math.round(Number(str(form, 'amount').replace(/[$,\s]/g, '') || 0) * 100)
+  if (!Number.isFinite(amount) || amount < 0) return { error: 'Enter the monthly price, e.g. 150.' }
+  const billingDay = Math.min(28, Math.max(1, Math.round(Number(str(form, 'billingDay')) || 1)))
+  const includes = str(form, 'includes').split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 12).map((l) => l.slice(0, 160))
+  const active = form.get('active') === 'on'
+  if (active && !amount) return { error: 'Add a monthly price before turning billing on.' }
+  const was = project.carePlan
+  await saveProject({
+    ...project,
+    carePlan: {
+      active, amount, billingDay, includes, lastBilled: was?.lastBilled, startedAt: was?.startedAt ?? new Date().toISOString(),
+      // Switching on (or changing the day) starts automatic billing on the next billing day, never retroactively
+      startsFrom: active && (!was?.active || was.billingDay !== billingDay) ? firstBillingMonth(billingDay) : was?.startsFrom,
+    },
+  })
+  if (active && !was?.active) {
+    await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: `Monthly care plan started (${money(amount)}/month)` })
+  }
+  refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
+  return { ok: 'Saved' }
+}
+
+export async function removeCarePlanAction(projectId: string) {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project) return
+  await saveProject({ ...project, carePlan: undefined })
+  refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
+}
+
+export async function startCarePlanAction(projectId: string) {
+  await requireAdmin()
+  const project = await getProject(projectId)
+  if (!project || project.carePlan) return
+  await saveProject({
+    ...project,
+    carePlan: { active: false, amount: 0, billingDay: 1, includes: CARE_DEFAULT_INCLUDES, startedAt: new Date().toISOString() },
+  })
+  refresh(`/portal/admin/projects/${projectId}`)
+}
+
+/** Sends this month's care-plan invoice right away (only once per month). */
+export async function billCareNowAction(projectId: string) {
+  await requireAdmin()
+  const inv = await billCarePlan(projectId, await siteOrigin())
+  if (inv) redirect(`/portal/admin/invoices/${inv.id}`)
+  refresh(`/portal/admin/projects/${projectId}`)
+}

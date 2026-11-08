@@ -290,3 +290,24 @@ export async function submitReviewAction(projectId: string, _: FormState, form: 
   return { ok: 'thanks' }
 }
 
+
+/* ───────────── accounts & access ───────────── */
+
+export async function markAccessInvitedAction(projectId: string, itemId: string) {
+  const { client, project } = await requireClientProject(projectId)
+  if (!project) return
+  const item = project.access?.find((a) => a.id === itemId)
+  if (!item || item.status !== 'todo') return
+  await saveProject({
+    ...project,
+    access: project.access!.map((a) => (a.id === itemId ? { ...a, status: 'invited' as const, invitedAt: new Date().toISOString() } : a)),
+  })
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} sent you access to ${item.name}`, href: `/portal/admin/projects/${projectId}#access` })
+  await notifyAdmin(
+    `${client.name} gave you access: ${item.name}`,
+    `${client.name} says they've ${item.records?.length ? 'added the DNS records' : 'sent you an invite'} for ${item.name} on ${project.name}. Check your email for the invite, accept it, then mark it confirmed in the portal.`,
+    `${await siteOrigin()}/portal/admin/projects/${projectId}#access`
+  )
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath('/portal')
+}

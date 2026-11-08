@@ -6,26 +6,22 @@ import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'
 import { INTAKE_EMAILJS } from '@/lib/emailjs'
 import {
-  FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart,
-  FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
+  FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart, FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
+  FaRocket, FaRobot, FaPlug, FaSyncAlt, FaWrench, FaCloud, FaHeartbeat,
 } from 'react-icons/fa'
 import { FiAlertCircle, FiCalendar } from 'react-icons/fi'
 import {
-  ASSET_OPTIONS, BUDGET_OPTIONS, DAY_OPTIONS, EMPTY_INTAKE, FEATURE_OPTIONS, PAGE_OPTIONS, TIME_OPTIONS,
+  ASSET_OPTIONS, BUDGET_OPTIONS, DAY_OPTIONS, EMPTY_INTAKE, NO_PAGES_TYPES, PAGE_OPTIONS, PROJECT_TYPES, PROJECT_TYPE_GROUPS, TIME_OPTIONS, featuresFor,
   TIMELINE_OPTIONS, intakeSummary, type IntakeData, ASSET_INFO, FEATURE_INFO, PAGE_INFO,
 } from '@/lib/portal/intake'
 import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
-const PROJECT_TYPES = [
-  { id: 'web-app',   icon: FaLaptopCode,   label: 'Web Application',      sub: 'Full-stack web platform' },
-  { id: 'website',   icon: FaGlobe,        label: 'Website / Landing Page', sub: 'Marketing or portfolio site' },
-  { id: 'mobile',    icon: FaMobileAlt,    label: 'Mobile App',            sub: 'iOS / Android application' },
-  { id: 'ecommerce', icon: FaShoppingCart, label: 'E-Commerce',            sub: 'Online store or marketplace' },
-  { id: 'design',    icon: FaPaintBrush,   label: 'UI/UX Design',          sub: 'Design system or prototype' },
-  { id: 'other',     icon: FaTools,        label: 'Something Else',        sub: "Let's talk about it" },
-]
+const TYPE_ICONS: Record<string, React.ComponentType> = {
+  website: FaGlobe, 'web-app': FaLaptopCode, saas: FaRocket, mobile: FaMobileAlt, ecommerce: FaShoppingCart, ai: FaRobot,
+  api: FaPlug, design: FaPaintBrush, rebuild: FaSyncAlt, fix: FaWrench, devops: FaCloud, care: FaHeartbeat, other: FaTools,
+}
 
 // Options and answer shape are shared with the client portal (lib/portal/intake.ts)
 const STEP_LABELS = ['About You', 'Project Type', 'Scope', 'What You Need', 'What You Have', 'Schedule']
@@ -180,13 +176,13 @@ function Step2({ data, set, showErrors }: StepProps) {
     <div className="flex flex-col gap-6">
       <StepHeading title="What Are You Building?" sub="Select the option that best describes your project." />
       <div>
-        <div
-          className="grid grid-cols-2 gap-3 min-[600px]:grid-cols-3"
-          role="radiogroup"
-          aria-label="Project type"
-          aria-describedby={missing ? 'wizard-type-error' : undefined}
-        >
-          {PROJECT_TYPES.map(({ id, icon: Icon, label, sub }) => {
+        <div className="grid gap-5" role="radiogroup" aria-label="Project type" aria-describedby={missing ? 'wizard-type-error' : undefined}>
+          {PROJECT_TYPE_GROUPS.map((g) => (
+            <div key={g.id}>
+              <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-subtle">{g.label}</p>
+              <div className="grid grid-cols-2 gap-3 min-[600px]:grid-cols-3">
+          {PROJECT_TYPES.filter((t) => t.group === g.id).map(({ id, label, sub }) => {
+            const Icon = TYPE_ICONS[id] ?? FaTools
             const selected = data.projectType === id
             return (
               <button
@@ -216,6 +212,9 @@ function Step2({ data, set, showErrors }: StepProps) {
               </button>
             )
           })}
+              </div>
+            </div>
+          ))}
         </div>
         {missing && <FieldError id="wizard-type-error">Please choose a project type.</FieldError>}
       </div>
@@ -265,12 +264,14 @@ function Step4({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> &
   return (
     <div className="flex flex-col gap-6">
       <StepHeading title="What You Need" sub="Pick everything that sounds useful. Not sure? Leave it — we'll figure it out together on the call." />
-      <FieldGroup label="Pages / Sections">
-        <PillRow options={PAGE_OPTIONS} hints={PAGE_INFO} selected={data.pages} onToggle={v => toggleArrayItem('pages', v)} multiSelect aria-label="Pages needed" />
-      </FieldGroup>
+      {!NO_PAGES_TYPES.includes(data.projectType) && (
+        <FieldGroup label={data.projectType === 'mobile' ? 'Screens / Sections' : 'Pages / Sections'}>
+          <PillRow options={PAGE_OPTIONS} hints={PAGE_INFO} selected={data.pages} onToggle={v => toggleArrayItem('pages', v)} multiSelect aria-label="Pages needed" />
+        </FieldGroup>
+      )}
       <FieldGroup label="Features">
         <OptionCards
-          options={FEATURE_OPTIONS.map(v => ({ value: v, label: FEATURE_INFO[v]?.label ?? v, hint: FEATURE_INFO[v]?.hint }))}
+          options={featuresFor(data.projectType).map(v => ({ value: v, label: FEATURE_INFO[v]?.label ?? v, hint: FEATURE_INFO[v]?.hint }))}
           selected={data.features}
           onToggle={v => toggleArrayItem('features', v)}
           aria-label="Features"
@@ -518,6 +519,12 @@ export default function ClientIntakeWizard() {
   const [data,         setData]         = useState<WizardData>(EMPTY_INTAKE)
   // Hidden field only bots fill in
   const [trap,         setTrap]         = useState('')
+
+  // /get-started?type=mobile (from the Services section) pre-selects the project type
+  useEffect(() => {
+    const type = new URLSearchParams(window.location.search).get('type')
+    if (type && PROJECT_TYPES.some(t => t.id === type)) setData(prev => (prev.projectType ? prev : { ...prev, projectType: type }))
+  }, [])
 
   // Move focus to the new step's heading so keyboard / screen-reader users land in context
   useEffect(() => {

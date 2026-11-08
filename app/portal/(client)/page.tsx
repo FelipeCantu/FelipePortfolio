@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FiArrowRight, FiCheckSquare, FiCreditCard, FiEye, FiFolder, FiMessageCircle, FiCalendar, FiMail, FiPenTool, FiStar } from 'react-icons/fi'
+import { FiArrowRight, FiCheckSquare, FiCreditCard, FiEye, FiFolder, FiKey, FiMessageCircle, FiCalendar, FiMail, FiPenTool, FiStar } from 'react-icons/fi'
 import { requireClient } from '@/lib/portal/session'
 import {
   getProjectReview, getSettings, invoiceTotal, listContracts, listFiles, listInvoices, listProjectActivity, listProjects,
@@ -33,6 +33,11 @@ export default async function PortalHome() {
 
   type Todo = { key: string; icon: React.ReactNode; text: string; sub: string; href: string; urgent?: boolean }
   const todos: Todo[] = []
+  for (const { project } of details) {
+    for (const a of (project.access ?? []).filter((a) => a.status === 'todo')) {
+      todos.push({ key: `a${a.id}`, icon: <FiKey />, text: `Give Felipe access: ${a.name}`, sub: `${project.name} · no passwords needed`, href: `/portal/projects/${project.id}#access` })
+    }
+  }
   for (const { project, contracts } of details) {
     for (const c of contracts.filter((c) => c.status === 'sent')) {
       todos.push({ key: `c${c.id}`, icon: <FiPenTool />, text: `Sign “${c.title}”`, sub: `${project.name} · agreement`, href: `/portal/contracts/${c.id}` })
