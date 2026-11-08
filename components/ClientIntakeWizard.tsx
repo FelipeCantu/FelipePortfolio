@@ -9,7 +9,12 @@ import {
   FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart,
   FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
 } from 'react-icons/fa'
-import { FiAlertCircle } from 'react-icons/fi'
+import { FiAlertCircle, FiCalendar } from 'react-icons/fi'
+import {
+  ASSET_OPTIONS, BUDGET_OPTIONS, DAY_OPTIONS, EMPTY_INTAKE, FEATURE_OPTIONS, PAGE_OPTIONS, TIME_OPTIONS,
+  TIMELINE_OPTIONS, intakeSummary, type IntakeData, ASSET_INFO, FEATURE_INFO, PAGE_INFO,
+} from '@/lib/portal/intake'
+import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -22,19 +27,9 @@ const PROJECT_TYPES = [
   { id: 'other',     icon: FaTools,        label: 'Something Else',        sub: "Let's talk about it" },
 ]
 
-const BUDGET_OPTIONS   = ['Under $1,000', '$1k–$5k', '$5k–$15k', '$15k+', "Let's Discuss"]
-const TIMELINE_OPTIONS = ['ASAP', '1–3 Months', '3–6 Months', '6+ Months', 'Flexible']
-const FEATURE_OPTIONS  = [
-  'User Authentication', 'Admin Dashboard', 'Payment Integration',
-  'API Integration', 'Real-time Features', 'Database Design',
-  'Mobile Responsive', 'SEO Optimization', 'CMS Integration',
-  'Analytics', 'Email Notifications', '3rd-Party Integrations',
-]
-const DAY_OPTIONS  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const TIME_OPTIONS = ['Morning (9am–12pm)', 'Afternoon (12pm–5pm)', 'Evening (5pm–8pm)']
-
-const STEP_LABELS = ['About You', 'Project Type', 'Scope', 'Requirements', 'Schedule']
-const TOTAL_STEPS = 5
+// Options and answer shape are shared with the client portal (lib/portal/intake.ts)
+const STEP_LABELS = ['About You', 'Project Type', 'Scope', 'What You Need', 'What You Have', 'Schedule']
+const TOTAL_STEPS = 6
 
 // ─── Framer Motion variants ───────────────────────────────────────────────────
 
@@ -46,13 +41,7 @@ const slideVariants = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface WizardData {
-  name: string; email: string; company: string
-  projectType: string
-  description: string; budget: string; timeline: string
-  features: string[]; techNotes: string
-  preferredDays: string[]; preferredTime: string; additionalNotes: string
-}
+type WizardData = IntakeData
 
 type SetField = (f: keyof WizardData, v: string) => void
 type ToggleItem = (f: keyof WizardData, v: string) => void
@@ -67,38 +56,7 @@ interface StepProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildEmailMessage(data: WizardData): string {
-  const featureList = data.features.length ? data.features.join(', ') : 'None selected'
-  const dayList     = data.preferredDays.length ? data.preferredDays.join(', ') : 'No preference'
-  return `
-CLIENT INTAKE SUMMARY
-─────────────────────────────────────────
-ABOUT
-Name:     ${data.name}
-Email:    ${data.email}
-Company:  ${data.company || '—'}
-
-PROJECT
-Type:     ${data.projectType}
-
-SCOPE
-Description:
-${data.description}
-
-Budget:   ${data.budget}
-Timeline: ${data.timeline}
-
-REQUIREMENTS
-Features: ${featureList}
-Tech Notes:
-${data.techNotes || '—'}
-
-SCHEDULING
-Preferred Days: ${dayList}
-Preferred Time: ${data.preferredTime || 'No preference'}
-Additional Notes:
-${data.additionalNotes || '—'}
-─────────────────────────────────────────
-  `.trim()
+  return `CLIENT INTAKE SUMMARY\n─────────────────────────────────────────\n${intakeSummary(data)}`
 }
 
 function isStepValid(step: number, data: WizardData): boolean {
@@ -202,6 +160,14 @@ function Step1({ data, set, showErrors }: StepProps) {
       <FieldGroup label="Company / Organization" id="wizard-company" optional>
         <FieldInput id="wizard-company" type="text" placeholder="e.g. Acme Inc." value={data.company} onChange={e => set('company', e.target.value)} autoComplete="organization" />
       </FieldGroup>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <FieldGroup label="Phone" id="wizard-phone" optional>
+          <FieldInput id="wizard-phone" type="tel" placeholder="(214) 555-0123" value={data.phone} onChange={e => set('phone', e.target.value)} autoComplete="tel" />
+        </FieldGroup>
+        <FieldGroup label="Current website" id="wizard-site" optional>
+          <FieldInput id="wizard-site" type="url" inputMode="url" placeholder="https://" value={data.currentWebsite} onChange={e => set('currentWebsite', e.target.value)} autoComplete="url" />
+        </FieldGroup>
+      </div>
     </div>
   )
 }
@@ -270,6 +236,9 @@ function Step3({ data, set, showErrors }: StepProps) {
         <FieldTextarea id="wizard-desc" rows={4} placeholder="Describe what you want to build, who it's for, and what problem it solves…" value={data.description} onChange={e => set('description', e.target.value)} required invalid={descErr} />
         {descErr && <FieldError id="wizard-desc-error">Please describe your project.</FieldError>}
       </FieldGroup>
+      <FieldGroup label="What would make this project a success?" id="wizard-goals" optional>
+        <FieldTextarea id="wizard-goals" rows={2} placeholder="e.g. More bookings, look more professional, sell online, save time on admin…" value={data.goals} onChange={e => set('goals', e.target.value)} />
+      </FieldGroup>
       <FieldGroup label="Budget Range" required>
         <PillRow options={BUDGET_OPTIONS} selected={data.budget} onSelect={v => set('budget', v)} radioGroup aria-label="Budget range" />
         {budgetErr && <FieldError id="wizard-budget-error">Please select a budget range.</FieldError>}
@@ -278,6 +247,14 @@ function Step3({ data, set, showErrors }: StepProps) {
         <PillRow options={TIMELINE_OPTIONS} selected={data.timeline} onSelect={v => set('timeline', v)} radioGroup aria-label="Timeline" />
         {timelineErr && <FieldError id="wizard-timeline-error">Please select a timeline.</FieldError>}
       </FieldGroup>
+      <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <FieldGroup label="Hard deadline?" id="wizard-deadline" optional>
+          <FieldInput id="wizard-deadline" type="date" value={data.deadline} onChange={e => set('deadline', e.target.value)} />
+        </FieldGroup>
+        <FieldGroup label="What's the deadline for?" id="wizard-deadline-why" optional>
+          <FieldInput id="wizard-deadline-why" type="text" placeholder="e.g. Grand opening, product launch" value={data.deadlineReason} onChange={e => set('deadlineReason', e.target.value)} />
+        </FieldGroup>
+      </div>
     </div>
   )
 }
@@ -287,35 +264,41 @@ function Step3({ data, set, showErrors }: StepProps) {
 function Step4({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> & { toggleArrayItem: ToggleItem }) {
   return (
     <div className="flex flex-col gap-6">
-      <StepHeading title="Key Requirements" sub="Select every feature or capability your project needs." />
-      <FieldGroup label="Features & Capabilities">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Feature selection">
-          {FEATURE_OPTIONS.map(feat => {
-            const active = data.features.includes(feat)
-            return (
-              <button
-                key={feat}
-                type="button"
-                role="checkbox"
-                aria-checked={active}
-                onClick={() => toggleArrayItem('features', feat)}
-                className={[
-                  'inline-flex min-h-[2.25rem] cursor-pointer select-none items-center gap-1.5 rounded-control border-[1.5px] px-3.5 py-1.5 text-[0.82rem] font-medium',
-                  'transition-[border-color,background-color,color] duration-200',
-                  active
-                    ? 'border-accent-light/70 bg-accent/15 text-accent-light'
-                    : 'border-line/25 bg-white/[0.03] text-muted hover:border-accent-light/40 hover:text-fg',
-                ].join(' ')}
-              >
-                {active && <FaCheck size={9} className="flex-shrink-0" aria-hidden="true" />}
-                {feat}
-              </button>
-            )
-          })}
-        </div>
+      <StepHeading title="What You Need" sub="Pick everything that sounds useful. Not sure? Leave it — we'll figure it out together on the call." />
+      <FieldGroup label="Pages / Sections">
+        <PillRow options={PAGE_OPTIONS} hints={PAGE_INFO} selected={data.pages} onToggle={v => toggleArrayItem('pages', v)} multiSelect aria-label="Pages needed" />
       </FieldGroup>
-      <FieldGroup label="Technical Notes" id="wizard-tech" optional>
-        <FieldTextarea id="wizard-tech" rows={3} placeholder="Preferred stack, existing systems to integrate with, specific constraints…" value={data.techNotes} onChange={e => set('techNotes', e.target.value)} />
+      <FieldGroup label="Features">
+        <OptionCards
+          options={FEATURE_OPTIONS.map(v => ({ value: v, label: FEATURE_INFO[v]?.label ?? v, hint: FEATURE_INFO[v]?.hint }))}
+          selected={data.features}
+          onToggle={v => toggleArrayItem('features', v)}
+          aria-label="Features"
+        />
+      </FieldGroup>
+      <FieldGroup label="Anything else I should know?" id="wizard-tech" optional>
+        <FieldTextarea id="wizard-tech" rows={3} placeholder="e.g. “We already use Square for payments” or “It has to work with our booking app.” Leave blank if you're not sure." value={data.techNotes} onChange={e => set('techNotes', e.target.value)} />
+      </FieldGroup>
+    </div>
+  )
+}
+
+// ─── Step 5: what they already have ───────────────────────────────────────────
+
+function StepAssets({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> & { toggleArrayItem: ToggleItem }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <StepHeading title="What You Already Have" sub="No worries if the answer is “nothing yet” — this just tells me where to start." />
+      <FieldGroup label="I already have…">
+        <OptionCards
+          options={ASSET_OPTIONS.map(v => ({ value: v, label: v, hint: ASSET_INFO[v] }))}
+          selected={data.assets}
+          onToggle={v => toggleArrayItem('assets', v)}
+          aria-label="What you already have"
+        />
+      </FieldGroup>
+      <FieldGroup label="Websites you like" id="wizard-inspo" optional>
+        <FieldTextarea id="wizard-inspo" rows={3} placeholder={'Links to sites (competitors or not) you like, and what you like about them\ne.g. https://example.com — clean, easy to book'} value={data.inspiration} onChange={e => set('inspiration', e.target.value)} />
       </FieldGroup>
     </div>
   )
@@ -345,6 +328,12 @@ function Step5({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> &
           aria-label="Preferred time of day"
         />
       </FieldGroup>
+      <p className="-mt-2 text-small text-muted">
+        Prefer to pick a time yourself?{' '}
+        <a href={DEFAULT_BOOKING_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
+          <FiCalendar aria-hidden="true" /> Book a call now
+        </a>
+      </p>
       <FieldGroup label="Anything else?" id="wizard-notes" optional>
         <FieldTextarea id="wizard-notes" rows={3} placeholder="Specific questions, context, or anything I should know before our call…" value={data.additionalNotes} onChange={e => set('additionalNotes', e.target.value)} />
       </FieldGroup>
@@ -398,6 +387,8 @@ function FieldTextarea({ invalid, ...props }: TextareaProps) {
 
 interface PillRowProps {
   options: string[]
+  /** Optional plain-English note per option, shown under the row for the last one touched */
+  hints?: Record<string, string>
   selected: string | string[]
   onSelect?: (v: string) => void
   onToggle?: (v: string) => void
@@ -406,8 +397,11 @@ interface PillRowProps {
   'aria-label'?: string
 }
 
-function PillRow({ options, selected, onSelect, onToggle, multiSelect, radioGroup, 'aria-label': ariaLabel }: PillRowProps) {
+function PillRow({ options, hints, selected, onSelect, onToggle, multiSelect, radioGroup, 'aria-label': ariaLabel }: PillRowProps) {
+  const [focus, setFocus] = useState<string | null>(null)
+  const note = hints && focus ? hints[focus] : null
   return (
+    <>
     <div className="flex flex-wrap gap-2" role={radioGroup ? 'radiogroup' : 'group'} aria-label={ariaLabel}>
       {options.map(opt => {
         const active = Array.isArray(selected) ? selected.includes(opt) : selected === opt
@@ -417,7 +411,11 @@ function PillRow({ options, selected, onSelect, onToggle, multiSelect, radioGrou
             type="button"
             role={radioGroup ? 'radio' : 'checkbox'}
             aria-checked={active}
+            title={hints?.[opt]}
+            onMouseEnter={() => hints && setFocus(opt)}
+            onFocus={() => hints && setFocus(opt)}
             onClick={() => {
+              if (hints) setFocus(opt)
               if (multiSelect && onToggle) onToggle(opt)
               else if (onSelect) onSelect(opt)
             }}
@@ -434,8 +432,53 @@ function PillRow({ options, selected, onSelect, onToggle, multiSelect, radioGrou
         )
       })}
     </div>
+    {hints && (
+      <p className="mt-2 min-h-[1.25rem] text-[0.8rem] text-subtle" aria-live="polite">
+        {note ? <><span className="font-semibold text-muted">{focus}:</span> {note}</> : 'Hover or tap an option to see what it means.'}
+      </p>
+    )}
+    </>
   )
 }
+
+// Checkbox cards with a short plain-English explanation under each option
+function OptionCards({
+  options, selected, onToggle, 'aria-label': ariaLabel,
+}: { options: { value: string; label: string; hint?: string }[]; selected: string[]; onToggle: (v: string) => void; 'aria-label'?: string }) {
+  return (
+    <div className="grid grid-cols-1 gap-2 min-[520px]:grid-cols-2" role="group" aria-label={ariaLabel}>
+      {options.map(({ value, label, hint }) => {
+        const active = selected.includes(value)
+        return (
+          <button
+            key={value}
+            type="button"
+            role="checkbox"
+            aria-checked={active}
+            onClick={() => onToggle(value)}
+            className={[
+              'flex cursor-pointer select-none items-start gap-3 rounded-control border-[1.5px] px-3.5 py-3 text-left',
+              'transition-[border-color,background-color] duration-200',
+              active ? 'border-accent-light/70 bg-accent/[0.12]' : 'border-line/20 bg-white/[0.03] hover:border-accent-light/40 hover:bg-white/[0.05]',
+            ].join(' ')}
+          >
+            <span
+              className={`mt-0.5 flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-[5px] border-[1.5px] ${active ? 'border-accent-light bg-accent text-accent-ink' : 'border-line/40'}`}
+              aria-hidden="true"
+            >
+              {active && <FaCheck size={9} />}
+            </span>
+            <span className="min-w-0">
+              <span className={`block text-[0.88rem] font-semibold leading-snug ${active ? 'text-fg' : 'text-fg/90'}`}>{label}</span>
+              {hint && <span className="mt-0.5 block text-[0.78rem] leading-snug text-subtle">{hint}</span>}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 
 // ─── Success screen ───────────────────────────────────────────────────────────
 
@@ -472,13 +515,9 @@ export default function ClientIntakeWizard() {
   const [error,        setError]        = useState('')
   const [showErrors,   setShowErrors]   = useState(false)
   const stepRef = useRef<HTMLDivElement>(null)
-  const [data,         setData]         = useState<WizardData>({
-    name: '', email: '', company: '',
-    projectType: '',
-    description: '', budget: '', timeline: '',
-    features: [], techNotes: '',
-    preferredDays: [], preferredTime: '', additionalNotes: '',
-  })
+  const [data,         setData]         = useState<WizardData>(EMPTY_INTAKE)
+  // Hidden field only bots fill in
+  const [trap,         setTrap]         = useState('')
 
   // Move focus to the new step's heading so keyboard / screen-reader users land in context
   useEffect(() => {
@@ -520,16 +559,29 @@ export default function ClientIntakeWizard() {
     setIsSubmitting(true)
     setError('')
     try {
-      await emailjs.send(
-        INTAKE_EMAILJS.serviceId,
-        INTAKE_EMAILJS.templateId,
-        { user_name: data.name, user_email: data.email, message: buildEmailMessage(data) },
-        INTAKE_EMAILJS.publicKey
-      )
+      // 1) Save to the client portal (shows up as a new request for Felipe)
+      // 2) EmailJS sends the visitor their confirmation copy, as before
+      // Either one succeeding counts: the request isn't lost.
+      const [portal, mail] = await Promise.allSettled([
+        fetch('/api/portal/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, website_url: trap }),
+        }).then(async (r) => {
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? 'Could not save')
+        }),
+        emailjs.send(
+          INTAKE_EMAILJS.serviceId,
+          INTAKE_EMAILJS.templateId,
+          { user_name: data.name, user_email: data.email, message: buildEmailMessage(data) },
+          INTAKE_EMAILJS.publicKey
+        ),
+      ])
+      if (portal.status === 'rejected' && mail.status === 'rejected') throw portal.reason
       setSubmitted(true)
       trackEvent('get_started_submit', { project_type: data.projectType })
     } catch (err) {
-      console.error('EmailJS error:', err)
+      console.error('Intake submit error:', err)
       setError('Something went wrong. Please try again or email me directly.')
     } finally {
       setIsSubmitting(false)
@@ -543,6 +595,14 @@ export default function ClientIntakeWizard() {
   return (
     <div className="flex w-full flex-col">
       <ProgressBar step={step} />
+
+      {/* Honeypot: invisible to people, tempting to spam bots */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label>
+          Website URL
+          <input tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
+        </label>
+      </div>
 
       {/* Step area */}
       <div ref={stepRef} className="min-h-[18rem] pb-2">
@@ -560,7 +620,8 @@ export default function ClientIntakeWizard() {
             {step === 2 && <Step2 data={data} set={set} showErrors={showErrors} />}
             {step === 3 && <Step3 data={data} set={set} showErrors={showErrors} />}
             {step === 4 && <Step4 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
-            {step === 5 && <Step5 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
+            {step === 5 && <StepAssets data={data} set={set} toggleArrayItem={toggleArrayItem} />}
+            {step === 6 && <Step5 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
           </motion.div>
         </AnimatePresence>
       </div>

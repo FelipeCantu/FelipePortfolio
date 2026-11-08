@@ -1,3 +1,5 @@
+import type { IntakeData } from './intake'
+
 export type Role = 'client' | 'admin'
 
 export interface Client {
@@ -51,6 +53,8 @@ export interface Project {
   price?: number
   /** set when the client has been asked for a review (avoids asking twice) */
   reviewRequestedAt?: string
+  /** the Get Started answers this project was created from */
+  brief?: IntakeData & { submittedAt: string }
   createdAt: string
   updatedAt: string
 }
@@ -160,4 +164,18 @@ export interface PortalSettings {
   bookingUrl?: string
   /** default deposit percentage for one-click deposit invoices */
   depositPercent?: number
+}
+
+export type LeadStatus = 'new' | 'converted' | 'archived'
+
+/** A Get Started wizard submission waiting for Felipe. */
+export interface Lead {
+  id: string
+  status: LeadStatus
+  data: IntakeData
+  createdAt: string
+  ip?: string
+  clientId?: string
+  projectId?: string
+  convertedAt?: string
 }

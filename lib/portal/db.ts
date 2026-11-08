@@ -2,9 +2,10 @@ import 'server-only'
 import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
 import { kv } from './kv'
 import type {
-  Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Message, Milestone, PortalSettings, Project,
-  Review, Role,
+  Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Lead, Message, Milestone, PortalSettings,
+  Project, Review, Role,
 } from './types'
+import type { IntakeData } from './intake'
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -64,6 +65,8 @@ const K = {
   projectReview: (projectId: string) => `portal:project:${projectId}:review`,
   invoices: 'portal:invoices',
   settings: 'portal:settings',
+  lead: (id: string) => `portal:lead:${id}`,
+  leads: 'portal:leads',
 }
 
 const byDateDesc = <T extends { createdAt: string }>(a: T, b: T) => b.createdAt.localeCompare(a.createdAt)
@@ -240,6 +243,8 @@ export async function createProject(clientId: string, input: Partial<Project> & 
     liveUrl: input.liveUrl,
     milestones: input.milestones ?? [],
     clientTasks: input.clientTasks ?? [],
+    price: input.price,
+    brief: input.brief,
     createdAt: now(),
     updatedAt: now(),
   }
@@ -536,4 +541,32 @@ export async function saveSettings(patch: PortalSettings) {
   const next = { ...(await getSettings()), ...patch }
   await kv().set(K.settings, next)
   return next
+}
+
+/* ───────────────────────── leads (Get Started requests) ───────────────────────── */
+
+export async function createLead(data: IntakeData, ip?: string) {
+  const lead: Lead = { id: newId(), status: 'new', data, createdAt: now(), ip }
+  await kv().set(K.lead(lead.id), lead)
+  await kv().sadd(K.leads, lead.id)
+  return lead
+}
+
+export async function getLead(id: string) {
+  return kv().get<Lead>(K.lead(id))
+}
+
+export async function listLeads() {
+  const ids = await kv().smembers(K.leads)
+  return compact(await Promise.all(ids.map(getLead))).sort(byDateDesc)
+}
+
+export async function saveLead(lead: Lead) {
+  await kv().set(K.lead(lead.id), lead)
+  return lead
+}
+
+export async function deleteLead(id: string) {
+  await kv().srem(K.leads, id)
+  await kv().del(K.lead(id))
 }

@@ -16,6 +16,7 @@ import ShareLinkForm from '@/components/portal/ShareLinkForm'
 import MessageThread from '@/components/portal/MessageThread'
 import Composer from '@/components/portal/Composer'
 import StateForm from '@/components/portal/admin/StateForm'
+import BriefView from '@/components/portal/BriefView'
 import {
   addClientTaskAction, addMilestoneAction, adminMessageAction, adminRecordUploadAction, adminShareLinkAction,
   deleteClientTaskAction, deleteFileAction, deleteMilestoneAction, deleteProjectAction, moveMilestoneAction,
@@ -127,6 +128,12 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
               </div>
             </div>
           </Panel>
+
+          {project.brief && (
+            <Panel title="Project brief" action={<span className="text-[0.75rem] text-subtle">From their Get Started form · {fmtDate(project.brief.submittedAt)}</span>}>
+              <BriefView data={project.brief} />
+            </Panel>
+          )}
 
           <Panel title="Project details">
             <StateForm action={updateProjectAction.bind(null, id)}>

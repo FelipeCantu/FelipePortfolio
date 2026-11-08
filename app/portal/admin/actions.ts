@@ -10,16 +10,20 @@ import {
   deleteContract, deleteInvoice, deleteProject, deleteReview, getClient, getContract, getFile, getInvoice, getProject,
   getReview, getSettings, invoiceTotal, listFiles, listInvoices, logActivity, newClientTask, newMilestone, rateLimit,
   removeFile, resetClientCode, saveContract, saveFile, saveInvoice, saveProject, saveReview, saveSettings, updateClient,
+  getClientByEmail, getLead, saveLead, deleteLead,
 } from '@/lib/portal/db'
+import { milestonesFor } from '@/lib/portal/intake'
 import { sendInvoiceReminder } from '@/lib/portal/reminders'
 import { endSession, requireAdmin, siteOrigin, startAdminSession } from '@/lib/portal/session'
-import { sendEmail } from '@/lib/portal/notify'
+import { emailEnabled, sendEmail } from '@/lib/portal/notify'
 import { isBlobUrl } from '@/lib/portal/blob'
 import { money } from '@/lib/portal/format'
 import type { InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
 import type { FormState } from '@/app/portal/actions'
 
-export type CredentialState = { error?: string; email?: string; code?: string; link?: string } | undefined
+export type CredentialState =
+  | { error?: string; email?: string; code?: string; link?: string; projectId?: string; note?: string }
+  | undefined
 
 const str = (form: FormData, key: string) => String(form.get(key) ?? '').trim()
 const opt = (form: FormData, key: string) => str(form, key) || undefined
@@ -564,3 +568,79 @@ export async function saveSettingsAction(_: FormState, form: FormData): Promise<
   refresh('/portal/admin/settings', '/portal')
   return { ok: 'saved' }
 }
+
+/* ───────────── Get Started requests ───────────── */
+
+export async function convertLeadAction(leadId: string, _: CredentialState, form: FormData): Promise<CredentialState> {
+  await requireAdmin()
+  const lead = await getLead(leadId)
+  if (!lead) return { error: 'Request not found.' }
+  if (lead.status === 'converted' && lead.projectId) return { error: 'Already converted.', projectId: lead.projectId }
+
+  const name = str(form, 'name')
+  const email = str(form, 'email').toLowerCase()
+  const projectName = str(form, 'projectName')
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || !projectName) return { error: 'Name, email and project name are required.' }
+  const priceRaw = str(form, 'price').replace(/[$,\s]/g, '')
+  const price = priceRaw ? Math.round(Number(priceRaw) * 100) : undefined
+  if (price !== undefined && (!Number.isFinite(price) || price < 0)) return { error: 'Enter the price as a number, e.g. 4800' }
+
+  // Reuse the client if they already have a portal account
+  let client = await getClientByEmail(email)
+  let code: string | undefined
+  if (!client) {
+    const created = await createClient({ name, email, company: opt(form, 'company'), phone: lead.data.phone || undefined })
+    client = created.client
+    code = created.code
+  }
+
+  const d = lead.data
+  const tasks = form.getAll('task').map(String).map((t) => t.trim()).filter(Boolean)
+  const extra = String(form.get('extraTasks') ?? '').split('\n').map((t) => t.trim()).filter(Boolean)
+  const summary = [d.description, d.goals && `Goals: ${d.goals}`].filter(Boolean).join('\n\n').slice(0, 2000)
+
+  const project = await createProject(client.id, {
+    name: projectName,
+    summary,
+    status: 'planning',
+    price,
+    dueDate: d.deadline || undefined,
+    milestones: milestonesFor(d.projectType).map((t) => newMilestone(t)),
+    clientTasks: [...tasks, ...extra].slice(0, 30).map(newClientTask),
+    brief: { ...d, submittedAt: lead.createdAt },
+  })
+  await saveLead({ ...lead, status: 'converted', clientId: client.id, projectId: project.id, convertedAt: new Date().toISOString() })
+  await logActivity({ clientId: client.id, projectId: project.id, actor: 'admin', text: `Project “${projectName}” was set up from your request` })
+
+  let link: string | undefined
+  if (code) {
+    link = await accessLink(client.email, code)
+    if (form.get('sendInvite') === 'on' && emailEnabled()) await sendInvite(client.name, client.email, code, link)
+  } else if (form.get('sendInvite') === 'on') {
+    await emailClient(
+      client.id,
+      project.id,
+      `New project: ${projectName}`,
+      `I've set up ${projectName} in your client portal, based on the details you sent. Take a look at the plan and the short list of things I'll need from you.`
+    )
+  }
+  refresh('/portal/admin', '/portal/admin/requests', `/portal/admin/requests/${leadId}`)
+  return code
+    ? { email: client.email, code, link, projectId: project.id }
+    : { projectId: project.id, note: `${client.name} already has a portal account, so the project was added to it.` }
+}
+
+export async function setLeadStatusAction(leadId: string, status: 'new' | 'archived') {
+  await requireAdmin()
+  const lead = await getLead(leadId)
+  if (!lead || lead.status === 'converted') return
+  await saveLead({ ...lead, status })
+  refresh('/portal/admin/requests', `/portal/admin/requests/${leadId}`, '/portal/admin')
+}
+
+export async function deleteLeadAction(leadId: string) {
+  await requireAdmin()
+  await deleteLead(leadId)
+  redirect('/portal/admin/requests')
+}
+

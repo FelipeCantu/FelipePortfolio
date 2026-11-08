@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FiArrowRight, FiUserPlus, FiUsers } from 'react-icons/fi'
 import {
-  invoiceTotal, listClients, listFiles, listGlobalActivity, listInvoices, listProjects, projectProgress, unreadCount,
+  invoiceTotal, listClients, listFiles, listGlobalActivity, listInvoices, listLeads, listProjects, projectProgress, unreadCount,
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, PageHeader, Panel, ProgressBar, Stat } from '@/components/portal/ui'
@@ -32,6 +32,9 @@ export default async function AdminHome() {
 
   type Item = { key: string; text: string; sub: string; href: string; tone: 'warning' | 'danger' | 'accent' }
   const attention: Item[] = []
+  for (const l of (await listLeads()).filter((l) => l.status === 'new')) {
+    attention.push({ key: `l${l.id}`, text: `New project request from ${l.data.name}`, sub: [l.data.company, l.data.budget].filter(Boolean).join(' · ') || l.data.email, href: `/portal/admin/requests/${l.id}`, tone: 'accent' })
+  }
   for (const { c, projects } of perClient) {
     for (const { p, unread, files } of projects) {
       if (unread) attention.push({ key: `m${p.id}`, text: `${unread} unread message${unread > 1 ? 's' : ''}`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#messages`, tone: 'accent' })

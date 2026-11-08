@@ -5,6 +5,8 @@ import { requireClientProject } from '@/lib/portal/session'
 import { getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import { bookingHref } from '@/lib/portal/booking'
+import BriefView from '@/components/portal/BriefView'
+import { taskHint } from '@/lib/portal/intake'
 import { PROJECT_STATUS, fmtDate } from '@/lib/portal/format'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
@@ -108,6 +110,18 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
             )}
           </Panel>
 
+          {project.brief && (
+            <details className="card group p-5 sm:p-6">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-lg font-bold text-fg">
+                Your project brief
+                <span className="text-small font-normal text-accent-light group-open:hidden">Show</span>
+                <span className="hidden text-small font-normal text-accent-light group-open:inline">Hide</span>
+              </summary>
+              <p className="mb-4 mt-1 text-small text-muted">What you told Felipe when you got started. Something changed? Send a message.</p>
+              <BriefView data={project.brief} showContact={false} />
+            </details>
+          )}
+
           <Panel
             id="files"
             title={
@@ -155,6 +169,8 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
             }
           >
             {project.clientTasks.length ? (
+              <>
+              <p className="mb-2 text-[0.8rem] text-subtle">Tick each one off when it&apos;s done. Stuck on anything? Just send Felipe a message.</p>
               <ul className="grid gap-1">
                 {project.clientTasks.map((t) => (
                   <li key={t.id}>
@@ -170,9 +186,13 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
                         <span className={t.done ? 'text-muted line-through' : 'text-fg'}>{t.title}</span>
                       </button>
                     </form>
+                    {!t.done && taskHint(t.title) && (
+                      <p className="-mt-1 mb-1 pl-[2.6rem] pr-2 text-[0.78rem] leading-snug text-subtle">{taskHint(t.title)}</p>
+                    )}
                   </li>
                 ))}
               </ul>
+              </>
             ) : (
               <p className="flex items-center gap-2 text-small text-muted">
                 <FiCheckCircle className="text-success" aria-hidden="true" /> Nothing needed from you right now.
