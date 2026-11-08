@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   description:
     "Ready to build something? Fill out the project intake form and let's get started.",
   alternates: { canonical: 'https://felipecantujr.com/get-started' },
+  openGraph: {
+    type: 'website',
+    siteName: 'Felipe Cantu Jr',
+    title: 'Get Started — Start Your Web Project',
+    description: 'Tell me about your website or web app project and get a clear plan and next steps.',
+    url: 'https://felipecantujr.com/get-started',
+  },
 }
 
 export default function GetStartedPage() {

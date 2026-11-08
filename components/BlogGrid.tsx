@@ -126,7 +126,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={post.mainImage.asset.url}
-                      alt={post.mainImage.alt ?? post.title}
+                      alt={post.mainImage.alt ?? ''}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
                     />

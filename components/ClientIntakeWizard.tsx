@@ -144,7 +144,7 @@ function Step1({ data, set, showErrors }: StepProps) {
   const emailErr = showErrors && data.email.trim() === ''
   return (
     <div className="flex flex-col gap-6">
-      <StepHeading title="About You" sub="Let's start with some basic information." />
+      <StepHeading title="About You" sub="Just your name and email to start. Everything else is optional." />
       <FieldGroup label="Full Name" id="wizard-name" required>
         <FieldInput id="wizard-name" type="text" placeholder="e.g. Jane Smith" value={data.name} onChange={e => set('name', e.target.value)} autoComplete="name" required invalid={nameErr} />
         {nameErr && <FieldError id="wizard-name-error">Please enter your name.</FieldError>}
@@ -176,7 +176,7 @@ function Step2({ data, set, showErrors }: StepProps) {
     <div className="flex flex-col gap-6">
       <StepHeading title="What Are You Building?" sub="Select the option that best describes your project." />
       <div>
-        <div className="grid gap-5" role="radiogroup" aria-label="Project type" aria-describedby={missing ? 'wizard-type-error' : undefined}>
+        <div className="grid gap-5" role="radiogroup" aria-label="Project type" aria-required="true" tabIndex={-1} data-invalid={missing ? 'true' : undefined} onKeyDown={onRadioKeyDown} aria-describedby={missing ? 'wizard-type-error' : undefined}>
           {PROJECT_TYPE_GROUPS.map((g) => (
             <div key={g.id}>
               <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.08em] text-subtle">{g.label}</p>
@@ -239,11 +239,11 @@ function Step3({ data, set, showErrors }: StepProps) {
         <FieldTextarea id="wizard-goals" rows={2} placeholder="e.g. More bookings, look more professional, sell online, save time on admin…" value={data.goals} onChange={e => set('goals', e.target.value)} />
       </FieldGroup>
       <FieldGroup label="Budget Range" required>
-        <PillRow options={BUDGET_OPTIONS} selected={data.budget} onSelect={v => set('budget', v)} radioGroup aria-label="Budget range" />
+        <PillRow options={BUDGET_OPTIONS} selected={data.budget} onSelect={v => set('budget', v)} radioGroup aria-label="Budget range" invalid={budgetErr} errorId="wizard-budget-error" />
         {budgetErr && <FieldError id="wizard-budget-error">Please select a budget range.</FieldError>}
       </FieldGroup>
       <FieldGroup label="Timeline" required>
-        <PillRow options={TIMELINE_OPTIONS} selected={data.timeline} onSelect={v => set('timeline', v)} radioGroup aria-label="Timeline" />
+        <PillRow options={TIMELINE_OPTIONS} selected={data.timeline} onSelect={v => set('timeline', v)} radioGroup aria-label="Timeline" invalid={timelineErr} errorId="wizard-timeline-error" />
         {timelineErr && <FieldError id="wizard-timeline-error">Please select a timeline.</FieldError>}
       </FieldGroup>
       <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -310,7 +310,7 @@ function StepAssets({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'se
 function Step5({ data, set, toggleArrayItem }: Pick<StepProps, 'data' | 'set'> & { toggleArrayItem: ToggleItem }) {
   return (
     <div className="flex flex-col gap-6">
-      <StepHeading title="Schedule a Call" sub="Tell me when you're generally available and I'll reach out to confirm." />
+      <StepHeading title="Last step: when should we talk?" sub="Tell me when you're generally available and I'll reach out to confirm. Or skip this and I'll suggest a time." />
       <FieldGroup label="Preferred Days">
         <PillRow
           options={DAY_OPTIONS}
@@ -396,14 +396,39 @@ interface PillRowProps {
   multiSelect?: boolean
   radioGroup?: boolean
   'aria-label'?: string
+  /** Radio groups only: flags a missing required answer and links the error message */
+  invalid?: boolean
+  errorId?: string
 }
 
-function PillRow({ options, hints, selected, onSelect, onToggle, multiSelect, radioGroup, 'aria-label': ariaLabel }: PillRowProps) {
+// Radio groups: arrow keys move the selection, as screen-reader users expect
+function onRadioKeyDown(e: React.KeyboardEvent<HTMLElement>) {
+  const forward = e.key === 'ArrowRight' || e.key === 'ArrowDown'
+  if (!forward && e.key !== 'ArrowLeft' && e.key !== 'ArrowUp') return
+  const radios = Array.from(e.currentTarget.querySelectorAll<HTMLElement>('[role="radio"]'))
+  const i = radios.indexOf(document.activeElement as HTMLElement)
+  if (i < 0) return
+  e.preventDefault()
+  const next = radios[(i + (forward ? 1 : -1) + radios.length) % radios.length]
+  next.focus()
+  next.click()
+}
+
+function PillRow({ options, hints, selected, onSelect, onToggle, multiSelect, radioGroup, 'aria-label': ariaLabel, invalid, errorId }: PillRowProps) {
   const [focus, setFocus] = useState<string | null>(null)
   const note = hints && focus ? hints[focus] : null
   return (
     <>
-    <div className="flex flex-wrap gap-2" role={radioGroup ? 'radiogroup' : 'group'} aria-label={ariaLabel}>
+    <div
+      className="flex flex-wrap gap-2"
+      role={radioGroup ? 'radiogroup' : 'group'}
+      aria-label={ariaLabel}
+      aria-required={radioGroup && errorId ? true : undefined}
+      aria-describedby={invalid ? errorId : undefined}
+      data-invalid={invalid ? 'true' : undefined}
+      tabIndex={radioGroup ? -1 : undefined}
+      onKeyDown={radioGroup ? onRadioKeyDown : undefined}
+    >
       {options.map(opt => {
         const active = Array.isArray(selected) ? selected.includes(opt) : selected === opt
         return (
@@ -547,7 +572,7 @@ export default function ClientIntakeWizard() {
       // Reveal inline errors and send focus to the first problem
       setShowErrors(true)
       requestAnimationFrame(() => {
-        stepRef.current?.querySelector<HTMLElement>('[aria-invalid="true"], [role="radiogroup"]')?.focus()
+        stepRef.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus()
       })
       return
     }
@@ -601,6 +626,9 @@ export default function ClientIntakeWizard() {
 
   return (
     <div className="flex w-full flex-col">
+      <p className="mb-6 text-center text-small text-muted">
+        About 5 minutes. Free, no obligation, and I reply within 24 hours.
+      </p>
       <ProgressBar step={step} />
 
       {/* Honeypot: invisible to people, tempting to spam bots */}
@@ -672,7 +700,7 @@ export default function ClientIntakeWizard() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            aria-label="Submit and book a call"
+            aria-label="Send my project details"
             className="btn btn-primary ml-auto"
           >
             {isSubmitting ? (
@@ -685,7 +713,7 @@ export default function ClientIntakeWizard() {
               </>
             ) : (
               <>
-                Book a Call
+                Send My Project Details
                 <FaCheck aria-hidden="true" />
               </>
             )}

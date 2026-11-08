@@ -5,6 +5,7 @@ import { FiCheck, FiCopy } from 'react-icons/fi'
 export default function CopyButton({ value, label, className = '' }: { value: string; label: string; className?: string }) {
   const [done, setDone] = useState(false)
   return (
+    <>
     <button
       type="button"
       aria-label={`Copy ${label}`}
@@ -23,5 +24,7 @@ export default function CopyButton({ value, label, className = '' }: { value: st
       {done ? <FiCheck className="text-success" aria-hidden="true" /> : <FiCopy aria-hidden="true" />}
       {done ? 'Copied' : 'Copy'}
     </button>
+    <span role="status" className="sr-only">{done ? `${label} copied` : ''}</span>
+    </>
   )
 }

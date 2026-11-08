@@ -1,6 +1,6 @@
 'use client'
 
-import { MotionConfig } from 'framer-motion'
+import { LazyMotion, domAnimation, MotionConfig } from 'framer-motion'
 
 /**
  * Wraps the app so every framer-motion animation honours the visitor's
@@ -8,5 +8,9 @@ import { MotionConfig } from 'framer-motion'
  * layout animations are disabled while opacity fades are kept.
  */
 export default function MotionProvider({ children }: { children: React.ReactNode }) {
-  return <MotionConfig reducedMotion="user">{children}</MotionConfig>
+  return (
+    <LazyMotion features={domAnimation}>
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+    </LazyMotion>
+  )
 }

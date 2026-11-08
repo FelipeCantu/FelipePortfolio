@@ -1,5 +1,7 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Disallow: /portal/
+Disallow: /api/
 
 Sitemap: https://felipecantujr.com/sitemap.xml

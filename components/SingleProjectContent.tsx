@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
+import { m as motion, type Variants } from 'framer-motion'
 import {
   FiArrowLeft,
   FiExternalLink,
@@ -86,14 +86,22 @@ export default function SingleProjectContent({ project }: Props) {
   useEffect(() => {
     if (!lightbox) return
     document.body.style.overflow = 'hidden'
+    const opener = document.activeElement as HTMLElement | null
     closeBtnRef.current?.focus()
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightbox(null)
+      // The close button is the only control in the dialog: keep focus inside it
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        closeBtnRef.current?.focus()
+      }
     }
     window.addEventListener('keydown', handler)
     return () => {
       window.removeEventListener('keydown', handler)
       document.body.style.overflow = ''
+      // Return focus to the thumbnail that opened the lightbox
+      opener?.focus?.()
     }
   }, [lightbox])
 

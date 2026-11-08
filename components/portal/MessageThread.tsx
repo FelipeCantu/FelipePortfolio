@@ -7,7 +7,7 @@ export default function MessageThread({ messages, viewer, clientName }: { messag
     return <p className="rounded-control bg-white/[0.03] px-4 py-6 text-center text-small text-muted">No messages yet. Say hello!</p>
   }
   return (
-    <ol className="grid max-h-[28rem] gap-3 overflow-y-auto pr-1" aria-label="Messages">
+    <ol className="grid max-h-[28rem] gap-3 overflow-y-auto pr-1" aria-label="Messages" tabIndex={0}>
       {messages.map((m) => {
         const mine = m.from === viewer
         const name = m.from === 'admin' ? 'Felipe' : clientName

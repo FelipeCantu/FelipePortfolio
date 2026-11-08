@@ -41,7 +41,7 @@ export default function Composer({
         </p>
       )}
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[0.75rem] text-subtle">{state?.error ? <span className="text-danger">{state.error}</span> : 'Ctrl/⌘ + Enter to send'}</p>
+        <p className="text-[0.75rem] text-subtle" aria-live="polite">{state?.error ? <span className="text-danger">{state.error}</span> : 'Ctrl/⌘ + Enter to send'}</p>
         <button type="submit" className="btn btn-primary btn-sm" disabled={pending}>
           <FiSend aria-hidden="true" /> {pending ? 'Sending…' : 'Send'}
         </button>

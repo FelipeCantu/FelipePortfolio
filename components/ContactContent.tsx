@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
+import { m as motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook, FaMapPin, FaPhoneAlt, FaArrowRight } from 'react-icons/fa'
 import { MdEmail } from 'react-icons/md'
 import { trackEvent } from '@/lib/analytics'

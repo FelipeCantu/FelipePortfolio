@@ -45,10 +45,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://felipecantujr.com',
+    siteName: 'Felipe Cantu Jr',
+    locale: 'en_US',
     title: 'Felipe Cantu Jr — Full Stack Web Developer',
     description:
       'Full-stack developer in Dallas, TX helping businesses launch fast, modern websites.',
-    images: [{ url: '/images/avatarpic.png' }],
+    images: [{ url: '/images/avatarpic.png', alt: 'Felipe Cantu Jr, full stack web developer in Dallas, TX' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -102,6 +104,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   '@type': 'WebSite',
                   name: 'Felipe Cantu Jr',
                   url: 'https://felipecantujr.com',
+                },
+                {
+                  '@type': 'ProfessionalService',
+                  '@id': 'https://felipecantujr.com/#service',
+                  name: 'Felipe Cantu Jr — Web Development',
+                  url: 'https://felipecantujr.com',
+                  image: 'https://felipecantujr.com/images/avatarpic.png',
+                  description:
+                    'Freelance web design and full stack development: fast, modern websites and web apps built with React, Next.js and Node.js.',
+                  founder: { '@type': 'Person', name: 'Felipe Cantu Jr', url: 'https://felipecantujr.com' },
+                  areaServed: { '@type': 'Country', name: 'US' },
+                  address: {
+                    '@type': 'PostalAddress',
+                    addressLocality: 'Dallas',
+                    addressRegion: 'TX',
+                    addressCountry: 'US',
+                  },
+                  sameAs: [
+                    'https://github.com/FelipeCantu',
+                    'https://www.linkedin.com/in/felipe-cantu-jr/',
+                    'https://www.instagram.com/son_of_robot_/',
+                    'https://www.facebook.com/profile.php?id=100064306140476',
+                  ],
                 },
               ],
             }),

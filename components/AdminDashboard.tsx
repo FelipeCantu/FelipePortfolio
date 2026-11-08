@@ -95,7 +95,7 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
         >
           Admin Dashboard
         </h1>
-        <p className="text-[0.95rem] text-white/55 leading-[1.75] m-0 mb-8">
+        <p className="text-[0.95rem] text-white/70 leading-[1.75] m-0 mb-8">
           Enter your password to access the client dashboard.
         </p>
 
@@ -125,6 +125,8 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-[0.85rem] text-left">
             <input
               type="password"
+              aria-label="Admin password"
+              autoComplete="current-password"
               placeholder="Password"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
@@ -138,7 +140,7 @@ function PasswordGate({ onAuth }: { onAuth: (key: string) => void }) {
               onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }}
               onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }}
             />
-            {error && <p className="text-[0.8rem] text-danger m-0">{error}</p>}
+            {error && <p className="text-[0.8rem] text-danger m-0" role="alert">{error}</p>}
             <button
               type="submit"
               disabled={loading || !pw}
@@ -230,17 +232,17 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
           <>
             <p className="text-[0.68rem] font-bold tracking-[0.16em] uppercase m-0 mb-1.5" style={{ color: 'var(--color-accent-light)' }}>New Client</p>
             <h2 className="text-[1.5rem] font-extrabold text-white m-0 mb-2" style={{ fontFamily: 'var(--font-display)' }}>Add a Client</h2>
-            <p className="text-[0.875rem] text-white/45 leading-[1.7] m-0 mb-6">
+            <p className="text-[0.875rem] text-white/65 leading-[1.7] m-0 mb-6">
               Creates a Stripe account and generates an onboarding link you can send them. They only need an email to get started.
             </p>
             <form onSubmit={handleCreate} className="flex flex-col gap-[0.85rem] text-left">
-              <label className="text-[0.72rem] font-bold tracking-[0.12em] uppercase text-white/45 -mb-[0.35rem]">Business / Client Name</label>
-              <input className={inputClass} style={inputStyle} placeholder="e.g. Angel Face Studio" value={name} onChange={e => setName(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
-              <label className="text-[0.72rem] font-bold tracking-[0.12em] uppercase text-white/45 -mb-[0.35rem]">Email <span className="font-normal normal-case tracking-normal opacity-60">(optional)</span></label>
-              <input type="email" className={inputClass} style={inputStyle} placeholder="client@example.com" value={email} onChange={e => setEmail(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
+              <label htmlFor="admin-client-name" className="text-[0.72rem] font-bold tracking-[0.12em] uppercase text-white/65 -mb-[0.35rem]">Business / Client Name</label>
+              <input id="admin-client-name" className={inputClass} style={inputStyle} placeholder="e.g. Angel Face Studio" value={name} onChange={e => setName(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
+              <label htmlFor="admin-client-email" className="text-[0.72rem] font-bold tracking-[0.12em] uppercase text-white/65 -mb-[0.35rem]">Email <span className="font-normal normal-case tracking-normal">(optional)</span></label>
+              <input id="admin-client-email" type="email" className={inputClass} style={inputStyle} placeholder="client@example.com" value={email} onChange={e => setEmail(e.target.value)} onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(14,165,233,0.18)' }} onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.boxShadow = '' }} />
               {error && <p className="text-[0.8rem] text-danger m-0">{error}</p>}
               <div className="flex gap-3 justify-end mt-2.5">
-                <button type="button" onClick={onClose} className="px-5 py-3 rounded-[10px] text-[0.88rem] text-white/55 cursor-pointer transition-[border-color,color] duration-200 hover:border-white/30 hover:text-white" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', fontFamily: 'var(--font-body)' }}>Cancel</button>
+                <button type="button" onClick={onClose} className="px-5 py-3 rounded-[10px] text-[0.88rem] text-white/70 cursor-pointer transition-[border-color,color] duration-200 hover:border-white/30 hover:text-white" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', fontFamily: 'var(--font-body)' }}>Cancel</button>
                 <button type="submit" disabled={loading || !name} className="inline-flex items-center gap-[0.4rem] px-7 py-3 rounded-[10px] text-[0.9rem] font-semibold text-accent-ink cursor-pointer transition-[background,transform] duration-200 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: 'var(--color-accent)', border: 'none', fontFamily: 'var(--font-body)' }}>
                   {loading ? 'Creating…' : 'Create Account →'}
                 </button>
@@ -253,16 +255,16 @@ function NewClientModal({ adminKey, onClose, onCreated }: { adminKey: string; on
               ✓ Account Created
             </div>
             <h2 className="text-[1.5rem] font-extrabold text-white m-0 mb-2" style={{ fontFamily: 'var(--font-display)' }}>{name}</h2>
-            <p className="text-[0.875rem] text-white/45 leading-[1.7] m-0 mb-6">
+            <p className="text-[0.875rem] text-white/65 leading-[1.7] m-0 mb-6">
               Copy the link below and send it to your client. They'll complete the rest directly with Stripe.
             </p>
             <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-4 py-3 mb-3 break-all">
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.55)' }}>
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>
                 {result.accountId}
               </code>
             </div>
             <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 flex-wrap mb-6">
-              <span className="flex-1 break-all" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)' }}>{result.onboardingUrl}</span>
+              <span className="flex-1 break-all" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'rgba(255,255,255,0.62)' }}>{result.onboardingUrl}</span>
               <button
                 onClick={copyLink}
                 className="inline-flex items-center gap-[0.35rem] px-[0.65rem] py-[0.3rem] rounded-[6px] text-[0.75rem] font-semibold cursor-pointer whitespace-nowrap flex-shrink-0 transition-all duration-200"
@@ -338,11 +340,11 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
             <p className="font-bold text-white text-[0.95rem] m-0 mb-[0.1rem]" style={{ fontFamily: 'var(--font-display)' }}>
               {account.name || '(unnamed)'}
             </p>
-            <p className="text-[0.75rem] text-white/40 m-0">{account.email || account.id}</p>
+            <p className="text-[0.75rem] text-white/60 m-0">{account.email || account.id}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 text-white/30">
-          <span className="text-[0.72rem] text-white/30">{timeAgo(account.created)}</span>
+        <div className="flex items-center gap-3 text-white/60">
+          <span className="text-[0.72rem] text-white/60">{timeAgo(account.created)}</span>
           {expanded ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
         </div>
       </div>
@@ -380,7 +382,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
             {/* Account ID row */}
             <div className="flex items-center gap-4 mb-[0.4rem]">
               <span className="text-[0.68rem] font-bold tracking-[0.12em] uppercase text-subtle w-24 flex-shrink-0 max-sm:w-auto">Account ID</span>
-              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)', wordBreak: 'break-all' }}>
+              <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)', wordBreak: 'break-all' }}>
                 {account.id}
               </code>
             </div>
@@ -411,7 +413,7 @@ function ClientRow({ account, adminKey }: { account: StripeAccount; adminKey: st
                 </button>
               ) : (
                 <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 flex-wrap">
-                  <span className="flex-1 break-all" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>
+                  <span className="flex-1 break-all" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(255,255,255,0.62)' }}>
                     {onboardingUrl}
                   </span>
                   <button
@@ -500,7 +502,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
                 onClick={onClick}
                 disabled={disabled}
                 title={title}
-                className="w-9 h-9 flex items-center justify-center rounded-lg text-white/50 cursor-pointer transition-all duration-200 hover:border-white/25 hover:text-white disabled:opacity-35 disabled:cursor-not-allowed"
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-white/65 cursor-pointer transition-all duration-200 hover:border-white/25 hover:text-white disabled:opacity-35 disabled:cursor-not-allowed"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
               >
                 {icon}
@@ -521,7 +523,7 @@ function Dashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => v
               className="rounded-2xl p-6 transition-[border-color] duration-200 hover:border-[rgba(14,165,233,0.3)]"
               style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.10)' }}
             >
-              <p className="text-[0.7rem] font-bold tracking-[0.14em] uppercase text-white/40 m-0 mb-2">{label}</p>
+              <p className="text-[0.7rem] font-bold tracking-[0.14em] uppercase text-white/60 m-0 mb-2">{label}</p>
               <p className="text-[1.9rem] font-bold text-white m-0 mb-[0.25rem] tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
                 {value}
               </p>

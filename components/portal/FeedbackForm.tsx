@@ -38,7 +38,7 @@ export default function FeedbackForm({
           {[1, 2, 3, 4, 5].map((n) => (
             <label key={n} className="cursor-pointer" onMouseEnter={() => setHover(n)}>
               <input type="radio" name="rating" value={n} checked={rating === n} onChange={() => setRating(n)} className="peer sr-only" aria-label={`${n} star${n > 1 ? 's' : ''}: ${LABELS[n]}`} />
-              <span className={`block px-0.5 text-3xl leading-none transition-transform peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-accent-light hover:scale-110 ${n <= shown ? 'text-gold' : 'text-line/30'}`} aria-hidden="true">
+              <span className={`block px-0.5 text-3xl leading-none transition-transform peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-accent-light hover:scale-110 ${n <= shown ? 'text-gold' : 'text-line/60'}`} aria-hidden="true">
                 ★
               </span>
             </label>

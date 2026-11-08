@@ -73,13 +73,13 @@ export default function FileUploader({
           setDrag(false)
           handle(e.dataTransfer.files)
         }}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-card border border-dashed px-4 py-6 text-center transition-colors ${
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-card border border-dashed px-4 py-6 text-center transition-colors focus-within:border-accent-light focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-light ${
           drag ? 'border-accent-light bg-accent/10' : 'border-line/30 hover:border-accent/50 hover:bg-white/[0.02]'
         }`}
       >
         <FiUploadCloud size={22} className="text-accent-light" aria-hidden="true" />
         {busy ? (
-          <span className="w-full max-w-xs">
+          <span className="w-full max-w-xs" role="status">
             <span className="block truncate text-small text-fg">Uploading {busy}…</span>
             <span className="mt-2 block h-1.5 overflow-hidden rounded-pill bg-white/[0.08]">
               <span className="block h-full bg-accent-light transition-[width]" style={{ width: `${progress}%` }} />

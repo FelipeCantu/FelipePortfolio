@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { motion, type Variants } from 'framer-motion'
+import { m as motion, type Variants } from 'framer-motion'
 import { FaGithub, FaLinkedin, FaInstagram, FaFacebook } from 'react-icons/fa'
 import { FiArrowRight } from 'react-icons/fi'
 import { trackEvent } from '@/lib/analytics'
@@ -132,30 +132,35 @@ export default function HomeHero() {
           </motion.h1>
 
           <motion.p variants={rise} className="lead mx-auto mt-6 max-w-xl lg:mx-0">
-            I help businesses and entrepreneurs launch fast, polished websites that attract clients and deliver real
-            results.
+            Tired of a website that looks fine but never brings in customers? I design and build fast, polished sites
+            and apps for businesses and entrepreneurs, and you can follow every step in your own client portal.
           </motion.p>
 
           <motion.div variants={rise} className="mt-9 flex flex-wrap justify-center gap-3 lg:justify-start">
             <Link
-              href="/portfolio"
-              onClick={() => trackEvent('cta_click', { label: 'view_work' })}
-              className="btn btn-primary"
-            >
-              View My Work
-            </Link>
-            <Link
               href="/get-started"
               onClick={() => trackEvent('cta_click', { label: 'start_project' })}
-              className="btn btn-secondary group"
+              className="btn btn-primary group"
             >
-              Start a Project
+              Start Your Project
               <FiArrowRight
                 aria-hidden="true"
                 className="transition-transform duration-200 group-hover:translate-x-1"
               />
             </Link>
+            <Link
+              href="/portfolio"
+              onClick={() => trackEvent('cta_click', { label: 'view_work' })}
+              className="btn btn-secondary"
+            >
+              See My Work
+            </Link>
           </motion.div>
+
+          <motion.p variants={rise} className="mt-4 text-small text-subtle">
+            Free project chat &middot; Reply within 24 hours &middot; No obligation
+          </motion.p>
+          {/* TODO(Felipe): add a real proof point here (e.g. number of sites launched, a client logo or a short quote). */}
 
           <motion.ul variants={rise} className="mt-10 flex justify-center gap-3 lg:justify-start">
             {socialLinks.map(({ href, icon: Icon, label }) => (

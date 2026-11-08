@@ -103,9 +103,12 @@ export default function Services() {
           ))}
         </div>
 
-        <div className="mt-14 flex flex-wrap justify-center gap-3">
-          <Link href="/get-started" className="btn btn-primary">Start a project</Link>
-          <Link href="/portfolio" className="btn btn-secondary">See my work</Link>
+        <div className="mt-14 text-center">
+          <p className="mb-4 text-muted">Don’t see exactly what you need? Tell me about it and I’ll point you in the right direction.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/get-started" className="btn btn-primary">Start Your Project</Link>
+            <Link href="/portfolio" className="btn btn-secondary">See My Work</Link>
+          </div>
         </div>
       </div>
     </section>

@@ -59,9 +59,9 @@ export default function AccessSection({ project, inviteEmail }: { project: Proje
                         <table className="w-full min-w-[30rem] text-left text-[0.8rem]">
                           <thead className="bg-white/[0.03] text-subtle">
                             <tr>
-                              <th className="px-3 py-2 font-semibold">Type</th>
-                              <th className="px-3 py-2 font-semibold">Name / Host</th>
-                              <th className="px-3 py-2 font-semibold">Value / Points to</th>
+                              <th scope="col" className="px-3 py-2 font-semibold">Type</th>
+                              <th scope="col" className="px-3 py-2 font-semibold">Name / Host</th>
+                              <th scope="col" className="px-3 py-2 font-semibold">Value / Points to</th>
                             </tr>
                           </thead>
                           <tbody>

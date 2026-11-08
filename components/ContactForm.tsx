@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m as motion } from 'framer-motion'
 import { FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi'
 import emailjs from '@emailjs/browser'
 import { trackEvent } from '@/lib/analytics'

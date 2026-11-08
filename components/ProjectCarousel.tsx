@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { m as motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { urlFor } from '@/lib/sanity'
 import { TYPE_LABELS, TYPE_BADGE } from '@/components/projectMeta'

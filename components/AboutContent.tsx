@@ -147,7 +147,6 @@ function DashCell({ label, color, glow, Icon }: { label: string; color: string; 
         border: `1px solid ${color}22`,
         padding: '0.35rem 0.3rem 0.3rem',
       }}
-      tabIndex={0}
     >
       {/* Top glow bar */}
       <div
@@ -510,8 +509,8 @@ export default function AboutContent() {
                   style={{ gridTemplateColumns: '1fr 1fr', alignItems: 'stretch' }}
                 >
                   {processSteps.map((step) => (
-                    <motion.div key={step.number} variants={chipVariant} className="h-full flex flex-col">
-                      <li className="flex flex-row items-start gap-2 px-3 py-[0.55rem] rounded-[14px] border transition-[background,border-color,transform] duration-[250ms] hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] hover:translate-y-[1px] h-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                    <motion.li key={step.number} variants={chipVariant} className="h-full flex flex-col">
+                      <div className="flex flex-row items-start gap-2 px-3 py-[0.55rem] rounded-[14px] border transition-[background,border-color,transform] duration-[250ms] hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] hover:translate-y-[1px] h-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
                         <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.75rem] font-bold border" style={{ fontFamily: 'var(--font-mono)', background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
                           {step.number}
                         </span>
@@ -519,8 +518,8 @@ export default function AboutContent() {
                           <p className="font-semibold text-fg m-0 mb-[0.2rem] tracking-[0.01em] leading-[1.2] text-[0.875rem]" style={{ fontFamily: 'var(--font-body)' }}>{step.title}</p>
                           <p className="text-muted m-0 leading-[1.4] text-[0.8rem]" style={{ fontFamily: 'var(--font-body)' }}>{step.body}</p>
                         </div>
-                      </li>
-                    </motion.div>
+                      </div>
+                    </motion.li>
                   ))}
                 </motion.ol>
               </motion.div>
@@ -532,7 +531,6 @@ export default function AboutContent() {
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.2 }}
                 className="flex-1 flex flex-col items-center justify-center px-10 py-12"
-                aria-hidden="true"
               >
                 <div className="w-full max-w-[320px] flex flex-col gap-3 pt-1">
                   <p className="text-[0.8rem] m-0 mb-1" style={{ fontFamily: 'var(--font-mono)', color: 'rgba(56,189,248,0.8)', letterSpacing: '0.05em' }}>{'// skill_matrix.exe'}</p>
@@ -552,12 +550,14 @@ export default function AboutContent() {
                 {['Process', 'Skills'].map((tab, idx) => (
                   <button
                     key={tab}
+                    type="button"
                     onClick={() => goToSkillTab(idx)}
+                    aria-pressed={skillTab === idx}
                     className="flex-1 py-[0.55rem] bg-none border-none cursor-pointer text-[0.8rem] tracking-[0.03em] transition-[color] duration-[220ms]"
                     style={{
                       fontFamily: 'var(--font-body)',
                       fontWeight: skillTab === idx ? 700 : 500,
-                      color: skillTab === idx ? 'var(--color-accent-light, #38bdf8)' : 'rgba(255,255,255,0.40)',
+                      color: skillTab === idx ? 'var(--color-accent-light, #38bdf8)' : 'rgba(255,255,255,0.62)',
                     }}
                   >
                     {tab}
@@ -596,8 +596,8 @@ export default function AboutContent() {
                       <h2 className="font-extrabold text-fg leading-[1.1] m-0 overflow-visible" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem,3vw,2.2rem)' }}>From idea to launch.</h2>
                       <ol className="list-none m-0 pb-4 grid gap-2" style={{ gridTemplateColumns: '1fr' }}>
                         {processSteps.map((step) => (
-                          <motion.div key={step.number} variants={chipVariant} initial="hidden" animate="visible">
-                            <li className="flex flex-row items-start gap-1.5 px-[0.45rem] py-[0.3rem] rounded-[14px] border hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] transition-all duration-[250ms]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                          <motion.li key={step.number} variants={chipVariant} initial="hidden" animate="visible">
+                            <div className="flex flex-row items-start gap-1.5 px-[0.45rem] py-[0.3rem] rounded-[14px] border hover:bg-[rgba(14,165,233,0.08)] hover:border-[rgba(14,165,233,0.35)] transition-all duration-[250ms]" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)' }}>
                               <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-[0.1rem] text-[0.75rem] font-bold" style={{ fontFamily: 'var(--font-mono)', background: 'rgba(14,165,233,0.14)', border: '1px solid rgba(14,165,233,0.30)', color: 'var(--color-accent-light, #38bdf8)' }}>
                                 {step.number}
                               </span>
@@ -605,8 +605,8 @@ export default function AboutContent() {
                                 <p className="font-semibold text-fg m-0 mb-[0.1rem] text-[0.8rem] leading-[1.2]" style={{ fontFamily: 'var(--font-body)' }}>{step.title}</p>
                                 <p className="text-muted m-0 text-[0.75rem] leading-[1.35]" style={{ fontFamily: 'var(--font-body)' }}>{step.body}</p>
                               </div>
-                            </li>
-                          </motion.div>
+                            </div>
+                          </motion.li>
                         ))}
                       </ol>
                     </>
