@@ -678,7 +678,7 @@ export default function AboutContent() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.2 }}
-                className="flex-[0_0_50%] flex flex-col items-start justify-center px-6 py-6 md:px-10 md:py-12 max-[899px]:relative max-[899px]:z-[2] max-[899px]:w-full max-[899px]:px-5 max-[899px]:py-6 max-[899px]:items-center max-[899px]:text-center max-[899px]:justify-center"
+                className="flex-[0_0_50%] flex flex-col items-start justify-center px-6 py-6 md:px-10 md:py-12 max-[899px]:flex-1 max-[899px]:relative max-[899px]:z-[2] max-[899px]:w-full max-[899px]:px-5 max-[899px]:py-6 max-[899px]:items-center max-[899px]:text-center max-[899px]:justify-center"
                 style={{ background: 'linear-gradient(to bottom, rgba(4,4,14,0.55) 0%, rgba(4,4,14,0.85) 100%)' } as React.CSSProperties}
               >
                 <motion.div variants={fromLeft}>
