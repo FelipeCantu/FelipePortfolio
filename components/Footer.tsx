@@ -20,8 +20,8 @@ const SOCIAL = [
   { href: 'https://www.facebook.com/profile.php?id=100064306140476', label: 'Facebook', Icon: FaFacebook },
 ]
 
-// Routes that manage their own full-height layout or are internal tools
-const HIDDEN_ON = ['/about', '/admin']
+// Internal tools only (the About page scrolls normally now, so it gets the footer too)
+const HIDDEN_ON = ['/admin']
 
 export default function Footer() {
   const pathname = usePathname()

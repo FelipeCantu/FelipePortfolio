@@ -192,7 +192,7 @@ function DashCell({ label, color, glow, Icon }: { label: string; color: string; 
 // ─── Section glass wrapper ────────────────────────────────────────────────────
 // Mirrors the SectionGlass styled-component's gradient border + grain texture
 
-function SectionGlass({ children, tall }: { children: React.ReactNode; tall?: boolean }) {
+function SectionGlass({ children, tall, clip }: { children: React.ReactNode; tall?: boolean; clip?: boolean }) {
   return (
     <div
       // Near-opaque fill instead of backdrop-blur: re-blurring the page behind a
@@ -223,7 +223,9 @@ function SectionGlass({ children, tall }: { children: React.ReactNode; tall?: bo
           backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(255,255,255,0.014) 3px, rgba(255,255,255,0.014) 4px)',
         }}
       />
-      <div className="relative z-[3] w-full flex items-stretch">{children}</div>
+      {/* clip: trims full-bleed photos to the card's own curve (26px card minus its 1px border).
+          clip-path, unlike overflow + radius, also clips children that are mid-animation on iOS Safari. */}
+      <div className={`relative z-[3] w-full flex items-stretch ${clip ? 'rounded-[25px] [clip-path:inset(0_round_25px)]' : ''}`}>{children}</div>
     </div>
   )
 }
@@ -429,8 +431,8 @@ export default function AboutContent() {
           aria-label="Personal story"
           className={snapSectionClass}
         >
-          <SectionGlass>
-            <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(95vw,560px)]">
+          <SectionGlass clip>
+            <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:min-h-[min(95vw,560px)]">
               {/* Photo LEFT (reversed to left visually) */}
               <motion.div
                 variants={fromLeft}
@@ -440,7 +442,7 @@ export default function AboutContent() {
                 className="flex-[0_0_50%] p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
-                <div className="w-full h-full overflow-hidden rounded-[0_25px_25px_0] max-[899px]:rounded-none">
+                <div className="w-full h-full overflow-hidden">
                   <img
                     src="/images/big.jpg"
                     alt="Felipe Cantu Jr"
@@ -668,8 +670,8 @@ export default function AboutContent() {
           aria-label="Work philosophy"
           className={snapSectionClass}
         >
-          <SectionGlass>
-            <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:overflow-hidden max-[899px]:rounded-[20px] max-[899px]:min-h-[min(115vw,680px)]">
+          <SectionGlass clip>
+            <div className="flex flex-row-reverse w-full max-[899px]:flex-col max-[899px]:min-h-[min(115vw,680px)]">
               {/* Value cards LEFT */}
               <motion.div
                 variants={staggerContainer}
@@ -746,7 +748,7 @@ export default function AboutContent() {
                 className="flex-1 p-0 overflow-hidden max-[899px]:absolute max-[899px]:inset-0 max-[899px]:flex-none max-[899px]:w-full max-[899px]:h-full max-[899px]:z-0"
                 aria-hidden="true"
               >
-                <div className="w-full h-full overflow-hidden rounded-[25px_0_0_25px] max-[899px]:rounded-none">
+                <div className="w-full h-full overflow-hidden">
                   <img src="/images/big2.jpg" alt="" className="w-full h-full object-cover object-top block" style={{ filter: 'saturate(0.88) contrast(1.05)' }} />
                 </div>
               </motion.div>
