@@ -109,7 +109,7 @@ function CollagePiece({ w, h, top, left, rotate, z, delay, radius, src, alt = ''
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement
         el.style.zIndex = '10'
-        el.style.boxShadow = '0 16px 48px rgba(0,0,0,0.7), 0 0 0 2px var(--color-accent, #0ea5e9)'
+        el.style.boxShadow = `0 16px 48px rgba(0,0,0,0.7), 0 0 0 2px ${accentColor}`
         el.style.rotate = '0deg'
         el.style.scale = '1.06'
       }}
@@ -141,12 +141,12 @@ function CollagePiece({ w, h, top, left, rotate, z, delay, radius, src, alt = ''
 function DashCell({ label, color, glow, Icon }: { label: string; color: string; glow: number; Icon: React.ComponentType<{ size?: number }> }) {
   return (
     <div
-      className="relative rounded-[8px] md:rounded-[10px] flex flex-col gap-[0.45rem] overflow-hidden transition-[background,border-color,transform] duration-300 hover:bg-[rgba(14,165,233,0.10)] hover:border-[rgba(56,189,248,0.50)] hover:-translate-y-0.5 focus-visible:bg-[rgba(14,165,233,0.10)] focus-visible:border-[rgba(56,189,248,0.50)] focus-visible:-translate-y-0.5 group"
+      // Hover tint, border and icon glow all follow the cell's own colour (--cell)
+      className="relative rounded-[8px] md:rounded-[10px] flex flex-col gap-[0.45rem] overflow-hidden transition-[background,border-color,transform] duration-300 bg-white/[0.04] border border-[color-mix(in_srgb,var(--cell)_14%,transparent)] hover:bg-[color-mix(in_srgb,var(--cell)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--cell)_50%,transparent)] hover:-translate-y-0.5 focus-visible:bg-[color-mix(in_srgb,var(--cell)_10%,transparent)] focus-visible:border-[color-mix(in_srgb,var(--cell)_50%,transparent)] focus-visible:-translate-y-0.5 group"
       style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: `1px solid ${color}22`,
+        '--cell': color,
         padding: '0.35rem 0.3rem 0.3rem',
-      }}
+      } as React.CSSProperties}
     >
       {/* Top glow bar */}
       <div
@@ -163,7 +163,7 @@ function DashCell({ label, color, glow, Icon }: { label: string; color: string; 
           {label}
         </span>
         {/* Bar */}
-        <div className="h-1 rounded-sm relative overflow-hidden" style={{ background: `${color}33` }}>
+        <div className="h-1 rounded-sm relative overflow-hidden" style={{ background: `color-mix(in srgb, ${color} 20%, transparent)` }}>
           <div
             className="absolute inset-0 rounded-sm opacity-85"
             style={{ width: `${Math.round(glow * 100)}%`, background: color }}
@@ -175,13 +175,13 @@ function DashCell({ label, color, glow, Icon }: { label: string; color: string; 
       <div
         className="absolute inset-0 flex items-center justify-center opacity-0 scale-[1.2] rotate-[-10deg] transition-[opacity,transform] duration-[320ms] cubic-bezier(0.22,1,0.36,1) group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0 group-focus:opacity-100 group-focus:scale-100 group-focus:rotate-0"
         style={{
-          color: 'var(--color-accent-light, #38bdf8)',
-          filter: 'drop-shadow(0 0 10px rgba(56,189,248,0.9))',
+          color,
+          filter: `drop-shadow(0 0 10px color-mix(in srgb, ${color} 90%, transparent))`,
         }}
       >
         <div
           className="absolute inset-0"
-          style={{ background: 'radial-gradient(circle at center, rgba(14,165,233,0.22) 0%, transparent 68%)' }}
+          style={{ background: `radial-gradient(circle at center, color-mix(in srgb, ${color} 22%, transparent) 0%, transparent 68%)` }}
         />
         <Icon size={46} />
       </div>
@@ -328,7 +328,8 @@ export default function AboutContent() {
           className={snapSectionClass}
         >
           <SectionGlass tall>
-            <div className="flex flex-col md:flex-row w-full">
+            {/* Side-by-side from 900px, matching the collage's own breakpoint */}
+            <div className="flex flex-col min-[900px]:flex-row w-full">
               {/* Text LEFT */}
               <motion.div
                 variants={fromLeft}
@@ -390,7 +391,8 @@ export default function AboutContent() {
                 className="flex-1 flex items-center justify-center p-2 overflow-visible"
                 aria-hidden="true"
               >
-                <div className="relative w-full max-w-[480px] h-[460px] max-[899px]:max-w-none max-[899px]:h-full flex-shrink-0">
+                {/* Piece positions are percentages of a 480x460 frame, so the aspect ratio keeps the layout intact at any width */}
+                <div className="relative w-full max-w-[480px] aspect-[480/460] max-[899px]:w-[min(100%,52svh)] flex-shrink-0">
                   {/* Connector lines */}
                   {[
                     { top: '38%', left: '32%', w: '80px', angle: '-25deg' },
