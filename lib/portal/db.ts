@@ -2,8 +2,8 @@ import 'server-only'
 import { createHash, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto'
 import { kv } from './kv'
 import type {
-  AccessItem, Activity, Client, ClientTask, Contract, FileItem, Invoice, InvoiceItem, Lead, Message, Milestone, PortalSettings,
-  Project, Review, Role,
+  AccessItem, Activity, ChangeOrder, Client, ClientTask, Contact, Contract, EmailPrefs, FileItem, Invoice, InvoiceItem, Lead,
+  Message, Milestone, PortalSettings, Preview, Project, Proposal, Review, Role, Ticket,
 } from './types'
 import type { IntakeData } from './intake'
 
@@ -67,6 +67,14 @@ const K = {
   settings: 'portal:settings',
   lead: (id: string) => `portal:lead:${id}`,
   leads: 'portal:leads',
+  contact: (id: string) => `portal:contact:${id}`,
+  clientContacts: (clientId: string) => `portal:client:${clientId}:contacts`,
+  contactByEmail: (email: string) => `portal:contact-email:${email}`,
+  proposals: (projectId: string) => `portal:project:${projectId}:proposals`,
+  changes: (projectId: string) => `portal:project:${projectId}:changes`,
+  previews: (projectId: string) => `portal:project:${projectId}:previews`,
+  tickets: (projectId: string) => `portal:project:${projectId}:tickets`,
+  ticketSeq: 'portal:seq:ticket',
 }
 
 const byDateDesc = <T extends { createdAt: string }>(a: T, b: T) => b.createdAt.localeCompare(a.createdAt)
@@ -94,7 +102,7 @@ export async function listClients() {
 
 export async function createClient(input: { name: string; email: string; company?: string; phone?: string }) {
   const email = input.email.trim().toLowerCase()
-  if (await kv().get(K.clientByEmail(email))) throw new Error('A client with that email already exists.')
+  if (await emailTaken(email)) throw new Error('A client with that email already exists.')
   const code = generateAccessCode()
   const client: Client = {
     id: newId(),
@@ -117,7 +125,7 @@ export async function updateClient(id: string, patch: Partial<Pick<Client, 'name
   if (!client) throw new Error('Client not found')
   if (patch.email && patch.email.toLowerCase() !== client.email) {
     const email = patch.email.trim().toLowerCase()
-    if (await kv().get(K.clientByEmail(email))) throw new Error('Another client already uses that email.')
+    if (await emailTaken(email)) throw new Error('Another client already uses that email.')
     await kv().del(K.clientByEmail(client.email))
     await kv().set(K.clientByEmail(email), id)
     patch.email = email
@@ -145,9 +153,16 @@ export async function resetClientCode(id: string) {
 }
 
 /** Sets the client's password, retires the setup code and signs out other sessions. */
-export async function setClientPassword(id: string, password: string) {
+export async function setClientPassword(id: string, password: string, contactId?: string): Promise<Client> {
   const client = await getClient(id)
   if (!client) throw new Error('Client not found')
+  if (contactId) {
+    const contact = await getContact(contactId)
+    if (!contact || contact.clientId !== id) throw new Error('Contact not found')
+    const updated: Contact = { ...contact, passwordHash: hashSecret(password), codeHash: undefined, sessionVersion: contact.sessionVersion + 1 }
+    await kv().set(K.contact(contact.id), updated)
+    return asViewer(client, updated)
+  }
   const next: Client = {
     ...client,
     passwordHash: hashSecret(password),
@@ -170,18 +185,23 @@ export async function getClientByEmail(email: string) {
 /* password reset links (single use, 1 hour) */
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex')
 
-export async function createResetToken(clientId: string) {
+export async function createResetToken(clientId: string, contactId?: string) {
   const token = randomBytes(32).toString('base64url')
   const key = K.resetToken(sha256(token))
-  await kv().set(key, clientId)
+  await kv().set(key, contactId ? `${clientId}:${contactId}` : clientId)
   await kv().expire(key, 60 * 60)
   return token
 }
 
 export async function peekResetToken(token: string) {
   if (!token) return null
-  const id = await kv().get<string>(K.resetToken(sha256(token)))
-  return id ? getClient(id) : null
+  const value = await kv().get<string>(K.resetToken(sha256(token)))
+  if (!value) return null
+  const [clientId, contactId] = String(value).split(':')
+  const client = await getClient(clientId)
+  if (!client || !contactId) return client
+  const contact = await getContact(contactId)
+  return contact && contact.clientId === client.id ? asViewer(client, contact) : null
 }
 
 export async function consumeResetToken(token: string) {
@@ -194,7 +214,11 @@ export async function deleteClient(id: string) {
   const client = await getClient(id)
   if (!client) return
   for (const p of await listProjects(id)) await deleteProject(p.id)
-  for (const inv of await listInvoices(id)) await kv().del(K.invoice(inv.id))
+  for (const inv of await listInvoices(id)) {
+    await kv().srem(K.invoices, inv.id)
+    await kv().del(K.invoice(inv.id))
+  }
+  for (const c of await listContacts(id)) await removeContact(c.id)
   await kv().del(K.clientInvoices(id))
   await kv().del(K.clientProjects(id))
   await kv().del(K.clientByEmail(client.email))
@@ -209,13 +233,119 @@ export async function deleteClient(id: string) {
  */
 export async function authenticateClient(email: string, secret: string) {
   const client = await getClientByEmail(email)
+  const contact = client ? null : await getContactByEmail(email)
+  const who = client ?? contact
   // Always run the hashes so response time doesn't reveal whether the email exists
-  const byPassword = verifySecret(secret, client?.passwordHash)
-  const byCode = !byPassword && verifyCode(secret, client?.passwordHash ? undefined : client?.codeHash)
-  if (!client || (!byPassword && !byCode)) return null
-  const updated = { ...client, lastLoginAt: now() }
-  await kv().set(K.client(client.id), updated)
-  return { client: updated, needsPassword: !client.passwordHash }
+  const byPassword = verifySecret(secret, who?.passwordHash)
+  const byCode = !byPassword && verifyCode(secret, who?.passwordHash ? undefined : who?.codeHash)
+  if (!who || (!byPassword && !byCode)) return null
+  const needsPassword = !who.passwordHash
+  if (contact) {
+    const owner = await getClient(contact.clientId)
+    if (!owner) return null
+    const updated: Contact = { ...contact, lastLoginAt: now() }
+    await kv().set(K.contact(contact.id), updated)
+    return { client: asViewer(owner, updated), needsPassword }
+  }
+  const updated: Client = { ...client!, lastLoginAt: now() }
+  await kv().set(K.client(updated.id), updated)
+  return { client: updated, needsPassword }
+}
+
+/* ───────────────────────── extra contacts ───────────────────────── */
+
+/**
+ * The signed-in person when they are an extra contact: the client's account
+ * (same projects and invoices) with the contact's own name, email and password.
+ * Never save this object back as the client record.
+ */
+export function asViewer(client: Client, contact: Contact): Client {
+  return {
+    ...client,
+    name: contact.name,
+    email: contact.email,
+    codeHash: contact.codeHash,
+    passwordHash: contact.passwordHash,
+    sessionVersion: contact.sessionVersion,
+    lastLoginAt: contact.lastLoginAt,
+    emailPrefs: contact.emailPrefs,
+    contactId: contact.id,
+  }
+}
+
+async function emailTaken(email: string) {
+  const e = email.trim().toLowerCase()
+  return Boolean((await kv().get(K.clientByEmail(e))) || (await kv().get(K.contactByEmail(e))))
+}
+
+export async function getContact(id: string) {
+  return kv().get<Contact>(K.contact(id))
+}
+
+export async function getContactByEmail(email: string) {
+  const id = await kv().get<string>(K.contactByEmail(email.trim().toLowerCase()))
+  return id ? getContact(id) : null
+}
+
+export async function listContacts(clientId: string) {
+  const ids = await kv().smembers(K.clientContacts(clientId))
+  return compact(await Promise.all(ids.map(getContact))).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+export async function createContact(clientId: string, input: { name: string; email: string; emailPrefs?: EmailPrefs }) {
+  const email = input.email.trim().toLowerCase()
+  if (await emailTaken(email)) throw new Error('That email already has a portal sign-in.')
+  const code = generateAccessCode()
+  const contact: Contact = {
+    id: newId(), clientId, name: input.name.trim(), email, codeHash: hashCode(code), sessionVersion: 1,
+    emailPrefs: input.emailPrefs, createdAt: now(),
+  }
+  await kv().set(K.contact(contact.id), contact)
+  await kv().set(K.contactByEmail(email), contact.id)
+  await kv().sadd(K.clientContacts(clientId), contact.id)
+  return { contact, code }
+}
+
+/** New one-time code for a contact; clears their password and signs them out. */
+export async function resetContactCode(id: string) {
+  const contact = await getContact(id)
+  if (!contact) throw new Error('Contact not found')
+  const code = generateAccessCode()
+  await kv().set(K.contact(id), { ...contact, codeHash: hashCode(code), passwordHash: undefined, sessionVersion: contact.sessionVersion + 1 })
+  return { contact, code }
+}
+
+export async function removeContact(id: string) {
+  const contact = await getContact(id)
+  if (!contact) return
+  await kv().del(K.contactByEmail(contact.email))
+  await kv().srem(K.clientContacts(contact.clientId), id)
+  await kv().del(K.contact(id))
+}
+
+/** Saves email preferences for whoever is signed in (the client or one of their contacts). */
+export async function saveEmailPrefs(viewer: Client, prefs: EmailPrefs) {
+  if (viewer.contactId) {
+    const contact = await getContact(viewer.contactId)
+    if (contact) await kv().set(K.contact(contact.id), { ...contact, emailPrefs: prefs })
+    return
+  }
+  const client = await getClient(viewer.id)
+  if (client) await kv().set(K.client(client.id), { ...client, emailPrefs: prefs })
+}
+
+export async function setStripeCustomer(clientId: string, stripeCustomerId: string) {
+  const client = await getClient(clientId)
+  if (client) await kv().set(K.client(clientId), { ...client, stripeCustomerId })
+}
+
+/** The client or contact with this sign-in email, as a viewer (used by "forgot password"). */
+export async function getViewerByEmail(email: string) {
+  const client = await getClientByEmail(email)
+  if (client) return client
+  const contact = await getContactByEmail(email)
+  const owner = contact ? await getClient(contact.clientId) : null
+  return contact && owner ? asViewer(owner, contact) : null
 }
 
 /* ───────────────────────── projects ───────────────────────── */
@@ -270,6 +400,10 @@ export async function deleteProject(id: string) {
     kv().del(K.activity(id)),
     kv().del(K.readMark(id, 'client')),
     kv().del(K.readMark(id, 'admin')),
+    kv().del(K.proposals(id)),
+    kv().del(K.changes(id)),
+    kv().del(K.previews(id)),
+    kv().del(K.tickets(id)),
   ])
   for (const c of await listContracts(id)) await kv().del(K.contract(c.id))
   await kv().del(K.projectContracts(id))
@@ -573,3 +707,32 @@ export async function deleteLead(id: string) {
   await kv().srem(K.leads, id)
   await kv().del(K.lead(id))
 }
+
+/* ───────────────────────── per-project collections ───────────────────────── */
+
+function collection<T extends { id: string; projectId: string; createdAt: string }>(key: (projectId: string) => string) {
+  return {
+    list: async (projectId: string) => Object.values(await kv().hgetall<T>(key(projectId))).sort(byDateDesc),
+    get: (projectId: string, id: string) => kv().hget<T>(key(projectId), id),
+    save: async (item: T) => {
+      await kv().hset(key(item.projectId), item.id, item)
+      return item
+    },
+    remove: (projectId: string, id: string) => kv().hdel(key(projectId), id),
+  }
+}
+
+/** Quotes, scope changes, site previews and support requests, each stored with its project. */
+export const proposals = collection<Proposal>(K.proposals)
+export const changeOrders = collection<ChangeOrder>(K.changes)
+export const previews = collection<Preview>(K.previews)
+export const tickets = collection<Ticket>(K.tickets)
+
+export const nextTicketNumber = () => kv().incr(K.ticketSeq)
+
+/** Today as YYYY-MM-DD in Felipe's time zone. */
+export const todayIso = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })
+
+/** A sent proposal whose "valid until" date has passed can no longer be accepted. */
+export const proposalExpired = (p: Pick<Proposal, 'status' | 'validUntil'>) =>
+  p.status === 'sent' && !!p.validUntil && p.validUntil < todayIso()

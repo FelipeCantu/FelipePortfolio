@@ -1,6 +1,8 @@
 import 'server-only'
 import { createInvoice, getClient, getProject, invoiceTotal, listClients, listProjects, logActivity, saveProject } from './db'
-import { sendEmail } from './notify'
+import { notifyAdmin } from './notify'
+import { emailPeople } from './people'
+import { chargeSavedCard } from './payments'
 import { money } from './format'
 import type { Project } from './types'
 
@@ -69,15 +71,42 @@ export async function billCarePlan(projectId: string, origin: string, now = new 
   })
   await logActivity({ clientId: inv.clientId, projectId, actor: 'admin', text: `Care plan invoice ${inv.number} issued (${money(invoiceTotal(inv))})`, href: `/portal/invoices/${inv.id}` })
   const client = await getClient(project.clientId)
-  if (client) {
-    await sendEmail(
-      client.email,
-      `Your ${monthName(ym)} care plan invoice`,
-      `Hi ${client.name.split(' ')[0]},\n\nYour monthly care plan invoice for ${project.name} (${money(invoiceTotal(inv))}) is ready. You can view and pay it securely online.`,
-      `${origin}/portal/invoices/${inv.id}`,
-      'View & pay invoice'
-    )
+  if (!client) return inv
+  const hi = `Hi ${client.name.split(' ')[0]},`
+  const amount = money(invoiceTotal(inv))
+  const link = `${origin}/portal/invoices/${inv.id}`
+
+  // Auto-pay: charge the saved card; if that fails, fall back to a normal invoice email
+  let failed: string | undefined
+  if (plan.autopay) {
+    const result = await chargeSavedCard(inv, project)
+    const latest = await getProject(projectId)
+    if (latest?.carePlan) await saveProject({ ...latest, carePlan: { ...latest.carePlan, autopayError: result.ok ? undefined : result.reason } })
+    if (result.ok) {
+      await emailPeople(
+        client.id,
+        'billing',
+        `Receipt: ${monthName(ym)} care plan`,
+        `${hi}\n\nYour ${monthName(ym)} care plan for ${project.name} (${amount}) was paid automatically with your ${plan.autopay.brand} card ending ${plan.autopay.last4}. Thank you! Your receipt is in your portal.`,
+        link,
+        'View receipt'
+      )
+      await notifyAdmin(`Auto-pay received: ${inv.number}`, `${amount} for the ${project.name} care plan (${monthName(ym)}) was charged automatically.`)
+      return inv
+    }
+    failed = result.reason
+    await notifyAdmin(`Auto-pay failed: ${inv.number}`, `The ${monthName(ym)} care plan charge for ${project.name} (${amount}) did not go through: ${failed}\n\n${client.name} was emailed the invoice so they can pay it another way.`, `${origin}/portal/admin/invoices/${inv.id}`)
   }
+  await emailPeople(
+    client.id,
+    'billing',
+    `Your ${monthName(ym)} care plan invoice`,
+    failed
+      ? `${hi}\n\nI tried to charge your ${plan.autopay!.brand} card ending ${plan.autopay!.last4} for this month's care plan for ${project.name} (${amount}), but it didn't go through. You can pay the invoice online with any card, and update your saved card from the project page.`
+      : `${hi}\n\nYour monthly care plan invoice for ${project.name} (${amount}) is ready. You can view and pay it securely online.`,
+    link,
+    'View & pay invoice'
+  )
   return inv
 }
 

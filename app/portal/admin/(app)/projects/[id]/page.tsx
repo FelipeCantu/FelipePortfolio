@@ -3,8 +3,12 @@ import { notFound } from 'next/navigation'
 import { FiArrowDown, FiArrowLeft, FiArrowUp, FiCheck, FiCheckSquare, FiFileText, FiPlay, FiRotateCcw, FiSend, FiSquare, FiStar, FiTrash2, FiPlus } from 'react-icons/fi'
 import {
   billingSummary, getClient, getProject, getProjectReview, getSettings, invoiceTotal, listContracts, listFiles,
-  listInvoices, listMessages, listProjectActivity, markRead, projectProgress, unreadCount,
+  listInvoices, listMessages, listProjectActivity, markRead, projectProgress, unreadCount, changeOrders, previews, proposals, tickets,
 } from '@/lib/portal/db'
+import { emailEnabled } from '@/lib/portal/notify'
+import SupportSection from '@/components/portal/SupportSection'
+import { AdminChangesPanel, AdminPreviewsPanel, AdminProposalsPanel, AdminWeeklyPanel } from '@/components/portal/admin/AdminProjectExtras'
+import { deleteTicketAction, updateTicketAction } from '@/app/portal/admin/more-actions'
 import { INVOICE_STATUS, PROJECT_STATUS, fmtDate, money, timeAgo } from '@/lib/portal/format'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import type { ProjectStatus } from '@/lib/portal/types'
@@ -37,6 +41,7 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
   const client = await getClient(project.clientId)
   if (!client) notFound()
 
+  const [quotes, changes, sitePreviews, support] = await Promise.all([proposals.list(id), changeOrders.list(id), previews.list(id), tickets.list(id)])
   const [files, messages, activity, unread, contracts, review, settings, clientInvoices] = await Promise.all([
     listFiles(id),
     listMessages(id),
@@ -100,6 +105,8 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
               <button className="btn btn-secondary btn-sm"><FiPlus aria-hidden="true" /> Add</button>
             </form>
           </Panel>
+
+          <AdminPreviewsPanel project={project} previews={sitePreviews} />
 
           <Panel id="files" title="Files & approvals">
             <div className="grid gap-5">
@@ -219,6 +226,10 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
             )}
           </Panel>
 
+          <AdminProposalsPanel projectId={id} proposals={quotes} />
+
+          <AdminChangesPanel project={project} changes={changes} />
+
           <AdminCarePlanPanel project={project} />
 
           <AdminAccessPanel project={project} />
@@ -275,6 +286,15 @@ export default async function AdminProjectPage({ params }: { params: Promise<{ i
               <Composer action={adminMessageAction.bind(null, id)} placeholder={`Message ${client.name.split(' ')[0]}…`} />
             </div>
           </Panel>
+
+          <SupportSection
+            tickets={support}
+            viewer="admin"
+            reply={(ticketId) => updateTicketAction.bind(null, id, ticketId)}
+            remove={(ticketId) => deleteTicketAction.bind(null, id, ticketId)}
+          />
+
+          <AdminWeeklyPanel project={project} globallyOn={settings.weeklyUpdates !== false} emailReady={emailEnabled()} />
 
           <Panel title="Requests for the client">
             <p className="mb-3 text-small text-muted">Things you need from them. They check these off in their portal.</p>

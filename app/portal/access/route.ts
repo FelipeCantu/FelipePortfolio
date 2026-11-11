@@ -21,6 +21,6 @@ export async function GET(request: Request) {
   const result = email && code ? await authenticateClient(email, code) : null
   if (!result) return NextResponse.redirect(fail, 303)
 
-  await startClientSession(result.client.id, result.client.sessionVersion)
+  await startClientSession(result.client.id, result.client.sessionVersion, result.client.contactId)
   return NextResponse.redirect(new URL(result.needsPassword ? '/portal/set-password' : '/portal', url), 303)
 }

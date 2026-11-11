@@ -4,6 +4,8 @@ import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { PageHeader, Panel } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import { saveSettingsAction } from '@/app/portal/admin/actions'
+import { setWeeklyUpdatesAction } from '@/app/portal/admin/more-actions'
+import { Badge } from '@/components/portal/ui'
 
 export const metadata = { title: 'Portal settings' }
 
@@ -32,6 +34,14 @@ export default async function SettingsPage() {
             <span className="field-hint block">Used by the one-click deposit invoice and pre-filled into new agreements.</span>
           </label>
         </StateForm>
+      </Panel>
+      <Panel title="Weekly progress emails" action={<Badge tone={settings.weeklyUpdates !== false ? 'success' : 'neutral'}>{settings.weeklyUpdates !== false ? 'On' : 'Off'}</Badge>}>
+        <p className="text-small text-muted">
+          Every Monday morning, each client with an active project gets a short summary: what got done, what’s next and what you’re waiting on from them. Projects with nothing to report are skipped, you can leave a single project out from its page, and clients can switch the emails off in their account settings.
+        </p>
+        <form action={setWeeklyUpdatesAction.bind(null, settings.weeklyUpdates === false)} className="mt-3">
+          <button className="btn btn-secondary btn-sm">{settings.weeklyUpdates !== false ? 'Turn off for everyone' : 'Turn on'}</button>
+        </form>
       </Panel>
     </div>
   )

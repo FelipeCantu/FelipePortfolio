@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FiArrowRight, FiUserPlus, FiUsers } from 'react-icons/fi'
 import {
-  invoiceTotal, listClients, listFiles, listGlobalActivity, listInvoices, listLeads, listProjects, projectProgress, unreadCount,
+  invoiceTotal, listClients, listFiles, listGlobalActivity, listInvoices, listLeads, listProjects, projectProgress, unreadCount, previews, proposals, tickets,
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, PageHeader, Panel, ProgressBar, Stat } from '@/components/portal/ui'
@@ -17,7 +17,10 @@ export default async function AdminHome() {
     clients.map(async (c) => {
       const [projects, invoices] = await Promise.all([listProjects(c.id), listInvoices(c.id)])
       const projectDetails = await Promise.all(
-        projects.map(async (p) => ({ p, unread: await unreadCount(p.id, 'admin'), files: await listFiles(p.id) }))
+        projects.map(async (p) => {
+          const [unread, files, quotes, shown, support] = await Promise.all([unreadCount(p.id, 'admin'), listFiles(p.id), proposals.list(p.id), previews.list(p.id), tickets.list(p.id)])
+          return { p, unread, files, quotes, shown, support }
+        })
       )
       return { c, projects: projectDetails, invoices }
     })
@@ -36,7 +39,22 @@ export default async function AdminHome() {
     attention.push({ key: `l${l.id}`, text: `New project request from ${l.data.name}`, sub: [l.data.company, l.data.budget].filter(Boolean).join(' · ') || l.data.email, href: `/portal/admin/requests/${l.id}`, tone: 'accent' })
   }
   for (const { c, projects } of perClient) {
-    for (const { p, unread, files } of projects) {
+    for (const { p, unread, files, quotes, shown, support } of projects) {
+      for (const t of support.filter((t) => t.status === 'open' || t.status === 'in_progress')) {
+        attention.push({ key: `t${t.id}`, text: `Support request #${t.number}: ${t.title}`, sub: `${c.name} · ${p.name}${t.priority === 'urgent' ? ' · urgent' : ''}`, href: `/portal/admin/projects/${p.id}#support`, tone: t.priority === 'urgent' ? 'danger' : 'warning' })
+      }
+      for (const q of quotes.filter((q) => q.status === 'declined')) {
+        attention.push({ key: `q${q.id}`, text: `Proposal declined: ${q.title}`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}/proposals/${q.id}`, tone: 'warning' })
+      }
+      for (const v of shown.filter((v) => v.status === 'changes_requested')) {
+        attention.push({ key: `v${v.id}`, text: `Changes requested on preview “${v.title}”`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#previews`, tone: 'warning' })
+      }
+      if (shown[0]?.status === 'approved' && p.status !== 'completed') {
+        attention.push({ key: `go${shown[0].id}`, text: `Approved to go live: ${shown[0].title}`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#previews`, tone: 'accent' })
+      }
+      if (p.carePlan?.autopayError) {
+        attention.push({ key: `ap${p.id}`, text: 'Care plan auto-pay failed', sub: `${c.name} · ${p.name} · ${p.carePlan.autopayError}`, href: `/portal/admin/projects/${p.id}#care`, tone: 'danger' })
+      }
       if (unread) attention.push({ key: `m${p.id}`, text: `${unread} unread message${unread > 1 ? 's' : ''}`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#messages`, tone: 'accent' })
       for (const f of files.filter((f) => f.approval?.status === 'changes_requested')) {
         attention.push({ key: `f${f.id}`, text: `Changes requested on “${f.name}”`, sub: `${c.name} · ${p.name}`, href: `/portal/admin/projects/${p.id}#files`, tone: 'warning' })
@@ -62,7 +80,7 @@ export default async function AdminHome() {
         <Stat label="Clients" value={clients.length} />
         <Stat label="Active projects" value={active.length} />
         <Stat label="Outstanding" value={money(outstanding.reduce((s, i) => s + invoiceTotal(i), 0))} tone={outstanding.length ? 'warning' : undefined} hint={`${outstanding.length} open invoice${outstanding.length === 1 ? '' : 's'}`} />
-        <Stat label={`Paid in ${year}`} value={money(paidThisYear.reduce((s, i) => s + invoiceTotal(i), 0))} tone="success" />
+        <Stat label={`Paid in ${year}`} value={money(paidThisYear.reduce((s, i) => s + invoiceTotal(i), 0))} tone="success" hint="See the income report" href="/portal/admin/income" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">

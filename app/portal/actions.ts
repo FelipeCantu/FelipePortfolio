@@ -5,10 +5,14 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
   addFile, addMessage, authenticateClient, checkClientPassword, consumeResetToken, contractHash, createResetToken,
-  getClientByEmail, getContract, getFile, logActivity, passwordProblem, rateLimit, saveContract, saveFile,
-  saveProject, setClientPassword, upsertReview,
+  getViewerByEmail, getContract, getFile, logActivity, passwordProblem, rateLimit, saveContract, saveFile,
+  saveProject, setClientPassword, upsertReview, changeOrders, nextTicketNumber, previews, proposalExpired, proposals,
+  saveEmailPrefs, tickets, newId,
 } from '@/lib/portal/db'
-import { createCheckoutUrl } from '@/lib/portal/payments'
+import { createAutopaySetupUrl, createCheckoutUrl, disableAutopay, paymentsEnabled } from '@/lib/portal/payments'
+import { acceptProposal, approveChange } from '@/lib/portal/deals'
+import { money } from '@/lib/portal/format'
+import type { EmailPrefs, TicketKind, TicketPriority } from '@/lib/portal/types'
 import {
   currentClient, endSession, requireClientInvoice, requireClientProject, siteOrigin, startClientSession,
 } from '@/lib/portal/session'
@@ -35,7 +39,7 @@ export async function loginAction(_: FormState, form: FormData): Promise<FormSta
   const result = await authenticateClient(email, secret)
   if (!result) return { error: "That email and password don't match." }
 
-  await startClientSession(result.client.id, result.client.sessionVersion)
+  await startClientSession(result.client.id, result.client.sessionVersion, result.client.contactId)
   redirect(result.needsPassword ? '/portal/set-password' : '/portal')
 }
 
@@ -47,8 +51,8 @@ export async function setPasswordAction(_: FormState, form: FormData): Promise<F
   const problem = passwordProblem(password, String(form.get('confirm') ?? ''))
   if (problem) return { error: problem }
 
-  const updated = await setClientPassword(client.id, password)
-  await startClientSession(updated.id, updated.sessionVersion)
+  const updated = await setClientPassword(client.id, password, client.contactId)
+  await startClientSession(updated.id, updated.sessionVersion, updated.contactId)
   redirect('/portal')
 }
 
@@ -61,8 +65,8 @@ export async function changePasswordAction(_: FormState, form: FormData): Promis
   const problem = passwordProblem(password, String(form.get('confirm') ?? ''))
   if (problem) return { error: problem }
 
-  const updated = await setClientPassword(client.id, password)
-  await startClientSession(updated.id, updated.sessionVersion)
+  const updated = await setClientPassword(client.id, password, client.contactId)
+  await startClientSession(updated.id, updated.sessionVersion, updated.contactId)
   return { ok: 'Password updated. Other devices have been signed out.' }
 }
 
@@ -72,9 +76,9 @@ export async function forgotPasswordAction(_: FormState, form: FormData): Promis
   if (!emailEnabled()) return { error: 'Password reset by email isn’t available. Please contact Felipe for a new access code.' }
   if (!(await rateLimit(`forgot:${await clientIp()}`, 5, 15 * 60))) return { error: 'Too many requests. Try again in 15 minutes.' }
 
-  const client = await getClientByEmail(email)
+  const client = await getViewerByEmail(email)
   if (client) {
-    const token = await createResetToken(client.id)
+    const token = await createResetToken(client.id, client.contactId)
     await sendEmail(
       client.email,
       'Reset your portal password',
@@ -94,8 +98,8 @@ export async function resetPasswordAction(token: string, _: FormState, form: For
   const client = await consumeResetToken(token)
   if (!client) return { error: 'This reset link has expired or was already used. Request a new one.' }
 
-  const updated = await setClientPassword(client.id, password)
-  await startClientSession(updated.id, updated.sessionVersion)
+  const updated = await setClientPassword(client.id, password, client.contactId)
+  await startClientSession(updated.id, updated.sessionVersion, updated.contactId)
   redirect('/portal')
 }
 
@@ -310,4 +314,196 @@ export async function markAccessInvitedAction(projectId: string, itemId: string)
   )
   revalidatePath(`/portal/projects/${projectId}`)
   revalidatePath('/portal')
+}
+
+
+/* ───────────── proposals ───────────── */
+
+export async function acceptProposalAction(projectId: string, proposalId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  const proposal = project ? await proposals.get(projectId, proposalId) : null
+  if (!project || !proposal || proposal.status === 'draft') return { error: 'Proposal not found.' }
+  if (proposal.status === 'accepted') return { ok: 'accepted' }
+  if (proposal.status !== 'sent') return { error: 'This proposal is no longer open.' }
+  if (proposalExpired(proposal)) return { error: 'This proposal has expired. Message Felipe for an updated one.' }
+
+  const optionId = String(form.get('option') ?? '')
+  if (!proposal.options.some((o) => o.id === optionId)) return { error: 'Choose one of the options first.' }
+  const name = String(form.get('name') ?? '').trim().replace(/\s+/g, ' ')
+  if (form.get('agree') !== 'on') return { error: 'Tick the box to confirm you accept.' }
+  if (name.length < 3) return { error: 'Type your full name to accept.' }
+
+  await acceptProposal(proposal, optionId, client, name, await clientIp(), await siteOrigin())
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath('/portal')
+  redirect(`/portal/projects/${projectId}/proposals/${proposalId}`)
+}
+
+export async function declineProposalAction(projectId: string, proposalId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  const proposal = project ? await proposals.get(projectId, proposalId) : null
+  if (!project || !proposal || proposal.status !== 'sent') return { error: 'This proposal is no longer open.' }
+  const note = String(form.get('note') ?? '').trim().slice(0, 2000) || undefined
+  await proposals.save({ ...proposal, status: 'declined', decidedAt: new Date().toISOString(), declineNote: note })
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} declined the proposal “${proposal.title}”`, href: `/portal/admin/projects/${projectId}/proposals/${proposalId}` })
+  await notifyAdmin(
+    `Proposal declined: ${proposal.title}`,
+    `${client.name} declined “${proposal.title}” on ${project.name}.${note ? `\n\nThey said: ${note}` : ''}`,
+    `${await siteOrigin()}/portal/admin/projects/${projectId}/proposals/${proposalId}`
+  )
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath('/portal')
+  return { ok: 'declined' }
+}
+
+/* ───────────── change requests ───────────── */
+
+export async function decideChangeAction(projectId: string, changeId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  const change = project ? await changeOrders.get(projectId, changeId) : null
+  if (!project || !change) return { error: 'Change request not found.' }
+  if (change.status !== 'sent') return { ok: change.status }
+  const note = String(form.get('note') ?? '').trim().slice(0, 2000) || undefined
+
+  if (form.get('decision') === 'approve') {
+    await approveChange(change, client, await siteOrigin(), note)
+  } else {
+    await changeOrders.save({ ...change, status: 'declined', decidedAt: new Date().toISOString(), decidedBy: client.name, note })
+    await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} declined the change request “${change.title}”`, href: `/portal/admin/projects/${projectId}#changes` })
+    await notifyAdmin(`Change declined: ${change.title}`, `${client.name} declined “${change.title}” (${money(change.price)}) on ${project.name}.${note ? `\n\nNote: ${note}` : ''}`, `${await siteOrigin()}/portal/admin/projects/${projectId}#changes`)
+  }
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath('/portal')
+  return { ok: 'done' }
+}
+
+/* ───────────── site previews ───────────── */
+
+export async function reviewPreviewAction(projectId: string, previewId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  const preview = project ? await previews.get(projectId, previewId) : null
+  if (!project || !preview) return { error: 'Preview not found.' }
+  const approved = form.get('decision') === 'approve'
+  const note = String(form.get('note') ?? '').trim().slice(0, 3000) || undefined
+  if (!approved && !note) return { error: 'Tell Felipe what you would like changed.' }
+
+  await previews.save({ ...preview, status: approved ? 'approved' : 'changes_requested', feedback: note, decidedAt: new Date().toISOString(), decidedBy: client.name })
+  const verb = approved ? 'approved the preview' : 'requested changes on the preview'
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} ${verb} “${preview.title}”`, href: `/portal/admin/projects/${projectId}#previews` })
+  await notifyAdmin(
+    approved ? `Approved to go live: ${preview.title}` : `Changes requested: ${preview.title}`,
+    `${client.name} ${verb} “${preview.title}” on ${project.name}.${note ? `\n\n${approved ? 'Note' : 'What to change'}: ${note}` : ''}`,
+    `${await siteOrigin()}/portal/admin/projects/${projectId}#previews`
+  )
+  revalidatePath(`/portal/projects/${projectId}`)
+  revalidatePath(`/portal/projects/${projectId}/preview/${previewId}`)
+  revalidatePath('/portal')
+  return { ok: approved ? 'approved' : 'changes_requested' }
+}
+
+/* ───────────── support requests ───────────── */
+
+const TICKET_KINDS: TicketKind[] = ['bug', 'change', 'question']
+const TICKET_PRIORITIES: TicketPriority[] = ['low', 'normal', 'urgent']
+
+export async function createTicketAction(projectId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  if (!project) return { error: 'Project not found.' }
+  const title = String(form.get('title') ?? '').trim().slice(0, 140)
+  const body = String(form.get('body') ?? '').trim().slice(0, 5000)
+  if (title.length < 3 || body.length < 5) return { error: 'Add a short title and describe what you need.' }
+  if (!(await rateLimit(`ticket:${client.id}`, 20, 60 * 60))) return { error: 'Slow down a little and try again shortly.' }
+  const kind = TICKET_KINDS.find((k) => k === form.get('kind')) ?? 'question'
+  const priority = TICKET_PRIORITIES.find((p) => p === form.get('priority')) ?? 'normal'
+  const pageUrl = String(form.get('pageUrl') ?? '').trim().slice(0, 500)
+  const at = new Date().toISOString()
+  const ticket = await tickets.save({
+    id: newId(),
+    number: await nextTicketNumber(),
+    clientId: client.id,
+    projectId,
+    title,
+    body,
+    pageUrl: /^https?:\/\//i.test(pageUrl) ? pageUrl : undefined,
+    kind,
+    priority,
+    status: 'open',
+    openedBy: client.name,
+    createdAt: at,
+    updatedAt: at,
+    replies: [],
+  })
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} opened support request #${ticket.number}: ${title}`, href: `/portal/admin/projects/${projectId}#support` })
+  await notifyAdmin(
+    `${priority === 'urgent' ? 'URGENT: ' : ''}Support request #${ticket.number} — ${title}`,
+    `${client.name} opened a ${kind === 'bug' ? 'bug report' : kind === 'change' ? 'change request' : 'question'} on ${project.name} (priority: ${priority}).\n\n${body}${ticket.pageUrl ? `\n\nPage: ${ticket.pageUrl}` : ''}`,
+    `${await siteOrigin()}/portal/admin/projects/${projectId}#support`
+  )
+  revalidatePath(`/portal/projects/${projectId}`)
+  return { ok: 'sent' }
+}
+
+export async function replyTicketAction(projectId: string, ticketId: string, _: FormState, form: FormData): Promise<FormState> {
+  const { client, project } = await requireClientProject(projectId)
+  const ticket = project ? await tickets.get(projectId, ticketId) : null
+  if (!project || !ticket) return { error: 'Request not found.' }
+  const body = String(form.get('body') ?? '').trim().slice(0, 5000)
+  if (!body) return { error: 'Write a reply first.' }
+  if (!(await rateLimit(`msg:${client.id}`, 30, 60 * 10))) return { error: 'Slow down a little and try again shortly.' }
+  await tickets.save({
+    ...ticket,
+    // A reply on a finished request reopens it
+    status: ticket.status === 'done' || ticket.status === 'waiting' ? 'open' : ticket.status,
+    closedAt: undefined,
+    updatedAt: new Date().toISOString(),
+    replies: [...ticket.replies, { from: 'client', name: client.name, body, at: new Date().toISOString() }],
+  })
+  await notifyAdmin(`Reply on support request #${ticket.number} — ${ticket.title}`, `${client.name} wrote:\n\n${body}`, `${await siteOrigin()}/portal/admin/projects/${projectId}#support`)
+  revalidatePath(`/portal/projects/${projectId}`)
+  return { ok: 'sent' }
+}
+
+export async function resolveTicketAction(projectId: string, ticketId: string) {
+  const { client, project } = await requireClientProject(projectId)
+  const ticket = project ? await tickets.get(projectId, ticketId) : null
+  if (!project || !ticket || ticket.status === 'done') return
+  const at = new Date().toISOString()
+  await tickets.save({ ...ticket, status: 'done', closedAt: at, updatedAt: at })
+  await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} marked support request #${ticket.number} as resolved`, href: `/portal/admin/projects/${projectId}#support` })
+  revalidatePath(`/portal/projects/${projectId}`)
+}
+
+/* ───────────── email settings ───────────── */
+
+export async function saveEmailPrefsAction(_: FormState, form: FormData): Promise<FormState> {
+  const client = await currentClient()
+  if (!client) redirect('/portal/login')
+  const prefs: EmailPrefs = {
+    messages: form.get('messages') === 'on',
+    files: form.get('files') === 'on',
+    // The account owner always gets invoices and agreements
+    billing: client.contactId ? form.get('billing') === 'on' : true,
+    updates: form.get('updates') === 'on',
+  }
+  await saveEmailPrefs(client, prefs)
+  revalidatePath('/portal/account')
+  return { ok: 'saved' }
+}
+
+/* ───────────── care plan auto-pay ───────────── */
+
+export async function startAutopayAction(projectId: string) {
+  const { client, project } = await requireClientProject(projectId)
+  if (!project?.carePlan?.active || !paymentsEnabled()) redirect(`/portal/projects/${projectId}#care`)
+  redirect(await createAutopaySetupUrl(client, project, await siteOrigin()))
+}
+
+export async function stopAutopayAction(projectId: string) {
+  const { client, project } = await requireClientProject(projectId)
+  if (!project?.carePlan?.autopay) return
+  if (await disableAutopay(projectId)) {
+    await logActivity({ clientId: client.id, projectId, actor: 'client', text: `${client.name} turned off auto-pay for the care plan`, href: `/portal/admin/projects/${projectId}#care` })
+    await notifyAdmin(`Auto-pay turned off: ${project.name}`, `${client.name} turned off auto-pay for the ${project.name} care plan. Monthly invoices will be emailed for them to pay by hand again.`)
+  }
+  revalidatePath(`/portal/projects/${projectId}`)
 }

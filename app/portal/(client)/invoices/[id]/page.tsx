@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FiArrowLeft, FiCheckCircle, FiCreditCard, FiLock } from 'react-icons/fi'
 import { requireClientInvoice } from '@/lib/portal/session'
-import { getInvoice, getProject, invoiceTotal } from '@/lib/portal/db'
+import { getClient, getInvoice, getProject, invoiceTotal } from '@/lib/portal/db'
 import { confirmCheckout, paymentsEnabled } from '@/lib/portal/payments'
 import { money } from '@/lib/portal/format'
 import { payInvoiceAction } from '@/app/portal/actions'
@@ -62,7 +62,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
         </div>
       )}
 
-      <InvoiceDocument invoice={invoice} client={found.client} project={project} />
+      <InvoiceDocument invoice={invoice} client={(await getClient(invoice.clientId)) ?? found.client} project={project} />
     </div>
   )
 }

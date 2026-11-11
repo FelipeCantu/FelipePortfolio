@@ -1,4 +1,6 @@
-import type { InvoiceStatus, ProjectStatus, ApprovalStatus, MilestoneStatus } from './types'
+import type {
+  ApprovalStatus, ChangeStatus, InvoiceStatus, MilestoneStatus, ProjectStatus, ProposalStatus, TicketKind, TicketPriority, TicketStatus,
+} from './types'
 
 export const money = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
@@ -64,6 +66,34 @@ export const APPROVAL_STATUS: Record<ApprovalStatus, { label: string; tone: Tone
   pending: { label: 'Awaiting your review', tone: 'warning' },
   approved: { label: 'Approved', tone: 'success' },
   changes_requested: { label: 'Changes requested', tone: 'danger' },
+}
+
+export const PROPOSAL_STATUS: Record<ProposalStatus | 'expired', { label: string; tone: Tone }> = {
+  draft: { label: 'Draft', tone: 'muted' },
+  sent: { label: 'Awaiting answer', tone: 'warning' },
+  accepted: { label: 'Accepted', tone: 'success' },
+  declined: { label: 'Declined', tone: 'danger' },
+  expired: { label: 'Expired', tone: 'muted' },
+}
+
+export const CHANGE_STATUS: Record<ChangeStatus, { label: string; tone: Tone }> = {
+  sent: { label: 'Awaiting approval', tone: 'warning' },
+  approved: { label: 'Approved', tone: 'success' },
+  declined: { label: 'Declined', tone: 'muted' },
+}
+
+export const TICKET_STATUS: Record<TicketStatus, { label: string; tone: Tone }> = {
+  open: { label: 'Open', tone: 'warning' },
+  in_progress: { label: 'In progress', tone: 'accent' },
+  waiting: { label: 'Waiting on you', tone: 'warning' },
+  done: { label: 'Resolved', tone: 'success' },
+}
+
+export const TICKET_KIND: Record<TicketKind, string> = { bug: 'Something is broken', change: 'Small change', question: 'Question' }
+export const TICKET_PRIORITY: Record<TicketPriority, { label: string; tone: Tone }> = {
+  low: { label: 'Low', tone: 'muted' },
+  normal: { label: 'Normal', tone: 'neutral' },
+  urgent: { label: 'Urgent', tone: 'danger' },
 }
 
 export type Tone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'muted'

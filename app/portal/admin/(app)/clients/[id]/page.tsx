@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiArrowLeft, FiArrowRight, FiFileText, FiPlus } from 'react-icons/fi'
-import { getClient, invoiceTotal, listInvoices, listProjects, projectProgress } from '@/lib/portal/db'
+import { FiArrowLeft, FiArrowRight, FiFileText, FiPlus, FiTrash2, FiUsers } from 'react-icons/fi'
+import { getClient, invoiceTotal, listContacts, listInvoices, listProjects, projectProgress } from '@/lib/portal/db'
+import { addContactAction, removeContactAction, resetContactAction } from '@/app/portal/admin/more-actions'
 import { INVOICE_STATUS, PROJECT_STATUS, fmtDate, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
@@ -13,7 +14,7 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
   const { id } = await params
   const client = await getClient(id)
   if (!client) notFound()
-  const [projects, invoices] = await Promise.all([listProjects(id), listInvoices(id)])
+  const [projects, invoices, contacts] = await Promise.all([listProjects(id), listInvoices(id), listContacts(id)])
 
   return (
     <div className="grid gap-6">
@@ -117,6 +118,54 @@ export default async function AdminClientPage({ params }: { params: Promise<{ id
                 : 'Lost the invite? Send a new one. The previous code stops working.'}
             </p>
             <CredentialForm action={resetCodeAction.bind(null, id)} submitLabel={client.passwordHash ? 'Reset & send new invite' : 'Send new invite'} emailEnabled={emailEnabled()} />
+          </Panel>
+
+          <Panel title={<span className="flex items-center gap-2"><FiUsers aria-hidden="true" /> Extra contacts</span>}>
+            <p className="mb-3 text-small text-muted">
+              Other people at {client.company || 'this client'} (a partner, assistant or bookkeeper) who get their own sign-in. They see the same projects and invoices as {client.name.split(' ')[0]}.
+            </p>
+            {contacts.length > 0 && (
+              <ul className="mb-4 grid gap-2">
+                {contacts.map((ct) => (
+                  <li key={ct.id} className="rounded-control border border-line/15 bg-bg/40 p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-small font-medium text-fg">{ct.name}</p>
+                        <p className="truncate text-[0.75rem] text-subtle">
+                          {ct.email} · {ct.passwordHash ? (ct.lastLoginAt ? `last signed in ${timeAgo(ct.lastLoginAt)}` : 'password set') : 'hasn’t signed in yet'}
+                        </p>
+                      </div>
+                      <form action={removeContactAction.bind(null, ct.id)}>
+                        <button className="inline-flex h-8 w-8 items-center justify-center rounded-full text-subtle transition-colors hover:bg-white/[0.06] hover:!text-danger" aria-label={`Remove ${ct.name}`}><FiTrash2 /></button>
+                      </form>
+                    </div>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-[0.8rem] text-accent-light">Send a new invite</summary>
+                      <div className="mt-2">
+                        <CredentialForm action={resetContactAction.bind(null, ct.id)} submitLabel="Reset & send new invite" emailEnabled={emailEnabled()} inviteLabel={`Email the invite to ${ct.name.split(' ')[0]}`} />
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <details className="rounded-control border border-line/15 p-4 [&[open]>summary]:mb-4">
+              <summary className="flex cursor-pointer items-center gap-2 font-semibold text-fg"><FiPlus aria-hidden="true" /> Add a contact</summary>
+              <CredentialForm action={addContactAction.bind(null, id)} submitLabel="Add contact & invite" emailEnabled={emailEnabled()} inviteLabel="Email them the invite">
+                <div className="grid gap-3">
+                  <input name="name" required placeholder="Full name" className="field" aria-label="Contact name" />
+                  <input name="email" type="email" required placeholder="Email" className="field" aria-label="Contact email" />
+                  <label className="text-small text-muted">
+                    Emails they get (they can change this later)
+                    <select name="emails" defaultValue="all" className="field mt-1">
+                      <option value="all">Everything</option>
+                      <option value="billing">Invoices and agreements only</option>
+                      <option value="project">Project updates only, no billing</option>
+                    </select>
+                  </label>
+                </div>
+              </CredentialForm>
+            </details>
           </Panel>
 
           <Panel title="Details">

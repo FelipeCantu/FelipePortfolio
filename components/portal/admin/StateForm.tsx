@@ -10,7 +10,13 @@ export default function StateForm({
   submitLabel = 'Save',
   className = 'grid gap-4',
   resetOnOk = false,
+  okLabel = 'Saved',
+  submitClass = 'btn btn-primary btn-sm',
+  pendingLabel = 'Saving…',
 }: {
+  okLabel?: string
+  submitClass?: string
+  pendingLabel?: string
   action: (s: FormState, f: FormData) => Promise<FormState>
   children: React.ReactNode
   submitLabel?: string
@@ -32,12 +38,12 @@ export default function StateForm({
     <form ref={ref} action={formAction} className={className}>
       {children}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" className="btn btn-primary btn-sm" disabled={pending}>
-          {pending ? 'Saving…' : submitLabel}
+        <button type="submit" className={submitClass} disabled={pending}>
+          {pending ? pendingLabel : submitLabel}
         </button>
         {flash && (
           <span className="flex items-center gap-1 text-small text-success" role="status">
-            <FiCheck aria-hidden="true" /> Saved
+            <FiCheck aria-hidden="true" /> {state?.ok && state.ok.includes(' ') ? state.ok : okLabel}
           </span>
         )}
         {state?.error && <span className="text-small text-danger" role="alert">{state.error}</span>}

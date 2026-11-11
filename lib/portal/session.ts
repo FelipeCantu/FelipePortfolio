@@ -2,7 +2,7 @@ import 'server-only'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getClient, getProject, getInvoice } from './db'
+import { asViewer, getClient, getContact, getProject, getInvoice } from './db'
 import { safeBaseUrl } from '@/lib/adminAuth'
 import type { Role } from './types'
 
@@ -16,6 +16,8 @@ interface Payload {
   id: string
   v: number
   exp: number
+  /** contact id, when an extra contact on the client's account is signed in */
+  c?: string
 }
 
 function secret() {
@@ -54,9 +56,9 @@ const cookieOpts = (maxAge: number) => ({
   maxAge,
 })
 
-export async function startClientSession(clientId: string, version: number) {
+export async function startClientSession(clientId: string, version: number, contactId?: string) {
   const exp = Math.floor(Date.now() / 1000) + CLIENT_TTL
-  ;(await cookies()).set(COOKIE, encode({ r: 'client', id: clientId, v: version, exp }), cookieOpts(CLIENT_TTL))
+  ;(await cookies()).set(COOKIE, encode({ r: 'client', id: clientId, v: version, exp, c: contactId }), cookieOpts(CLIENT_TTL))
 }
 
 export async function startAdminSession() {
@@ -73,7 +75,12 @@ export async function currentClient() {
   const p = decode((await cookies()).get(COOKIE)?.value)
   if (!p || p.r !== 'client') return null
   const client = await getClient(p.id)
-  return client && client.sessionVersion === p.v ? client : null
+  if (!client) return null
+  if (p.c) {
+    const contact = await getContact(p.c)
+    return contact && contact.clientId === client.id && contact.sessionVersion === p.v ? asViewer(client, contact) : null
+  }
+  return client.sessionVersion === p.v ? client : null
 }
 
 export async function isAdminSession() {

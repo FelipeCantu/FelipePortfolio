@@ -17,6 +17,7 @@ export default async function AdminPortalLayout({ children }: { children: React.
           <PortalTabs label="Portal admin" tabs={[
               { href: '/portal/admin', label: 'Dashboard', exact: true },
               { href: '/portal/admin/requests', label: 'Requests', count: newRequests },
+              { href: '/portal/admin/income', label: 'Income' },
               { href: '/portal/admin/reviews', label: 'Reviews' },
               { href: '/portal/admin/settings', label: 'Settings' },
             ]} />

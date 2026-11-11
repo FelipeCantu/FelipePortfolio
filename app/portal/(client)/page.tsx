@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import { FiArrowRight, FiCheckSquare, FiCreditCard, FiEye, FiFolder, FiKey, FiMessageCircle, FiCalendar, FiMail, FiPenTool, FiStar } from 'react-icons/fi'
+import { FiArrowRight, FiCheckSquare, FiClipboard, FiCreditCard, FiEye, FiFolder, FiKey, FiLifeBuoy, FiMessageCircle, FiCalendar, FiMail, FiMonitor, FiPenTool, FiPlusCircle, FiStar } from 'react-icons/fi'
 import { requireClient } from '@/lib/portal/session'
 import {
   getProjectReview, getSettings, invoiceTotal, listContracts, listFiles, listInvoices, listProjectActivity, listProjects,
-  nextMilestone, projectProgress, unreadCount,
+  nextMilestone, projectProgress, unreadCount, changeOrders, previews, proposalExpired, proposals, tickets,
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, Panel, ProgressBar, Stat } from '@/components/portal/ui'
@@ -17,14 +17,18 @@ export default async function PortalHome() {
 
   const details = await Promise.all(
     projects.map(async (p) => {
-      const [files, unread, activity, contracts, review] = await Promise.all([
+      const [files, unread, activity, contracts, review, quotes, changes, shown, support] = await Promise.all([
         listFiles(p.id),
         unreadCount(p.id, 'client'),
         listProjectActivity(p.id, 8),
         listContracts(p.id),
         getProjectReview(p.id),
+        proposals.list(p.id),
+        changeOrders.list(p.id),
+        previews.list(p.id),
+        tickets.list(p.id),
       ])
-      return { project: p, files, unread, activity, contracts, review }
+      return { project: p, files, unread, activity, contracts, review, quotes, changes, shown, support }
     })
   )
 
@@ -36,6 +40,20 @@ export default async function PortalHome() {
   for (const { project } of details) {
     for (const a of (project.access ?? []).filter((a) => a.status === 'todo')) {
       todos.push({ key: `a${a.id}`, icon: <FiKey />, text: `Give Felipe access: ${a.name}`, sub: `${project.name} · no passwords needed`, href: `/portal/projects/${project.id}#access` })
+    }
+  }
+  for (const { project, quotes, changes, shown, support } of details) {
+    for (const q of quotes.filter((q) => q.status === 'sent' && !proposalExpired(q))) {
+      todos.push({ key: `q${q.id}`, icon: <FiClipboard />, text: `Review your proposal: ${q.title}`, sub: `${project.name} · pick an option and accept`, href: `/portal/projects/${project.id}/proposals/${q.id}` })
+    }
+    for (const c of changes.filter((c) => c.status === 'sent')) {
+      todos.push({ key: `ch${c.id}`, icon: <FiPlusCircle />, text: `Approve or decline: ${c.title}`, sub: `${project.name} · ${c.price ? `+${money(c.price)}` : 'no extra charge'}`, href: `/portal/projects/${project.id}#changes` })
+    }
+    for (const p of shown.filter((p) => p.status === 'pending')) {
+      todos.push({ key: `pv${p.id}`, icon: <FiMonitor />, text: `Look at the preview: ${p.title}`, sub: `${project.name} · before it goes live`, href: `/portal/projects/${project.id}/preview/${p.id}` })
+    }
+    for (const t of support.filter((t) => t.status === 'waiting')) {
+      todos.push({ key: `sp${t.id}`, icon: <FiLifeBuoy />, text: `Felipe needs an answer on request #${t.number}`, sub: `${project.name} · ${t.title}`, href: `/portal/projects/${project.id}#support` })
     }
   }
   for (const { project, contracts } of details) {

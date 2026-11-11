@@ -1,6 +1,6 @@
 import 'server-only'
 import { getClient, invoiceTotal, listAllInvoices, logActivity, saveInvoice } from './db'
-import { sendEmail } from './notify'
+import { emailPeople } from './people'
 import { fmtDate, money } from './format'
 import type { Invoice } from './types'
 
@@ -48,7 +48,7 @@ export async function sendInvoiceReminder(inv: Invoice, stage: string, origin: s
   const client = await getClient(inv.clientId)
   if (!client) return false
   const { subject, text } = copy(stage, inv, days)
-  await sendEmail(client.email, subject, `Hi ${client.name.split(' ')[0]},\n\n${text}`, `${origin}/portal/invoices/${inv.id}`, 'View & pay invoice')
+  await emailPeople(client.id, 'billing', subject, `Hi ${client.name.split(' ')[0]},\n\n${text}`, `${origin}/portal/invoices/${inv.id}`, 'View & pay invoice')
   await saveInvoice({ ...inv, reminders: [...new Set([...(inv.reminders ?? []), ...skipped, stage])] })
   await logActivity({
     clientId: inv.clientId,

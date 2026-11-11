@@ -63,3 +63,18 @@ app/portal/admin/  admin area: login, (app)/ dashboard · clients · projects ·
 app/api/portal/    upload (Blob tokens), files (downloads), stripe-webhook
 components/portal/ shared UI
 ```
+
+
+## Added November 2026
+
+- **Proposals** (project page → Proposals): a priced quote with up to three options and a "valid until" date. The client picks one and accepts by typing their name. Acceptance sets the project price and, unless you untick them, sends the agreement for signature and the deposit invoice.
+- **Change requests**: extra work outside the agreed scope, with a price and optional extra days. The client approves or declines. Approved changes are added to the project price, and are invoiced right away or rolled into the remaining balance.
+- **Site previews**: share a preview or staging link. The client views it inside the portal at computer, tablet and phone widths, then approves it to go live or requests changes. The link must open without a login (for a protected Vercel preview use its shareable link).
+- **Support requests**: clients on a care plan or with a completed project open tracked requests (type, urgency, page link). You reply and move them through Open → In progress → Waiting on client → Resolved.
+- **Extra contacts** (client page): more people on one client account, each with their own sign-in. Everyone sees the same projects and invoices.
+- **Email settings** (client account page): each person chooses messages, files & previews, invoices & agreements, and progress updates. The account owner always gets invoices.
+- **Weekly progress emails**: Mondays, from the daily cron job. Skips projects that are completed, on hold or have nothing to report. Switch off for everyone in Settings, or per project.
+- **Income** (admin tab): received per month and per client for any year, a CSV download for taxes, and a JSON backup of all portal data (no passwords, no uploaded files).
+- **Care plan auto-pay**: the client saves a card on Stripe's page; each month's care-plan invoice is then charged automatically with a receipt email. A failed charge falls back to a normal invoice email and shows on your dashboard. Add the Stripe webhook event `checkout.session.completed` (already used for payments) so a saved card is recorded even if the client closes the tab.
+
+Code: `lib/portal/deals.ts` (accepting proposals, approving changes), `weekly.ts`, `income.ts`, `people.ts` (who gets which email), `app/portal/admin/more-actions.ts`.

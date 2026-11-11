@@ -16,6 +16,30 @@ export interface Client {
   sessionVersion: number
   createdAt: string
   lastLoginAt?: string
+  /** which optional emails this person gets (missing = on) */
+  emailPrefs?: EmailPrefs
+  /** Stripe customer, created the first time they save a card for auto-pay */
+  stripeCustomerId?: string
+  /** set only on the signed-in viewer when they are an extra contact, never stored on the client */
+  contactId?: string
+}
+
+/** Optional emails a person can switch off. Invites, password resets and receipts always send. */
+export type EmailKind = 'messages' | 'files' | 'billing' | 'updates'
+export type EmailPrefs = Partial<Record<EmailKind, boolean>>
+
+/** An extra person on a client's account (partner, assistant, bookkeeper) with their own sign-in. */
+export interface Contact {
+  id: string
+  clientId: string
+  name: string
+  email: string
+  codeHash?: string
+  passwordHash?: string
+  sessionVersion: number
+  emailPrefs?: EmailPrefs
+  createdAt: string
+  lastLoginAt?: string
 }
 
 export type ProjectStatus = 'planning' | 'in_progress' | 'review' | 'completed' | 'on_hold'
@@ -27,6 +51,7 @@ export interface Milestone {
   description?: string
   dueDate?: string
   status: MilestoneStatus
+  doneAt?: string
 }
 
 /** Something Felipe needs from the client (logo files, hosting login, copy...) */
@@ -60,6 +85,10 @@ export interface Project {
   carePlan?: CarePlan
   /** the Get Started answers this project was created from */
   brief?: IntakeData & { submittedAt: string }
+  /** YYYY-MM-DD of the last automatic weekly progress email */
+  weeklySentOn?: string
+  /** set to false to leave this project out of the weekly progress emails */
+  weeklyUpdates?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -112,6 +141,10 @@ export interface CarePlan {
   /** YYYY-MM of the last month billed */
   lastBilled?: string
   startedAt: string
+  /** card the client saved so each month is charged automatically */
+  autopay?: { paymentMethodId: string; brand: string; last4: string; enabledAt: string; enabledBy: string }
+  /** why the last automatic charge failed (cleared on the next success) */
+  autopayError?: string
 }
 
 export interface Invoice {
@@ -204,6 +237,8 @@ export interface PortalSettings {
   bookingUrl?: string
   /** default deposit percentage for one-click deposit invoices */
   depositPercent?: number
+  /** Monday progress emails to clients with active projects (default on) */
+  weeklyUpdates?: boolean
 }
 
 export type LeadStatus = 'new' | 'converted' | 'archived'
@@ -218,4 +253,111 @@ export interface Lead {
   clientId?: string
   projectId?: string
   convertedAt?: string
+}
+
+/* ───────────── proposals ───────────── */
+
+export type ProposalStatus = 'draft' | 'sent' | 'accepted' | 'declined'
+
+export interface ProposalOption {
+  id: string
+  name: string
+  description?: string
+  /** cents */
+  price: number
+  timeline?: string
+  includes: string[]
+  recommended?: boolean
+}
+
+/** A priced quote. The client picks an option and accepts it in the portal. */
+export interface Proposal {
+  id: string
+  clientId: string
+  projectId: string
+  title: string
+  intro?: string
+  options: ProposalOption[]
+  /** YYYY-MM-DD: the quote can't be accepted after this date */
+  validUntil?: string
+  /** on acceptance: send the agreement for signature / the deposit invoice */
+  autoContract: boolean
+  autoDeposit: boolean
+  status: ProposalStatus
+  createdAt: string
+  sentAt?: string
+  decidedAt?: string
+  acceptedOptionId?: string
+  declineNote?: string
+  acceptedBy?: { name: string; email: string; ip: string }
+  contractId?: string
+  invoiceId?: string
+}
+
+/* ───────────── change requests (scope changes) ───────────── */
+
+export type ChangeStatus = 'sent' | 'approved' | 'declined'
+
+/** Extra work outside the agreed scope, with a price the client approves first. */
+export interface ChangeOrder {
+  id: string
+  clientId: string
+  projectId: string
+  title: string
+  description: string
+  /** cents added to the project price */
+  price: number
+  /** days added to the target launch */
+  addDays?: number
+  /** 'now' = invoice on approval, 'balance' = added to the remaining balance */
+  billing: 'now' | 'balance'
+  status: ChangeStatus
+  createdAt: string
+  decidedAt?: string
+  decidedBy?: string
+  note?: string
+  invoiceId?: string
+}
+
+/* ───────────── previews ───────────── */
+
+/** A link to the site before it goes live, which the client views inside the portal and signs off on. */
+export interface Preview {
+  id: string
+  projectId: string
+  title: string
+  url: string
+  /** what to look at */
+  note?: string
+  status: ApprovalStatus
+  feedback?: string
+  createdAt: string
+  decidedAt?: string
+  decidedBy?: string
+}
+
+/* ───────────── support requests ───────────── */
+
+export type TicketKind = 'bug' | 'change' | 'question'
+export type TicketPriority = 'low' | 'normal' | 'urgent'
+export type TicketStatus = 'open' | 'in_progress' | 'waiting' | 'done'
+
+export interface Ticket {
+  id: string
+  /** short number shown to the client, e.g. 12 */
+  number: number
+  clientId: string
+  projectId: string
+  title: string
+  body: string
+  /** page or link where the problem shows up */
+  pageUrl?: string
+  kind: TicketKind
+  priority: TicketPriority
+  status: TicketStatus
+  openedBy: string
+  createdAt: string
+  updatedAt: string
+  closedAt?: string
+  replies: { from: Role; name: string; body: string; at: string }[]
 }

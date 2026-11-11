@@ -18,9 +18,10 @@ import { sendInvoiceReminder } from '@/lib/portal/reminders'
 import { CARE_DEFAULT_INCLUDES, billCarePlan, firstBillingMonth } from '@/lib/portal/carePlans'
 import { endSession, requireAdmin, siteOrigin, startAdminSession } from '@/lib/portal/session'
 import { emailEnabled, sendEmail } from '@/lib/portal/notify'
+import { emailPeople } from '@/lib/portal/people'
 import { isBlobUrl } from '@/lib/portal/blob'
 import { money } from '@/lib/portal/format'
-import type { AccessStatus, InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
+import type { AccessStatus, EmailKind, InvoiceItem, InvoiceStatus, MilestoneStatus, Project, ProjectStatus } from '@/lib/portal/types'
 import type { FormState } from '@/app/portal/actions'
 
 export type CredentialState =
@@ -236,7 +237,7 @@ export async function setMilestoneStatusAction(projectId: string, milestoneId: s
   const project = await getProject(projectId)
   const m = project?.milestones.find((x) => x.id === milestoneId)
   if (!project || !m) return
-  await saveProject({ ...project, milestones: project.milestones.map((x) => (x.id === milestoneId ? { ...x, status } : x)) })
+  await saveProject({ ...project, milestones: project.milestones.map((x) => (x.id === milestoneId ? { ...x, status, doneAt: status === 'done' ? new Date().toISOString() : undefined } : x)) })
   if (status === 'done') {
     await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: `Milestone completed: ${m.title}` })
     await emailClient(project.clientId, projectId, `Milestone complete: ${m.title}`, `“${m.title}” is done on ${project.name}. See the latest progress in your portal.`)
@@ -297,7 +298,7 @@ export async function adminMessageAction(projectId: string, _: FormState, form: 
   if (!body) return { error: 'Write a message first.' }
   await addMessage(projectId, 'admin', body)
   await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: 'Felipe sent a message' })
-  await emailClient(project.clientId, projectId, `New message from Felipe — ${project.name}`, body, '#messages')
+  await emailClient(project.clientId, projectId, `New message from Felipe — ${project.name}`, body, '#messages', undefined, 'messages')
   refresh(`/portal/admin/projects/${projectId}`)
   return { ok: 'sent' }
 }
@@ -346,7 +347,9 @@ async function afterAdminFile(clientId: string, projectId: string, projectName: 
     approval
       ? `“${name}” is ready for your review on ${projectName}. You can approve it or request changes right from your portal.`
       : `I shared “${name}” on ${projectName}.`,
-    '#files'
+    '#files',
+    undefined,
+    'files'
   )
   refresh(`/portal/admin/projects/${projectId}`, `/portal/projects/${projectId}`)
 }
@@ -397,8 +400,9 @@ async function afterInvoiceSent(invoiceId: string) {
   await logActivity({ clientId: inv.clientId, projectId: inv.projectId, actor: 'admin', text: `Invoice ${inv.number} issued (${money(invoiceTotal(inv))})`, href: `/portal/invoices/${inv.id}` })
   const client = await getClient(inv.clientId)
   if (client) {
-    await sendEmail(
-      client.email,
+    await emailPeople(
+      client.id,
+      'billing',
       `Invoice ${inv.number} from Felipe Cantu Jr`,
       `Hi ${client.name.split(' ')[0]},\n\nInvoice ${inv.number} for ${inv.title} (${money(invoiceTotal(inv))}) is ready. You can view and pay it securely online.`,
       `${await siteOrigin()}/portal/invoices/${inv.id}`
@@ -434,10 +438,8 @@ export async function deleteInvoiceAction(invoiceId: string) {
 
 /* ───────────── helpers ───────────── */
 
-async function emailClient(clientId: string, projectId: string, subject: string, text: string, hash = '', label?: string) {
-  const client = await getClient(clientId)
-  if (!client) return
-  await sendEmail(client.email, subject, text, `${await siteOrigin()}/portal/projects/${projectId}${hash}`, label)
+async function emailClient(clientId: string, projectId: string, subject: string, text: string, hash = '', label?: string, kind: EmailKind = 'updates') {
+  await emailPeople(clientId, kind, subject, text, `${await siteOrigin()}/portal/projects/${projectId}${hash}`, label)
 }
 
 /* ───────────── billing shortcuts & reminders ───────────── */
@@ -513,8 +515,9 @@ async function sendContract(contractId: string) {
   const client = await getClient(c.clientId)
   await logActivity({ clientId: c.clientId, projectId: c.projectId, actor: 'admin', text: `Agreement ready to sign: ${c.title}` })
   if (client) {
-    await sendEmail(
-      client.email,
+    await emailPeople(
+      client.id,
+      'billing',
       `Please review and sign: ${c.title}`,
       `Hi ${client.name.split(' ')[0]},\n\nOur project agreement is ready. Please read it over and sign it in your portal. If anything needs changing, just send me a message there before signing.`,
       `${await siteOrigin()}/portal/contracts/${c.id}`,
@@ -761,6 +764,7 @@ export async function saveCarePlanAction(projectId: string, _: FormState, form: 
     ...project,
     carePlan: {
       active, amount, billingDay, includes, lastBilled: was?.lastBilled, startedAt: was?.startedAt ?? new Date().toISOString(),
+      autopay: was?.autopay, autopayError: was?.autopayError,
       // Switching on (or changing the day) starts automatic billing on the next billing day, never retroactively
       startsFrom: active && (!was?.active || was.billingDay !== billingDay) ? firstBillingMonth(billingDay) : was?.startsFrom,
     },

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FiArrowLeft, FiCheckCircle } from 'react-icons/fi'
 import { requireClient } from '@/lib/portal/session'
-import { getContract } from '@/lib/portal/db'
+import { getClient, getContract } from '@/lib/portal/db'
 import ContractDocument from '@/components/portal/ContractDocument'
 import SignForm from '@/components/portal/SignForm'
 import PrintButton from '@/components/portal/PrintButton'
@@ -30,7 +30,7 @@ export default async function ClientContractPage({ params }: { params: Promise<{
           <p className="text-small font-medium">Signed. A copy has been emailed to you, and it stays here in your portal.</p>
         </div>
       )}
-      <ContractDocument contract={contract} client={client} />
+      <ContractDocument contract={contract} client={(await getClient(contract.clientId)) ?? client} />
       {contract.status === 'sent' && <SignForm action={signContractAction.bind(null, contract.id)} defaultName={client.name} />}
     </div>
   )

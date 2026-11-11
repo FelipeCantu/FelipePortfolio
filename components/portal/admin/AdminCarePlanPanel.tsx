@@ -1,9 +1,10 @@
-import { FiHeart, FiSend, FiTrash2 } from 'react-icons/fi'
+import { FiCreditCard, FiHeart, FiSend, FiTrash2 } from 'react-icons/fi'
 import { Badge, Panel } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import { fmtDate, money } from '@/lib/portal/format'
 import { nextBillingDate, today } from '@/lib/portal/carePlans'
 import { billCareNowAction, removeCarePlanAction, saveCarePlanAction, startCarePlanAction } from '@/app/portal/admin/actions'
+import { adminStopAutopayAction } from '@/app/portal/admin/more-actions'
 import type { Project } from '@/lib/portal/types'
 
 /** Monthly maintenance: price, billing day and what's included. Invoices go out automatically. */
@@ -36,6 +37,22 @@ export default function AdminCarePlanPanel({ project }: { project: Project }) {
           : 'Billing is off. Turn it on once the client has agreed to the plan.'}
         {plan.lastBilled ? ` Last billed: ${plan.lastBilled}.` : ''}
       </p>
+      <div className="mb-4 rounded-control border border-line/15 bg-bg/40 px-3 py-2.5 text-small">
+        {plan.autopay ? (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-fg">
+              <FiCreditCard className="mr-1.5 inline text-success" aria-hidden="true" />
+              Auto-pay on: <span className="capitalize">{plan.autopay.brand}</span> ending {plan.autopay.last4}, saved by {plan.autopay.enabledBy} {fmtDate(plan.autopay.enabledAt)}
+            </p>
+            <form action={adminStopAutopayAction.bind(null, project.id)}>
+              <button className="btn btn-ghost btn-sm">Turn off</button>
+            </form>
+          </div>
+        ) : (
+          <p className="text-muted">Auto-pay is off. The client can save a card from their project page so each month is charged automatically.</p>
+        )}
+        {plan.autopayError && <p className="mt-1 text-danger">Last automatic charge failed: {plan.autopayError}</p>}
+      </div>
       <StateForm action={saveCarePlanAction.bind(null, project.id)}>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-small text-muted">Monthly price ($)<input name="amount" inputMode="decimal" defaultValue={plan.amount ? (plan.amount / 100).toFixed(2) : ''} placeholder="e.g. 150" className="field mt-1" /></label>

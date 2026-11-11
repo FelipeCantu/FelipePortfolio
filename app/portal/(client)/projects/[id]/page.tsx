@@ -1,15 +1,21 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, FiFolder, FiSquare, FiCheckCircle, FiMonitor, FiHeart, FiCheck } from 'react-icons/fi'
+import { FiArrowRight, FiCalendar, FiCheckSquare, FiExternalLink, FiFileText, FiFolder, FiSquare, FiCheckCircle, FiMonitor, FiHeart, FiCheck, FiClipboard, FiCreditCard, FiEye, FiPlusCircle, FiAlertCircle } from 'react-icons/fi'
 import { requireClientProject } from '@/lib/portal/session'
-import { getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, projectProgress, unreadCount } from '@/lib/portal/db'
+import {
+  changeOrders, getProject, getProjectReview, getSettings, listContracts, listFiles, listMessages, markRead, previews, projectProgress,
+  proposalExpired, proposals, tickets, unreadCount,
+} from '@/lib/portal/db'
+import { confirmAutopaySetup, paymentsEnabled } from '@/lib/portal/payments'
+import DecisionForm from '@/components/portal/DecisionForm'
+import SupportSection from '@/components/portal/SupportSection'
 import FeedbackForm from '@/components/portal/FeedbackForm'
 import { bookingHref } from '@/lib/portal/booking'
 import BriefView from '@/components/portal/BriefView'
 import AccessSection from '@/components/portal/AccessSection'
 import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { taskHint } from '@/lib/portal/intake'
-import { PROJECT_STATUS, fmtDate, money } from '@/lib/portal/format'
+import { APPROVAL_STATUS, CHANGE_STATUS, PROJECT_STATUS, PROPOSAL_STATUS, fmtDate, money } from '@/lib/portal/format'
 import { nextBillingDate } from '@/lib/portal/carePlans'
 import { BLOB_ACCESS } from '@/lib/portal/blob'
 import { Badge, Empty, PageHeader, Panel, ProgressBar } from '@/components/portal/ui'
@@ -21,22 +27,39 @@ import ReviewForm from '@/components/portal/ReviewForm'
 import MessageThread from '@/components/portal/MessageThread'
 import Composer from '@/components/portal/Composer'
 import {
-  recordClientUploadAction, reviewFileAction, sendMessageAction, shareLinkAction, submitReviewAction, toggleClientTaskAction,
+  createTicketAction, decideChangeAction, recordClientUploadAction, replyTicketAction, resolveTicketAction, reviewFileAction,
+  sendMessageAction, shareLinkAction, startAutopayAction, stopAutopayAction, submitReviewAction, toggleClientTaskAction,
 } from '@/app/portal/actions'
 
-export default async function ClientProjectPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ autopay?: string }> }) {
   const { id } = await params
-  const { client, project } = await requireClientProject(id)
-  if (!project) notFound()
+  const { autopay: autopaySession } = await searchParams
+  const found = await requireClientProject(id)
+  const client = found.client
+  if (!found.project) notFound()
+  // Back from Stripe after saving a card for auto-pay
+  let autopayJustOn = false
+  if (autopaySession && found.project.carePlan && !found.project.carePlan.autopay) autopayJustOn = await confirmAutopaySetup(id, autopaySession)
+  const project = (autopayJustOn ? await getProject(id) : null) ?? found.project
 
-  const [files, messages, unread, allContracts, review, settings] = await Promise.all([
+  const [files, messages, unread, allContracts, review, settings, allProposals, changes, sitePreviews, support] = await Promise.all([
     listFiles(id),
     listMessages(id),
     unreadCount(id, 'client'),
     listContracts(id),
     getProjectReview(id),
     getSettings(),
+    proposals.list(id),
+    changeOrders.list(id),
+    previews.list(id),
+    tickets.list(id),
   ])
+  const quotes = allProposals.filter((q) => q.status !== 'draft')
+  const openQuotes = quotes.filter((q) => q.status === 'sent' && !proposalExpired(q))
+  const pendingChanges = changes.filter((c) => c.status === 'sent')
+  const latestPreview = sitePreviews[0]
+  const showSupport = !!project.carePlan?.active || project.status === 'completed' || support.length > 0
+  const plan = project.carePlan
   const contracts = allContracts.filter((c) => c.status === 'sent' || c.status === 'signed')
   const toSign = contracts.filter((c) => c.status === 'sent')
   const askReview = project.status === 'completed' || !!project.reviewRequestedAt
@@ -58,11 +81,15 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
             <a href={bookingHref(settings, client, project)} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
               <FiCalendar aria-hidden="true" /> Book a call
             </a>
-            {project.stagingUrl && (
+            {latestPreview ? (
+              <Link href={`/portal/projects/${id}/preview/${latestPreview.id}`} className="btn btn-secondary btn-sm">
+                <FiMonitor aria-hidden="true" /> Preview site
+              </Link>
+            ) : project.stagingUrl ? (
               <a href={project.stagingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
                 <FiMonitor aria-hidden="true" /> Preview site
               </a>
-            )}
+            ) : null}
             {project.liveUrl && (
               <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold btn-sm">
                 <FiExternalLink aria-hidden="true" /> Live site
@@ -78,6 +105,22 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
         </div>
         {project.summary && <p className="mt-3 max-w-prose-lg whitespace-pre-line">{project.summary}</p>}
       </PageHeader>
+
+      {openQuotes.map((q) => (
+        <Link key={q.id} href={`/portal/projects/${id}/proposals/${q.id}`} className="card-interactive group flex flex-wrap items-center gap-4 border-gold/40 bg-gold/[0.06] p-5 no-underline">
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold" aria-hidden="true">
+            <FiClipboard size={20} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-fg">Your proposal is ready: {q.title}</span>
+            <span className="block text-small text-muted">
+              {q.options.length > 1 ? `${q.options.length} options from ${money(Math.min(...q.options.map((o) => o.price)))}` : money(q.options[0].price)}
+              {q.validUntil ? ` · valid until ${fmtDate(q.validUntil)}` : ''}
+            </span>
+          </span>
+          <span className="btn btn-gold btn-sm">View proposal <FiArrowRight aria-hidden="true" /></span>
+        </Link>
+      ))}
 
       {toSign.map((c) => (
         <Link key={c.id} href={`/portal/contracts/${c.id}`} className="card-interactive group flex items-center gap-4 border-gold/40 bg-gold/[0.06] p-5 no-underline">
@@ -112,6 +155,76 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
               <p className="text-small text-muted">Felipe is putting together the project plan. Milestones will appear here.</p>
             )}
           </Panel>
+
+          {sitePreviews.length > 0 && (
+            <Panel
+              id="previews"
+              title={
+                <span className="flex items-center gap-2">
+                  <FiEye aria-hidden="true" /> Site previews {sitePreviews.some((p) => p.status === 'pending') && <Badge tone="warning">To review</Badge>}
+                </span>
+              }
+            >
+              <p className="mb-3 text-small text-muted">See the site before it goes live, on a computer, tablet or phone. Nothing here is public until you approve it.</p>
+              <ul className="grid gap-2">
+                {sitePreviews.map((p, i) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/portal/projects/${id}/preview/${p.id}`}
+                      className={`flex flex-wrap items-center gap-3 rounded-control border p-3 no-underline transition-colors hover:bg-white/[0.04] sm:p-4 ${p.status === 'pending' ? 'border-warning/30 bg-warning/[0.04]' : 'border-line/15 bg-bg/40'}`}
+                    >
+                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-control bg-accent/10 text-accent-light" aria-hidden="true"><FiMonitor /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-fg">{p.title}{i === 0 && sitePreviews.length > 1 ? ' (latest)' : ''}</span>
+                        <span className="block text-[0.75rem] text-subtle">Shared {fmtDate(p.createdAt, { month: 'short', day: 'numeric' })}</span>
+                      </span>
+                      <Badge tone={APPROVAL_STATUS[p.status].tone}>{APPROVAL_STATUS[p.status].label}</Badge>
+                      <span className="btn btn-secondary btn-sm">Open <FiArrowRight aria-hidden="true" /></span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
+
+          {changes.length > 0 && (
+            <Panel
+              id="changes"
+              title={
+                <span className="flex items-center gap-2">
+                  <FiPlusCircle aria-hidden="true" /> Change requests {pendingChanges.length > 0 && <Badge tone="warning">{pendingChanges.length} to answer</Badge>}
+                </span>
+              }
+            >
+              <p className="mb-3 text-small text-muted">Extra work outside the original plan. Felipe prices it first, and nothing starts until you approve.</p>
+              <ul className="grid gap-2">
+                {changes.map((c) => (
+                  <li key={c.id} className={`rounded-control border p-3 sm:p-4 ${c.status === 'sent' ? 'border-warning/30 bg-warning/[0.04]' : 'border-line/15 bg-bg/40'}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="min-w-0 flex-1 font-medium text-fg">{c.title}</p>
+                      <Badge tone={CHANGE_STATUS[c.status].tone}>{CHANGE_STATUS[c.status].label}</Badge>
+                    </div>
+                    <p className="mt-1.5 whitespace-pre-line text-small text-muted">{c.description}</p>
+                    <p className="mt-2 text-small text-fg">
+                      <span className="font-display text-lg font-bold">{c.price ? `+${money(c.price)}` : 'No extra charge'}</span>
+                      <span className="text-subtle">
+                        {c.addDays ? ` · adds about ${c.addDays} day${c.addDays === 1 ? '' : 's'}` : ''}
+                        {c.price ? (c.billing === 'now' ? ' · invoiced when you approve' : ' · added to your remaining balance') : ''}
+                      </span>
+                    </p>
+                    {c.status === 'sent' ? (
+                      <DecisionForm action={decideChangeAction.bind(null, id, c.id)} approveLabel={c.price ? `Approve +${money(c.price)}` : 'Approve'} declineLabel="Decline" notePrompt="Why not, or what would you change? (optional)" />
+                    ) : (
+                      <p className="mt-1 text-[0.75rem] text-subtle">
+                        {c.status === 'approved' ? 'Approved' : 'Declined'} by {c.decidedBy === client.name ? 'you' : c.decidedBy} · {fmtDate(c.decidedAt)}
+                        {c.note ? ` · “${c.note}”` : ''}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          )}
 
           <AccessSection project={project} inviteEmail={settings.accessEmail || DEFAULT_ACCESS_EMAIL} />
 
@@ -215,7 +328,65 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-[0.8rem] text-subtle">Next invoice {fmtDate(nextBillingDate(project))}, emailed to you automatically. Need a change? Just send a message.</p>
+              <p className="mt-3 text-[0.8rem] text-subtle">
+                Next invoice {fmtDate(nextBillingDate(project))}. {plan?.autopay ? 'It’s paid automatically and you get a receipt by email.' : 'It’s emailed to you automatically.'} Need a change? Just send a message.
+              </p>
+              <div className="mt-4 border-t border-line/10 pt-4">
+                {autopayJustOn && (
+                  <p className="mb-3 flex items-center gap-2 text-small text-success" role="status">
+                    <FiCheckCircle aria-hidden="true" /> Auto-pay is on. You don’t need to do anything each month.
+                  </p>
+                )}
+                {plan?.autopayError && (
+                  <p className="mb-3 flex items-start gap-2 text-small text-danger" role="alert">
+                    <FiAlertCircle className="mt-0.5 flex-shrink-0" aria-hidden="true" /> The last automatic payment didn’t go through ({plan.autopayError}) Please pay that invoice and save a new card below.
+                  </p>
+                )}
+                {plan?.autopay ? (
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="flex items-center gap-2 text-small text-fg">
+                      <FiCreditCard className="text-success" aria-hidden="true" />
+                      Auto-pay on · <span className="capitalize">{plan.autopay.brand}</span> ending {plan.autopay.last4}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {paymentsEnabled() && (
+                        <form action={startAutopayAction.bind(null, id)}>
+                          <button className="btn btn-ghost btn-sm">Change card</button>
+                        </form>
+                      )}
+                      <form action={stopAutopayAction.bind(null, id)}>
+                        <button className="btn btn-ghost btn-sm">Turn off</button>
+                      </form>
+                    </div>
+                  </div>
+                ) : paymentsEnabled() ? (
+                  <form action={startAutopayAction.bind(null, id)} className="grid gap-2">
+                    <button className="btn btn-secondary btn-sm w-fit"><FiCreditCard aria-hidden="true" /> Turn on auto-pay</button>
+                    <p className="text-[0.75rem] text-subtle">
+                      Save a card once on Stripe’s secure page and {money(project.carePlan.amount)} is charged to it each month for this plan. Nothing is charged today, and you can turn it off here any time.
+                    </p>
+                  </form>
+                ) : null}
+              </div>
+            </Panel>
+          )}
+
+          {quotes.length > 0 && (
+            <Panel title="Proposals">
+              <ul className="grid gap-2">
+                {quotes.map((q) => {
+                  const st = PROPOSAL_STATUS[proposalExpired(q) ? 'expired' : q.status]
+                  return (
+                    <li key={q.id}>
+                      <Link href={`/portal/projects/${id}/proposals/${q.id}`} className="flex items-center gap-3 rounded-control px-2 py-2 no-underline transition-colors hover:bg-white/[0.04]">
+                        <FiClipboard className="flex-shrink-0 text-accent-light" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 truncate text-small text-fg">{q.title}</span>
+                        <Badge tone={st.tone}>{q.status === 'sent' && st.label !== 'Expired' ? 'To answer' : st.label}</Badge>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
             </Panel>
           )}
 
@@ -241,6 +412,17 @@ export default async function ClientProjectPage({ params }: { params: Promise<{ 
               <Composer action={sendMessageAction.bind(null, id)} placeholder="Ask a question or share feedback…" warnPasswords />
             </div>
           </Panel>
+
+          {showSupport && (
+            <SupportSection
+              tickets={support}
+              viewer="client"
+              clientName={client.name}
+              create={createTicketAction.bind(null, id)}
+              reply={(ticketId) => replyTicketAction.bind(null, id, ticketId)}
+              resolve={(ticketId) => resolveTicketAction.bind(null, id, ticketId)}
+            />
+          )}
         </div>
       </div>
     </div>
