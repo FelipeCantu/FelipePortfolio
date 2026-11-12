@@ -1,6 +1,6 @@
 import 'server-only'
 import { createInvoice, getClient, getProject, invoiceTotal, listClients, listProjects, logActivity, saveProject } from './db'
-import { notifyAdmin } from './notify'
+import { isDemoEmail, notifyAdmin } from './notify'
 import { emailPeople } from './people'
 import { chargeSavedCard } from './payments'
 import { money } from './format'
@@ -115,6 +115,7 @@ export async function runCarePlans(origin: string, now = new Date()) {
   const billed: string[] = []
   const t = today(now)
   for (const c of await listClients()) {
+    if (isDemoEmail(c.email)) continue
     for (const p of await listProjects(c.id)) {
       const plan = p.carePlan
       if (!plan?.active || plan.amount <= 0 || plan.lastBilled === t.ym || t.day < plan.billingDay || (plan.startsFrom && plan.startsFrom > t.ym)) continue

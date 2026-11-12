@@ -54,6 +54,6 @@ export async function GET(request: Request) {
   const year = Number(url.searchParams.get('year')) || new Date().getFullYear()
   if (year < 2000 || year > 2100) return new Response('Bad year', { status: 400 })
   const report = await incomeReport(year)
-  // BOM so Excel reads accents and dashes correctly
-  return download('﻿' + incomeCsv(report.rows), 'text/csv', `income-${year}.csv`)
+  // BOM so Excel reads accents and dashes correctly; demo invoices never go in the tax CSV
+  return download('﻿' + incomeCsv(report.rows.filter((r) => !r.invoice.number.startsWith('DEMO-'))), 'text/csv', `income-${year}.csv`)
 }

@@ -219,6 +219,12 @@ export async function deleteClient(id: string) {
     await kv().del(K.invoice(inv.id))
   }
   for (const c of await listContacts(id)) await removeContact(c.id)
+  // Drop their entries from the admin activity feed so it has no dead links
+  const feed = await kv().lrange<Activity>(K.globalActivity, 0, -1)
+  if (feed.some((a) => a.clientId === id)) {
+    await kv().del(K.globalActivity)
+    for (const a of feed.filter((a) => a.clientId !== id)) await kv().rpush(K.globalActivity, a)
+  }
   await kv().del(K.clientInvoices(id))
   await kv().del(K.clientProjects(id))
   await kv().del(K.clientByEmail(client.email))
@@ -468,15 +474,16 @@ export async function listMessages(projectId: string) {
   return kv().lrange<Message>(K.messages(projectId), 0, -1)
 }
 
-export async function addMessage(projectId: string, from: Role, body: string) {
-  const msg: Message = { id: newId(), projectId, from, body: body.trim().slice(0, 5000), at: now() }
+/** `at` backdates the message (demo data); normally it's now. */
+export async function addMessage(projectId: string, from: Role, body: string, at = now()) {
+  const msg: Message = { id: newId(), projectId, from, body: body.trim().slice(0, 5000), at }
   await kv().rpush(K.messages(projectId), msg)
-  await markRead(projectId, from)
+  await markRead(projectId, from, at)
   return msg
 }
 
-export async function markRead(projectId: string, role: Role) {
-  await kv().set(K.readMark(projectId, role), now())
+export async function markRead(projectId: string, role: Role, at = now()) {
+  await kv().set(K.readMark(projectId, role), at)
 }
 
 /** Messages from the *other* party since `role` last looked. */
@@ -487,8 +494,8 @@ export async function unreadCount(projectId: string, role: Role) {
 
 /* ───────────────────────── activity ───────────────────────── */
 
-export async function logActivity(a: Omit<Activity, 'id' | 'at'>) {
-  const entry: Activity = { ...a, id: newId(), at: now() }
+export async function logActivity(a: Omit<Activity, 'id' | 'at'> & { at?: string }) {
+  const entry: Activity = { ...a, id: newId(), at: a.at ?? now() }
   if (a.projectId) {
     await kv().lpush(K.activity(a.projectId), entry)
     await kv().ltrim(K.activity(a.projectId), 0, 99)
@@ -522,11 +529,13 @@ export async function createInvoice(input: {
   dueDate?: string
   notes?: string
   send: boolean
+  /** demo invoices get their own numbers so real ones stay sequential */
+  number?: string
 }) {
-  const seq = await kv().incr(K.invoiceSeq)
+  const number = input.number ?? `FC-${new Date().getFullYear()}-${String(await kv().incr(K.invoiceSeq)).padStart(4, '0')}`
   const inv: Invoice = {
     id: newId(),
-    number: `FC-${new Date().getFullYear()}-${String(seq).padStart(4, '0')}`,
+    number,
     clientId: input.clientId,
     projectId: input.projectId || undefined,
     title: input.title.trim(),

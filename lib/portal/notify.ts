@@ -11,7 +11,11 @@ const ADMIN_EMAIL = process.env.PORTAL_ADMIN_EMAIL ?? 'cantujr.felipe@gmail.com'
 
 export const emailEnabled = () => Boolean(process.env.RESEND_API_KEY && process.env.PORTAL_FROM_EMAIL)
 
+/** The demo client and its contacts use example.com (a reserved domain), so nothing is ever emailed to them. */
+export const isDemoEmail = (email: string) => /@example\.com$/i.test(email.trim())
+
 export async function sendEmail(to: string, subject: string, text: string, link?: string, linkLabel = 'Open your portal') {
+  if (isDemoEmail(to)) return
   const key = process.env.RESEND_API_KEY?.trim()
   const from = process.env.PORTAL_FROM_EMAIL?.trim()
   if (!key || !from) {

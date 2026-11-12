@@ -1,16 +1,19 @@
+import Link from 'next/link'
+import { FiArrowRight, FiEye } from 'react-icons/fi'
 import { getSettings } from '@/lib/portal/db'
+import { DEMO_CONTACT_EMAIL, DEMO_EMAIL, DEMO_PASSWORD, findDemoClient } from '@/lib/portal/demo'
 import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { PageHeader, Panel } from '@/components/portal/ui'
 import StateForm from '@/components/portal/admin/StateForm'
 import { saveSettingsAction } from '@/app/portal/admin/actions'
-import { setWeeklyUpdatesAction } from '@/app/portal/admin/more-actions'
+import { createDemoAction, removeDemoAction, setWeeklyUpdatesAction, viewDemoAsClientAction } from '@/app/portal/admin/more-actions'
 import { Badge } from '@/components/portal/ui'
 
 export const metadata = { title: 'Portal settings' }
 
 export default async function SettingsPage() {
-  const settings = await getSettings()
+  const [settings, demo] = await Promise.all([getSettings(), findDemoClient()])
   return (
     <div className="mx-auto grid max-w-2xl gap-6">
       <PageHeader eyebrow="Portal admin" title="Settings" />
@@ -42,6 +45,42 @@ export default async function SettingsPage() {
         <form action={setWeeklyUpdatesAction.bind(null, settings.weeklyUpdates === false)} className="mt-3">
           <button className="btn btn-secondary btn-sm">{settings.weeklyUpdates !== false ? 'Turn off for everyone' : 'Turn on'}</button>
         </form>
+      </Panel>
+      <Panel id="demo" title="Demo client" action={demo ? <Badge tone="accent">Active</Badge> : undefined}>
+        <p className="text-small text-muted">
+          A made-up client (Sunrise Yoga Studio) with three projects that use every portal feature: milestones, files waiting for approval, a pending
+          preview, an accepted and an open proposal, a signed agreement, change requests, paid, open and draft invoices, a care plan, support
+          requests, a review, an extra contact and a new project request. Nothing is ever emailed to it, its invoices (DEMO-…) stay out of the
+          income CSV, and the care plan is never billed.
+        </p>
+        {demo ? (
+          <div className="mt-4 grid gap-4">
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/portal/admin/clients/${demo.id}`} className="btn btn-secondary btn-sm">
+                Admin view <FiArrowRight aria-hidden="true" />
+              </Link>
+              <form action={viewDemoAsClientAction.bind(null, false)}>
+                <button className="btn btn-primary btn-sm"><FiEye aria-hidden="true" /> View as the client</button>
+              </form>
+              <form action={viewDemoAsClientAction.bind(null, true)}>
+                <button className="btn btn-ghost btn-sm"><FiEye aria-hidden="true" /> View as their assistant</button>
+              </form>
+            </div>
+            <p className="text-small text-muted">
+              Or sign in at <Link href="/portal/login">/portal/login</Link> (handy in a private window or on your phone): <span className="text-fg">{DEMO_EMAIL}</span> or{' '}
+              <span className="text-fg">{DEMO_CONTACT_EMAIL}</span>, password <span className="font-mono text-fg">{DEMO_PASSWORD}</span>. You stay signed in as admin in this browser too.
+            </p>
+            <form action={removeDemoAction}>
+              <button className="btn btn-ghost btn-sm text-danger">Remove the demo client</button>
+            </form>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <StateForm action={createDemoAction} submitLabel="Create demo client" pendingLabel="Creating…" okLabel="Created" submitClass="btn btn-gold btn-sm">
+              <span className="sr-only">Creates the demo client and its projects.</span>
+            </StateForm>
+          </div>
+        )}
       </Panel>
     </div>
   )

@@ -3,10 +3,11 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
-  changeOrders, createContact, getClient, getContact, getProject, getSettings, logActivity, newId, previews, proposals,
+  changeOrders, createContact, getClient, getContact, getContactByEmail, getProject, getSettings, logActivity, newId, previews, proposals,
   removeContact, resetContactCode, saveProject, saveSettings, tickets,
 } from '@/lib/portal/db'
-import { requireAdmin, siteOrigin } from '@/lib/portal/session'
+import { requireAdmin, siteOrigin, startClientSession } from '@/lib/portal/session'
+import { DEMO_CONTACT_EMAIL, createDemoClient, findDemoClient, removeDemoClient } from '@/lib/portal/demo'
 import { emailEnabled, sendEmail } from '@/lib/portal/notify'
 import { emailPeople } from '@/lib/portal/people'
 import { disableAutopay } from '@/lib/portal/payments'
@@ -369,4 +370,34 @@ export async function adminStopAutopayAction(projectId: string) {
     await logActivity({ clientId: project.clientId, projectId, actor: 'admin', text: 'Auto-pay for the care plan was turned off' })
   }
   refreshProject(projectId)
+}
+
+/* ───────────── demo client ───────────── */
+
+export async function createDemoAction(): Promise<FormState> {
+  await requireAdmin()
+  try {
+    await createDemoClient()
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+  revalidatePath('/portal/admin', 'layout')
+  return { ok: 'Demo client created.' }
+}
+
+export async function removeDemoAction() {
+  await requireAdmin()
+  await removeDemoClient()
+  revalidatePath('/portal/admin', 'layout')
+}
+
+/** Signs this browser into the client side as the demo client (or its extra contact), without touching the admin session. */
+export async function viewDemoAsClientAction(asContact: boolean) {
+  await requireAdmin()
+  const client = await findDemoClient()
+  if (!client) return
+  const contact = asContact ? await getContactByEmail(DEMO_CONTACT_EMAIL) : null
+  if (contact) await startClientSession(client.id, contact.sessionVersion, contact.id)
+  else await startClientSession(client.id, client.sessionVersion)
+  redirect('/portal')
 }
