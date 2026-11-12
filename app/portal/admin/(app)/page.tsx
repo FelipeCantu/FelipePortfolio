@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FiArrowRight, FiUserPlus, FiUsers } from 'react-icons/fi'
 import {
-  invoiceTotal, listClients, listFiles, listGlobalActivity, listInvoices, listLeads, listProjects, projectProgress, unreadCount, previews, proposals, tickets,
+  invoiceTotal, isDemoInvoice, listClients, listFiles, listGlobalActivity, listInvoices, listLeads, listProjects, projectProgress, unreadCount, previews, proposals, tickets,
 } from '@/lib/portal/db'
 import { PROJECT_STATUS, fmtDate, isOverdue, money, timeAgo } from '@/lib/portal/format'
 import { Badge, Empty, PageHeader, Panel, ProgressBar, Stat } from '@/components/portal/ui'
@@ -27,7 +27,8 @@ export default async function AdminHome() {
   )
   const activity = (await listGlobalActivity(25)).filter((a) => a.actor === 'client')
 
-  const allInvoices = perClient.flatMap((x) => x.invoices)
+  // Demo invoices are made up: keep them out of the money totals (they still show under the demo client)
+  const allInvoices = perClient.flatMap((x) => x.invoices).filter((i) => !isDemoInvoice(i))
   const outstanding = allInvoices.filter((i) => i.status === 'open')
   const year = new Date().getFullYear().toString()
   const paidThisYear = allInvoices.filter((i) => i.status === 'paid' && i.paidAt?.startsWith(year))

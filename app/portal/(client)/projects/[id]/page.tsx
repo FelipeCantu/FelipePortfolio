@@ -31,6 +31,11 @@ import {
   sendMessageAction, shareLinkAction, startAutopayAction, stopAutopayAction, submitReviewAction, toggleClientTaskAction,
 } from '@/app/portal/actions'
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { project } = await requireClientProject((await params).id)
+  return { title: project?.name ?? 'Project' }
+}
+
 export default async function ClientProjectPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ autopay?: string }> }) {
   const { id } = await params
   const { autopay: autopaySession } = await searchParams

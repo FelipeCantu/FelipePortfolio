@@ -1,5 +1,5 @@
 import 'server-only'
-import { getProject, invoiceTotal, listAllInvoices, listClients } from './db'
+import { getProject, invoiceTotal, isDemoInvoice, listAllInvoices, listClients } from './db'
 import type { Invoice } from './types'
 
 const TZ = 'America/Chicago'
@@ -18,7 +18,9 @@ export interface IncomeRow {
 
 /** Everything needed for the income page and the CSV export. */
 export async function incomeReport(year: number) {
-  const [invoices, clients] = await Promise.all([listAllInvoices(), listClients()])
+  const [everyInvoice, clients] = await Promise.all([listAllInvoices(), listClients()])
+  // The demo client's invoices are made up, so they never count as income
+  const invoices = everyInvoice.filter((i) => !isDemoInvoice(i))
   const byId = new Map(clients.map((c) => [c.id, c]))
   const projectNames = new Map<string, string>()
   for (const id of new Set(invoices.map((i) => i.projectId).filter((x): x is string => !!x))) {

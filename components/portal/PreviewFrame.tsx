@@ -14,7 +14,7 @@ const SIZES = [
  * width. Some sites refuse to load inside another page, so "Open in a new
  * tab" is always offered next to it.
  */
-export default function PreviewFrame({ url, title }: { url: string; title: string }) {
+export default function PreviewFrame({ url, title, sameSite = false }: { url: string; title: string; sameSite?: boolean }) {
   const [size, setSize] = useState<(typeof SIZES)[number]['key']>('desktop')
   const [nonce, setNonce] = useState(0)
   const current = SIZES.find((s) => s.key === size)!
@@ -54,7 +54,8 @@ export default function PreviewFrame({ url, title }: { url: string; title: strin
           title={`Preview: ${title}`}
           className="mx-auto block max-w-none rounded-control bg-white transition-[width] duration-300"
           style={{ width: current.width, height: current.height }}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+          // A preview hosted on this same site is kept apart from the portal session
+          sandbox={sameSite ? 'allow-scripts allow-forms allow-popups' : 'allow-scripts allow-same-origin allow-forms allow-popups'}
           referrerPolicy="no-referrer"
           loading="lazy"
         />

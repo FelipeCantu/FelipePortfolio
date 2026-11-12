@@ -1,7 +1,8 @@
 import 'server-only'
+import { randomBytes } from 'crypto'
 import {
   addFile, addMessage, changeOrders, contractHash, createClient, createContact, createContract, createInvoice, createLead,
-  createProject, deleteClient, deleteLead, getClientByEmail, listLeads, logActivity, newAccessItem, newId, nextTicketNumber,
+  createProject, deleteClient, deleteLead, getClientByEmail, listLeads, logActivity, newAccessItem, newId,
   previews, proposals, saveContract, saveFile, saveInvoice, saveLead, saveProject, saveReview, setClientPassword, tickets,
   upsertReview,
 } from './db'
@@ -20,7 +21,8 @@ import type { Client, FileItem, Invoice, Milestone, ProposalOption, Role } from 
  */
 export const DEMO_EMAIL = 'demo.client@example.com'
 export const DEMO_CONTACT_EMAIL = 'demo.assistant@example.com'
-export const DEMO_PASSWORD = 'demo-portal'
+/** A new random password every time the demo is created. Nobody is told it: the demo is opened with the admin's "View as" buttons. */
+const demoPassword = () => randomBytes(24).toString('base64url')
 
 export const findDemoClient = () => getClientByEmail(DEMO_EMAIL)
 
@@ -83,9 +85,9 @@ export async function createDemoClient() {
   if (await findDemoClient()) throw new Error('The demo client already exists. Remove it first to start over.')
 
   const { client } = await createClient({ name: 'Maria Lopez (demo)', email: DEMO_EMAIL, company: 'Sunrise Yoga Studio', phone: '(555) 010-4242' })
-  await setClientPassword(client.id, DEMO_PASSWORD)
+  await setClientPassword(client.id, demoPassword())
   const { contact } = await createContact(client.id, { name: 'Sam Rivera (demo assistant)', email: DEMO_CONTACT_EMAIL, emailPrefs: { updates: false } })
-  await setClientPassword(client.id, DEMO_PASSWORD, contact.id)
+  await setClientPassword(client.id, demoPassword(), contact.id)
 
   /* ───── 1. Website in progress: milestones, files, approvals, proposal, agreement, changes, previews, invoices ───── */
   const site0 = await createProject(client.id, {
@@ -245,18 +247,18 @@ export async function createDemoClient() {
 
   const ticketBase = { clientId: client.id, projectId: landing.id, openedBy: 'Maria Lopez' }
   await tickets.save({
-    ...ticketBase, id: newId(), number: await nextTicketNumber(), title: 'Signup form not sending emails',
+    ...ticketBase, id: newId(), number: 1, title: 'Signup form not sending emails',
     body: 'Two people said they filled in the workshop form but I never got an email.', pageUrl: 'https://felipecantujr.com/#contact',
     kind: 'bug', priority: 'urgent', status: 'open', createdAt: ago(0, 12), updatedAt: ago(0, 12), replies: [],
   })
   await tickets.save({
-    ...ticketBase, id: newId(), number: await nextTicketNumber(), title: 'Change the workshop dates',
+    ...ticketBase, id: newId(), number: 2, title: 'Change the workshop dates',
     body: 'The fall session moved to October 18–20.', kind: 'change', priority: 'normal', status: 'waiting',
     createdAt: ago(3), updatedAt: ago(2),
     replies: [{ from: 'admin', name: 'Felipe', body: 'Happy to! Should the early-bird price end on the 1st or the 10th?', at: ago(2) }],
   })
   await tickets.save({
-    ...ticketBase, id: newId(), number: await nextTicketNumber(), title: 'How do I see how many people visited?',
+    ...ticketBase, id: newId(), number: 3, title: 'How do I see how many people visited?',
     body: 'Where can I find the visitor numbers?', kind: 'question', priority: 'low', status: 'done',
     createdAt: ago(40), updatedAt: ago(39), closedAt: ago(39),
     replies: [

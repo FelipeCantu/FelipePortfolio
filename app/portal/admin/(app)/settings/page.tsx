@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FiArrowRight, FiEye } from 'react-icons/fi'
 import { getSettings } from '@/lib/portal/db'
-import { DEMO_CONTACT_EMAIL, DEMO_EMAIL, DEMO_PASSWORD, findDemoClient } from '@/lib/portal/demo'
+import { findDemoClient } from '@/lib/portal/demo'
 import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 import { DEFAULT_ACCESS_EMAIL } from '@/lib/portal/access'
 import { PageHeader, Panel } from '@/components/portal/ui'
@@ -50,8 +50,8 @@ export default async function SettingsPage() {
         <p className="text-small text-muted">
           A made-up client (Sunrise Yoga Studio) with three projects that use every portal feature: milestones, files waiting for approval, a pending
           preview, an accepted and an open proposal, a signed agreement, change requests, paid, open and draft invoices, a care plan, support
-          requests, a review, an extra contact and a new project request. Nothing is ever emailed to it, its invoices (DEMO-…) stay out of the
-          income CSV, and the care plan is never billed.
+          requests, a review, an extra contact and a new project request. Nothing is ever emailed to it, its invoices (DEMO-…) stay out of your
+          income totals and CSV, and the care plan is never billed.
         </p>
         {demo ? (
           <div className="mt-4 grid gap-4">
@@ -67,8 +67,7 @@ export default async function SettingsPage() {
               </form>
             </div>
             <p className="text-small text-muted">
-              Or sign in at <Link href="/portal/login">/portal/login</Link> (handy in a private window or on your phone): <span className="text-fg">{DEMO_EMAIL}</span> or{' '}
-              <span className="text-fg">{DEMO_CONTACT_EMAIL}</span>, password <span className="font-mono text-fg">{DEMO_PASSWORD}</span>. You stay signed in as admin in this browser too.
+              These buttons are the only way in. The demo has no password anyone knows, so it can’t be opened from the public sign-in page. You stay signed in as admin in this browser too.
             </p>
             <form action={removeDemoAction}>
               <button className="btn btn-ghost btn-sm text-danger">Remove the demo client</button>

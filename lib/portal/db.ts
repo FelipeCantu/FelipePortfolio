@@ -75,6 +75,8 @@ const K = {
   previews: (projectId: string) => `portal:project:${projectId}:previews`,
   tickets: (projectId: string) => `portal:project:${projectId}:tickets`,
   ticketSeq: 'portal:seq:ticket',
+  demoTicketSeq: 'portal:seq:demo-ticket',
+  demoInvoiceSeq: 'portal:seq:demo-invoice',
 }
 
 const byDateDesc = <T extends { createdAt: string }>(a: T, b: T) => b.createdAt.localeCompare(a.createdAt)
@@ -532,7 +534,13 @@ export async function createInvoice(input: {
   /** demo invoices get their own numbers so real ones stay sequential */
   number?: string
 }) {
-  const number = input.number ?? `FC-${new Date().getFullYear()}-${String(await kv().incr(K.invoiceSeq)).padStart(4, '0')}`
+  // Anything the demo client triggers (accepting a proposal, approving a change) gets a DEMO- number too
+  const demo = !input.number && isDemoAddress((await getClient(input.clientId))?.email)
+  const number =
+    input.number ??
+    (demo
+      ? `DEMO-${String(100 + (await kv().incr(K.demoInvoiceSeq))).padStart(4, '0')}`
+      : `FC-${new Date().getFullYear()}-${String(await kv().incr(K.invoiceSeq)).padStart(4, '0')}`)
   const inv: Invoice = {
     id: newId(),
     number,
@@ -737,7 +745,12 @@ export const changeOrders = collection<ChangeOrder>(K.changes)
 export const previews = collection<Preview>(K.previews)
 export const tickets = collection<Ticket>(K.tickets)
 
-export const nextTicketNumber = () => kv().incr(K.ticketSeq)
+/** Demo addresses use example.com, a reserved domain (same rule as isDemoEmail in notify.ts). */
+export const isDemoAddress = (email?: string) => !!email && /@example\.com$/i.test(email.trim())
+export const isDemoInvoice = (inv: { number: string }) => inv.number.startsWith('DEMO-')
+
+/** Real clients share one running number; the demo client counts on its own so it never uses one up. */
+export const nextTicketNumber = (demo = false) => kv().incr(demo ? K.demoTicketSeq : K.ticketSeq)
 
 /** Today as YYYY-MM-DD in Felipe's time zone. */
 export const todayIso = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: 'America/Chicago' })

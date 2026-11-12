@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import {
   addFile, addMessage, authenticateClient, checkClientPassword, consumeResetToken, contractHash, createResetToken,
-  getViewerByEmail, getContract, getFile, logActivity, passwordProblem, rateLimit, saveContract, saveFile,
+  getViewerByEmail, getClient, isDemoAddress, getContract, getFile, logActivity, passwordProblem, rateLimit, saveContract, saveFile,
   saveProject, setClientPassword, upsertReview, changeOrders, nextTicketNumber, previews, proposalExpired, proposals,
   saveEmailPrefs, tickets, newId,
 } from '@/lib/portal/db'
@@ -419,7 +419,7 @@ export async function createTicketAction(projectId: string, _: FormState, form: 
   const at = new Date().toISOString()
   const ticket = await tickets.save({
     id: newId(),
-    number: await nextTicketNumber(),
+    number: isDemoAddress((await getClient(client.id))?.email) ? 3 + (await nextTicketNumber(true)) : await nextTicketNumber(),
     clientId: client.id,
     projectId,
     title,

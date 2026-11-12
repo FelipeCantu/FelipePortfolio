@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FiArrowLeft, FiCheckCircle, FiEdit3, FiEyeOff } from 'react-icons/fi'
-import { requireClientProject } from '@/lib/portal/session'
+import { requireClientProject, siteOrigin } from '@/lib/portal/session'
 import { previews } from '@/lib/portal/db'
 import { fmtDate } from '@/lib/portal/format'
 import { Badge } from '@/components/portal/ui'
@@ -10,6 +10,14 @@ import DecisionForm from '@/components/portal/DecisionForm'
 import { reviewPreviewAction } from '@/app/portal/actions'
 
 export const metadata = { title: 'Preview' }
+
+function sameOrigin(url: string, origin: string) {
+  try {
+    return new URL(url).host.replace(/^www\./, '') === new URL(origin).host.replace(/^www\./, '')
+  } catch {
+    return false
+  }
+}
 
 export default async function ClientPreviewPage({ params }: { params: Promise<{ id: string; previewId: string }> }) {
   const { id, previewId } = await params
@@ -47,7 +55,7 @@ export default async function ClientPreviewPage({ params }: { params: Promise<{ 
         </p>
       )}
 
-      <PreviewFrame url={preview.url} title={preview.title} />
+      <PreviewFrame url={preview.url} title={preview.title} sameSite={sameOrigin(preview.url, await siteOrigin())} />
 
       <section className="card p-5 sm:p-6" aria-labelledby="preview-answer">
         <h2 id="preview-answer" className="text-lg font-bold text-fg">What do you think?</h2>
