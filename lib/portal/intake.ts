@@ -135,6 +135,12 @@ export function cleanIntake(raw: unknown): { data?: IntakeData; error?: string }
     // The audit form only asks for the site; a description is optional
     if (!data.currentWebsite) return { error: 'Please enter the website you want audited.' }
     if (!data.description) data.description = 'Free website audit request'
+    // Drop project answers left over from before switching to the audit
+    Object.assign(data, {
+      budget: '', timeline: '', deadline: '', deadlineReason: '', pages: [], features: [], assets: [],
+      inspiration: '', techNotes: '', preferredDays: [], preferredTime: '', additionalNotes: '',
+    })
+    return { data }
   }
   if (!data.description) return { error: 'Please describe your project.' }
   // Drop answers hidden for this project type (e.g. picked before switching type)
@@ -148,6 +154,22 @@ export function cleanIntake(raw: unknown): { data?: IntakeData; error?: string }
 /** Plain-text summary (used in emails). */
 export function intakeSummary(d: IntakeData) {
   const list = (xs: string[]) => (xs.length ? xs.join(', ') : '—')
+  if (d.projectType === 'audit') {
+    return `ABOUT
+Name: ${d.name}
+Email: ${d.email}
+Company: ${d.company || '—'}
+Phone: ${d.phone || '—'}
+
+FREE WEBSITE AUDIT
+Website: ${d.currentWebsite}
+
+Business:
+${d.description}
+
+Look at:
+${d.goals || '—'}`
+  }
   return `ABOUT
 Name: ${d.name}
 Email: ${d.email}
@@ -219,6 +241,8 @@ export function clientTasksFor(d: IntakeData): string[] {
   const f = (x: string) => d.features.includes(x)
   const t = d.projectType
   const tasks: string[] = []
+  // An audit only needs the public site, nothing from the client
+  if (t === 'audit') return tasks
 
   if (BRAND_TYPES.includes(t)) {
     tasks.push(has('Logo') ? 'Upload your logo files (SVG or high-res PNG)' : 'Share logo ideas, or tell Felipe if you need a logo designed')

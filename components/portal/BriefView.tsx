@@ -25,6 +25,7 @@ function Chips({ items }: { items: string[] }) {
 
 /** The Get Started answers, laid out for reading. */
 export default function BriefView({ data, showContact = true }: { data: IntakeData; showContact?: boolean }) {
+  const audit = data.projectType === 'audit'
   const links = (text: string) =>
     text.split(/(\s+)/).map((part, i) =>
       /^https?:\/\/\S+$/.test(part) ? (
@@ -43,14 +44,14 @@ export default function BriefView({ data, showContact = true }: { data: IntakeDa
         </>
       )}
       <Row label="Project type">{PROJECT_TYPE_LABELS[data.projectType] ?? data.projectType}</Row>
-      <Row label="Description">{data.description}</Row>
-      <Row label="Success looks like">{data.goals}</Row>
+      <Row label={audit ? 'Business' : 'Description'}>{data.description}</Row>
+      <Row label={audit ? 'Look at' : 'Success looks like'}>{data.goals}</Row>
       <Row label="Budget">{data.budget}</Row>
       <Row label="Timeline">{data.timeline}</Row>
       <Row label="Hard deadline">{data.deadline ? `${fmtDate(data.deadline)}${data.deadlineReason ? ` — ${data.deadlineReason}` : ''}` : ''}</Row>
       <Row label="Pages">{data.pages.length ? <Chips items={data.pages} /> : ''}</Row>
       <Row label="Features">{data.features.length ? <Chips items={data.features.map(featureLabel)} /> : ''}</Row>
-      <Row label="Already has">{data.assets.length ? <Chips items={data.assets} /> : 'Nothing yet'}</Row>
+      {!audit && <Row label="Already has">{data.assets.length ? <Chips items={data.assets} /> : 'Nothing yet'}</Row>}
       <Row label="Sites they like">{data.inspiration ? links(data.inspiration) : ''}</Row>
       <Row label="Tech notes">{data.techNotes}</Row>
       {showContact && (

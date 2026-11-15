@@ -12,7 +12,7 @@ import {
 import { FiAlertCircle, FiCalendar } from 'react-icons/fi'
 import {
   ASSET_OPTIONS, BUDGET_OPTIONS, DAY_OPTIONS, EMPTY_INTAKE, NO_PAGES_TYPES, PAGE_OPTIONS, PROJECT_TYPES, PROJECT_TYPE_GROUPS, TIME_OPTIONS, featuresFor,
-  TIMELINE_OPTIONS, intakeSummary, type IntakeData, ASSET_INFO, FEATURE_INFO, PAGE_INFO,
+  TIMELINE_OPTIONS, cleanIntake, intakeSummary, type IntakeData, ASSET_INFO, FEATURE_INFO, PAGE_INFO,
 } from '@/lib/portal/intake'
 import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 
@@ -54,7 +54,8 @@ interface StepProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildEmailMessage(data: WizardData): string {
-  return `CLIENT INTAKE SUMMARY\n─────────────────────────────────────────\n${intakeSummary(data)}`
+  const title = data.projectType === 'audit' ? 'FREE WEBSITE AUDIT REQUEST' : 'CLIENT INTAKE SUMMARY'
+  return `${title}\n─────────────────────────────────────────\n${intakeSummary(data)}`
 }
 
 function isStepValid(step: number, data: WizardData): boolean {
@@ -263,7 +264,7 @@ function Step3({ data, set, showErrors }: StepProps) {
 
 // ─── Step 3 (free audit) ──────────────────────────────────────────────────────
 
-function StepAudit({ data, set, showErrors }: StepProps) {
+function StepAudit({ data, set, showErrors, onSwitch }: StepProps & { onSwitch: () => void }) {
   const siteErr = showErrors && data.currentWebsite.trim() === ''
   return (
     <div className="flex flex-col gap-6">
@@ -281,6 +282,12 @@ function StepAudit({ data, set, showErrors }: StepProps) {
       <FieldGroup label="Anything specific you want me to look at?" id="wizard-audit-focus" optional>
         <FieldTextarea id="wizard-audit-focus" rows={3} placeholder="e.g. Not getting calls from the site, it's slow on phones, it doesn't show up on Google…" value={data.goals} onChange={e => set('goals', e.target.value)} />
       </FieldGroup>
+      <p className="m-0 text-small text-subtle">
+        Ready for a new site or app instead?{' '}
+        <button type="button" onClick={onSwitch} className="font-semibold text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
+          Switch to a project request
+        </button>
+      </p>
     </div>
   )
 }
@@ -603,18 +610,31 @@ export default function ClientIntakeWizard() {
     })
   }
 
+  /** Reveals inline errors and focuses the first problem; true when the step can't continue. */
+  const blockIfInvalid = () => {
+    if (isStepValid(step, data)) return false
+    setShowErrors(true)
+    requestAnimationFrame(() => {
+      stepRef.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus()
+    })
+    return true
+  }
+
   const goNext = () => {
-    if (!isStepValid(step, data)) {
-      // Reveal inline errors and send focus to the first problem
-      setShowErrors(true)
-      requestAnimationFrame(() => {
-        stepRef.current?.querySelector<HTMLElement>('[aria-invalid="true"], [data-invalid="true"]')?.focus()
-      })
-      return
-    }
+    if (blockIfInvalid()) return
     setShowErrors(false)
     setDir(1)
     setStep(s => s + 1)
+  }
+
+  // Leave the audit and pick a project type instead
+  const switchToProject = () => {
+    set('projectType', '')
+    setShowErrors(false)
+    if (step > 2) {
+      setDir(-1)
+      setStep(2)
+    }
   }
 
   const goBack = () => {
@@ -624,8 +644,12 @@ export default function ClientIntakeWizard() {
   }
 
   const handleSubmit = async () => {
+    // The audit's last step has a required field, so check before sending
+    if (blockIfInvalid()) return
     setIsSubmitting(true)
     setError('')
+    // Same cleanup the server does, so the visitor's copy never shows answers left over from another project type
+    const clean = cleanIntake(data).data ?? data
     try {
       // 1) Save to the client portal (shows up as a new request for Felipe)
       // 2) EmailJS sends the visitor their confirmation copy, as before
@@ -634,14 +658,14 @@ export default function ClientIntakeWizard() {
         fetch('/api/portal/leads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, website_url: trap }),
+          body: JSON.stringify({ ...clean, website_url: trap }),
         }).then(async (r) => {
           if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? 'Could not save')
         }),
         emailjs.send(
           INTAKE_EMAILJS.serviceId,
           INTAKE_EMAILJS.templateId,
-          { user_name: data.name, user_email: data.email, message: buildEmailMessage(data) },
+          { user_name: clean.name, user_email: clean.email, message: buildEmailMessage(clean) },
           INTAKE_EMAILJS.publicKey
         ),
       ])
@@ -666,7 +690,9 @@ export default function ClientIntakeWizard() {
   return (
     <div className="flex w-full flex-col">
       <p className="mb-6 text-center text-small text-muted">
-        About 5 minutes. Free, no obligation, and I reply within 24 hours.
+        {isAudit
+          ? 'About 1 minute. Free, no obligation, and your video audit arrives within 2 business days.'
+          : 'About 5 minutes. Free, no obligation, and I reply within 24 hours.'}
       </p>
       {step === 1 && !isAudit && (
         <p className="-mt-2 mb-6 rounded-control border border-accent-light/30 bg-accent/[0.08] px-4 py-3 text-center text-small text-muted">
@@ -678,7 +704,10 @@ export default function ClientIntakeWizard() {
       )}
       {step === 1 && isAudit && (
         <p className="-mt-2 mb-6 rounded-control border border-accent-light/30 bg-accent/[0.08] px-4 py-3 text-center text-small text-muted">
-          You&apos;re requesting a <strong className="font-semibold text-fg">free website audit</strong>: three quick steps.
+          You&apos;re requesting a <strong className="font-semibold text-fg">free website audit</strong>: three quick steps.{' '}
+          <button type="button" onClick={switchToProject} className="font-semibold text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
+            Start a project instead
+          </button>
         </p>
       )}
       <ProgressBar step={step} labels={labels} />
@@ -706,7 +735,7 @@ export default function ClientIntakeWizard() {
             {step === 1 && <Step1 data={data} set={set} showErrors={showErrors} />}
             {step === 2 && <Step2 data={data} set={set} showErrors={showErrors} />}
             {step === 3 && (isAudit
-              ? <StepAudit data={data} set={set} showErrors={showErrors} />
+              ? <StepAudit data={data} set={set} showErrors={showErrors} onSwitch={switchToProject} />
               : <Step3 data={data} set={set} showErrors={showErrors} />)}
             {step === 4 && <Step4 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
             {step === 5 && <StepAssets data={data} set={set} toggleArrayItem={toggleArrayItem} />}
@@ -755,7 +784,7 @@ export default function ClientIntakeWizard() {
             onClick={handleSubmit}
             disabled={isSubmitting}
             aria-label={isAudit ? 'Request my free audit' : 'Send my project details'}
-            className="btn btn-primary ml-auto"
+            className="btn btn-primary ml-auto min-w-0 whitespace-normal text-center"
           >
             {isSubmitting ? (
               <>

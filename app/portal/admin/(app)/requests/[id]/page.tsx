@@ -19,7 +19,7 @@ export default async function RequestPage({ params }: { params: Promise<{ id: st
   const d = lead.data
   const existing = await getClientByEmail(d.email)
   const type = PROJECT_TYPE_LABELS[d.projectType] ?? d.projectType
-  const suggestedName = d.company ? `${d.company} ${d.projectType === 'web-app' ? 'web app' : d.projectType === 'mobile' ? 'app' : d.projectType === 'ecommerce' ? 'online store' : d.projectType === 'design' ? 'design' : 'website'}` : `${d.name.split(' ')[0]}'s ${type.toLowerCase()}`
+  const suggestedName = d.company ? `${d.company} ${d.projectType === 'web-app' ? 'web app' : d.projectType === 'mobile' ? 'app' : d.projectType === 'ecommerce' ? 'online store' : d.projectType === 'design' ? 'design' : d.projectType === 'audit' ? 'website audit' : 'website'}` : `${d.name.split(' ')[0]}'s ${type.toLowerCase()}`
   const tasks = clientTasksFor(d)
 
   return (

@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const lead = await createLead(data, ip)
     const origin = new URL(request.url).origin
     await notifyAdmin(
-      `New project request: ${data.name}${data.company ? ` (${data.company})` : ''} — ${PROJECT_TYPE_LABELS[data.projectType]}`,
+      `New ${data.projectType === 'audit' ? 'audit' : 'project'} request: ${data.name}${data.company ? ` (${data.company})` : ''} — ${PROJECT_TYPE_LABELS[data.projectType]}`,
       intakeSummary(data),
       `${origin}/portal/admin/requests/${lead.id}`
     )
