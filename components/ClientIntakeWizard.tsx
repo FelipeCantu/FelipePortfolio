@@ -7,7 +7,7 @@ import { trackEvent } from '@/lib/analytics'
 import { INTAKE_EMAILJS } from '@/lib/emailjs'
 import {
   FaLaptopCode, FaGlobe, FaMobileAlt, FaShoppingCart, FaPaintBrush, FaTools, FaArrowLeft, FaArrowRight, FaCheck, FaCheckCircle,
-  FaRocket, FaRobot, FaPlug, FaSyncAlt, FaWrench, FaCloud, FaHeartbeat,
+  FaRocket, FaRobot, FaPlug, FaSyncAlt, FaWrench, FaCloud, FaHeartbeat, FaSearch,
 } from 'react-icons/fa'
 import { FiAlertCircle, FiCalendar } from 'react-icons/fi'
 import {
@@ -20,12 +20,14 @@ import { DEFAULT_BOOKING_URL } from '@/lib/portal/booking'
 
 const TYPE_ICONS: Record<string, React.ComponentType> = {
   website: FaGlobe, 'web-app': FaLaptopCode, saas: FaRocket, mobile: FaMobileAlt, ecommerce: FaShoppingCart, ai: FaRobot,
-  api: FaPlug, design: FaPaintBrush, rebuild: FaSyncAlt, fix: FaWrench, devops: FaCloud, care: FaHeartbeat, other: FaTools,
+  api: FaPlug, design: FaPaintBrush, audit: FaSearch, rebuild: FaSyncAlt, fix: FaWrench, devops: FaCloud, care: FaHeartbeat, other: FaTools,
 }
 
 // Options and answer shape are shared with the client portal (lib/portal/intake.ts)
 const STEP_LABELS = ['About You', 'Project Type', 'Scope', 'What You Need', 'What You Have', 'Schedule']
-const TOTAL_STEPS = 6
+// The free audit is a shorter flow: who you are, the type, and the site to review
+const AUDIT_STEP_LABELS = ['About You', 'Project Type', 'Your Site']
+const stepLabelsFor = (type: string) => (type === 'audit' ? AUDIT_STEP_LABELS : STEP_LABELS)
 
 // ─── Framer Motion variants ───────────────────────────────────────────────────
 
@@ -58,19 +60,20 @@ function buildEmailMessage(data: WizardData): string {
 function isStepValid(step: number, data: WizardData): boolean {
   if (step === 1) return data.name.trim() !== '' && data.email.trim() !== ''
   if (step === 2) return data.projectType !== ''
+  if (step === 3 && data.projectType === 'audit') return data.currentWebsite.trim() !== ''
   if (step === 3) return data.description.trim() !== '' && data.budget !== '' && data.timeline !== ''
   return true
 }
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
 
-function ProgressBar({ step }: { step: number }) {
+function ProgressBar({ step, labels }: { step: number; labels: string[] }) {
   return (
     <ol
       className="m-0 mb-8 flex list-none items-start justify-center gap-0 p-0"
       aria-label="Wizard progress"
     >
-      {STEP_LABELS.map((label, idx) => {
+      {labels.map((label, idx) => {
         const num       = idx + 1
         const completed = num < step
         const active    = num === step
@@ -254,6 +257,30 @@ function Step3({ data, set, showErrors }: StepProps) {
           <FieldInput id="wizard-deadline-why" type="text" placeholder="e.g. Grand opening, product launch" value={data.deadlineReason} onChange={e => set('deadlineReason', e.target.value)} />
         </FieldGroup>
       </div>
+    </div>
+  )
+}
+
+// ─── Step 3 (free audit) ──────────────────────────────────────────────────────
+
+function StepAudit({ data, set, showErrors }: StepProps) {
+  const siteErr = showErrors && data.currentWebsite.trim() === ''
+  return (
+    <div className="flex flex-col gap-6">
+      <StepHeading
+        title="Your Free Website Audit"
+        sub="I'll look through your site and record a short video showing what's working, what's costing you customers, and how to fix it. No cost, no obligation."
+      />
+      <FieldGroup label="Website to audit" id="wizard-audit-site" required>
+        <FieldInput id="wizard-audit-site" type="url" inputMode="url" placeholder="https://yourbusiness.com" value={data.currentWebsite} onChange={e => set('currentWebsite', e.target.value)} autoComplete="url" required invalid={siteErr} />
+        {siteErr && <FieldError id="wizard-audit-site-error">Please enter the website you want me to review.</FieldError>}
+      </FieldGroup>
+      <FieldGroup label="What does your business do?" id="wizard-audit-business" optional>
+        <FieldInput id="wizard-audit-business" type="text" placeholder="e.g. Family-owned taqueria in Arlington" value={data.description} onChange={e => set('description', e.target.value)} />
+      </FieldGroup>
+      <FieldGroup label="Anything specific you want me to look at?" id="wizard-audit-focus" optional>
+        <FieldTextarea id="wizard-audit-focus" rows={3} placeholder="e.g. Not getting calls from the site, it's slow on phones, it doesn't show up on Google…" value={data.goals} onChange={e => set('goals', e.target.value)} />
+      </FieldGroup>
     </div>
   )
 }
@@ -508,7 +535,7 @@ function OptionCards({
 
 // ─── Success screen ───────────────────────────────────────────────────────────
 
-function SuccessScreen({ firstName }: { firstName: string }) {
+function SuccessScreen({ firstName, audit }: { firstName: string; audit: boolean }) {
   return (
     <motion.div
       className="flex flex-col items-center gap-5 px-2 py-8 text-center sm:py-12"
@@ -523,8 +550,17 @@ function SuccessScreen({ firstName }: { firstName: string }) {
       </div>
       <h2 className="text-h2 text-fg">You're all set, {firstName}!</h2>
       <p className="m-0 max-w-[26rem] text-muted">
-        Your intake form has been received. I'll review your project details and follow up within{' '}
-        <strong className="font-semibold text-fg">24 hours</strong> to confirm a time that works for both of us.
+        {audit ? (
+          <>
+            Your audit request has been received. I'll review your site and email you a short video walkthrough, usually within{' '}
+            <strong className="font-semibold text-fg">2 business days</strong>.
+          </>
+        ) : (
+          <>
+            Your intake form has been received. I'll review your project details and follow up within{' '}
+            <strong className="font-semibold text-fg">24 hours</strong> to confirm a time that works for both of us.
+          </>
+        )}
       </p>
       <p className="m-0 text-small text-subtle">Check your inbox — a confirmation copy has been sent to you.</p>
     </motion.div>
@@ -621,15 +657,31 @@ export default function ClientIntakeWizard() {
   }
 
   const firstName = data.name.trim().split(' ')[0] || 'there'
+  const isAudit = data.projectType === 'audit'
+  const labels = stepLabelsFor(data.projectType)
+  const totalSteps = labels.length
 
-  if (submitted) return <SuccessScreen firstName={firstName} />
+  if (submitted) return <SuccessScreen firstName={firstName} audit={isAudit} />
 
   return (
     <div className="flex w-full flex-col">
       <p className="mb-6 text-center text-small text-muted">
         About 5 minutes. Free, no obligation, and I reply within 24 hours.
       </p>
-      <ProgressBar step={step} />
+      {step === 1 && !isAudit && (
+        <p className="-mt-2 mb-6 rounded-control border border-accent-light/30 bg-accent/[0.08] px-4 py-3 text-center text-small text-muted">
+          Not sure what you need yet?{' '}
+          <button type="button" onClick={() => set('projectType', 'audit')} className="font-semibold text-accent-light underline decoration-accent/40 underline-offset-4 hover:text-white">
+            Get a free video audit of your current site
+          </button>
+        </p>
+      )}
+      {step === 1 && isAudit && (
+        <p className="-mt-2 mb-6 rounded-control border border-accent-light/30 bg-accent/[0.08] px-4 py-3 text-center text-small text-muted">
+          You&apos;re requesting a <strong className="font-semibold text-fg">free website audit</strong>: three quick steps.
+        </p>
+      )}
+      <ProgressBar step={step} labels={labels} />
 
       {/* Honeypot: invisible to people, tempting to spam bots */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -653,7 +705,9 @@ export default function ClientIntakeWizard() {
           >
             {step === 1 && <Step1 data={data} set={set} showErrors={showErrors} />}
             {step === 2 && <Step2 data={data} set={set} showErrors={showErrors} />}
-            {step === 3 && <Step3 data={data} set={set} showErrors={showErrors} />}
+            {step === 3 && (isAudit
+              ? <StepAudit data={data} set={set} showErrors={showErrors} />
+              : <Step3 data={data} set={set} showErrors={showErrors} />)}
             {step === 4 && <Step4 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
             {step === 5 && <StepAssets data={data} set={set} toggleArrayItem={toggleArrayItem} />}
             {step === 6 && <Step5 data={data} set={set} toggleArrayItem={toggleArrayItem} />}
@@ -685,7 +739,7 @@ export default function ClientIntakeWizard() {
           Back
         </button>
 
-        {step < TOTAL_STEPS ? (
+        {step < totalSteps ? (
           <button
             type="button"
             onClick={goNext}
@@ -700,7 +754,7 @@ export default function ClientIntakeWizard() {
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            aria-label="Send my project details"
+            aria-label={isAudit ? 'Request my free audit' : 'Send my project details'}
             className="btn btn-primary ml-auto"
           >
             {isSubmitting ? (
@@ -713,7 +767,7 @@ export default function ClientIntakeWizard() {
               </>
             ) : (
               <>
-                Send My Project Details
+                {isAudit ? 'Request My Free Audit' : 'Send My Project Details'}
                 <FaCheck aria-hidden="true" />
               </>
             )}

@@ -45,6 +45,7 @@ export const PROJECT_TYPES = [
   { id: 'ai', group: 'new', label: 'AI Features', sub: 'Chatbots, smart search and automation' },
   { id: 'api', group: 'new', label: 'APIs & Integrations', sub: 'Connect your systems and tools together' },
   { id: 'design', group: 'new', label: 'UI/UX Design', sub: 'Designs and a clickable prototype first' },
+  { id: 'audit', group: 'improve', label: 'Free Website Audit', sub: 'A short video review of your current site' },
   { id: 'rebuild', group: 'improve', label: 'Rebuild / Modernize', sub: 'Move an outdated site or app to modern tech' },
   { id: 'fix', group: 'improve', label: 'Fix & Speed Up', sub: 'Bugs, slow pages, security or messy code' },
   { id: 'devops', group: 'improve', label: 'Hosting & Deployment', sub: 'Cloud setup, automatic updates, backups' },
@@ -61,7 +62,7 @@ export const PROJECT_TYPE_GROUPS = [
 export const PROJECT_TYPE_LABELS: Record<string, string> = Object.fromEntries(PROJECT_TYPES.map((t) => [t.id, t.label]))
 
 /** Types where a page list doesn't really apply. */
-export const NO_PAGES_TYPES = ['api', 'devops', 'fix', 'care']
+export const NO_PAGES_TYPES = ['api', 'devops', 'fix', 'care', 'audit']
 /** Types that need logo / brand / content from the client. */
 const BRAND_TYPES = ['website', 'web-app', 'saas', 'mobile', 'ecommerce', 'design', 'rebuild', 'ai', 'other']
 
@@ -130,6 +131,11 @@ export function cleanIntake(raw: unknown): { data?: IntakeData; error?: string }
   if (!data.name) return { error: 'Please enter your name.' }
   if (!/^\S+@\S+\.\S+$/.test(data.email)) return { error: 'Please enter a valid email address.' }
   if (!PROJECT_TYPE_LABELS[data.projectType]) return { error: 'Please choose a project type.' }
+  if (data.projectType === 'audit') {
+    // The audit form only asks for the site; a description is optional
+    if (!data.currentWebsite) return { error: 'Please enter the website you want audited.' }
+    if (!data.description) data.description = 'Free website audit request'
+  }
   if (!data.description) return { error: 'Please describe your project.' }
   // Drop answers hidden for this project type (e.g. picked before switching type)
   const allowedFeatures = featuresFor(data.projectType)
@@ -195,6 +201,8 @@ export function milestonesFor(type: string): string[] {
       return ['Audit & diagnosis', 'Priority fix list', 'Fixes & improvements', 'Testing', 'Before & after report']
     case 'devops':
       return ['Infrastructure review', 'Cloud & hosting setup', 'Automatic deploys (CI/CD)', 'Monitoring & backups', 'Handoff & documentation']
+    case 'audit':
+      return ['Review current site', 'Record video audit', 'Send audit & recommended next steps']
     case 'care':
       return ['Onboarding & site check-up', 'Monitoring, backups & security set up', 'First monthly report']
     default:
