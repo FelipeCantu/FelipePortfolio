@@ -49,11 +49,21 @@ export default {
       title: "Body",
       type: "array",
       of: [
-        { 
+        {
           type: "block",
           title: "Block",
-          styles: [],
-          lists: [],
+          // The site styles all of these (.prose-pt in app/globals.css)
+          styles: [
+            { title: "Normal", value: "normal" },
+            { title: "Heading", value: "h2" },
+            { title: "Subheading", value: "h3" },
+            { title: "Small heading", value: "h4" },
+            { title: "Callout", value: "blockquote" },
+          ],
+          lists: [
+            { title: "Bullet", value: "bullet" },
+            { title: "Numbered", value: "number" },
+          ],
         },
         {
           type: "image",
@@ -73,6 +83,32 @@ export default {
               type: "string",
             },
           ],
+        },
+        {
+          // Multi-line code sample, rendered as <pre><code> on the site
+          name: "code",
+          title: "Code block",
+          type: "object",
+          fields: [
+            {
+              name: "language",
+              title: "Language",
+              type: "string",
+              description: "e.g. ts, tsx, js, html, css, bash",
+            },
+            {
+              name: "code",
+              title: "Code",
+              type: "text",
+              rows: 12,
+            },
+          ],
+          preview: {
+            select: { language: "language", code: "code" },
+            prepare({ language, code }) {
+              return { title: (code || "").split("\n")[0] || "Code block", subtitle: language || "code" };
+            },
+          },
         },
       ],
     },
