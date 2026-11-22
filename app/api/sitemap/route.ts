@@ -1,4 +1,4 @@
-import { sanity } from '@/lib/sanity'
+import { sanity, ALL_PROJECTS_SLUGS_QUERY } from '@/lib/sanity'
 
 const BASE_URL = 'https://felipecantujr.com'
 
@@ -15,7 +15,7 @@ export async function GET() {
   try {
     const [posts, projects] = await Promise.all([
       sanity.fetch(`*[_type == "post" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`),
-      sanity.fetch(`*[_type == "project" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`),
+      sanity.fetch(ALL_PROJECTS_SLUGS_QUERY),
     ])
 
     const today = new Date().toISOString().split('T')[0]

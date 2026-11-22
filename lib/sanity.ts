@@ -46,34 +46,39 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
   "authorImage": author->image
 }`
 
-export const ALL_PROJECTS_QUERY = `*[_type == "project"] | order(featured desc, order asc, date desc) {
+// Only curated projects (`showcase` in the Studio) are public: the portfolio,
+// case-study pages and sitemap all filter on this, so hidden ones 404.
+const SHOWCASED = `_type == "project" && showcase == true && defined(slug.current)`
+
+export const SHOWCASE_PROJECTS_QUERY = `*[${SHOWCASED}] | order(order asc, date desc)[0...5] {
   _id,
   title,
-  slug,
+  "slug": slug.current,
   excerpt,
-  featured,
+  role,
   status,
-  projectType,
-  "techStack": tags,
+  "techStack": tags[0...4],
   date,
   place,
-  "githubUrl": githubLink,
   "liveUrl": link,
-  _updatedAt,
-  "mainImage": image { asset->{ _id, url }, alt },
-  gallery[]{ asset->{ _id, url }, alt, caption }
+  "image": image {
+    alt,
+    "url": asset->url,
+    "lqip": asset->metadata.lqip,
+    "width": asset->metadata.dimensions.width,
+    "height": asset->metadata.dimensions.height
+  }
 }`
 
-export const ALL_PROJECTS_SLUGS_QUERY = `*[_type == "project" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+export const ALL_PROJECTS_SLUGS_QUERY = `*[${SHOWCASED}]{ "slug": slug.current, _updatedAt }`
 
-export const PROJECT_BY_SLUG_QUERY = `*[_type == "project" && slug.current == $slug][0]{
+export const PROJECT_BY_SLUG_QUERY = `*[${SHOWCASED} && slug.current == $slug][0]{
   _id,
   title,
   slug,
   excerpt,
-  featured,
+  role,
   status,
-  projectType,
   "techStack": tags,
   date,
   place,

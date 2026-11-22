@@ -14,7 +14,7 @@ import {
 import { FaGithub } from 'react-icons/fa'
 import { PortableText } from '@portabletext/react'
 import { portableTextComponents } from '@/components/portableTextComponents'
-import { TYPE_LABELS, TYPE_BADGE, STATUS_CONFIG } from '@/components/projectMeta'
+import { STATUS_CONFIG } from '@/components/projectMeta'
 import Reveal from '@/components/ui/Reveal'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -31,9 +31,8 @@ interface Project {
   excerpt?: string
   description?: string
   body?: unknown[]
-  projectType?: string | string[]
+  role?: string
   status?: string
-  featured?: boolean
   date?: string
   place?: string
   techStack?: string[]
@@ -108,12 +107,6 @@ export default function SingleProjectContent({ project }: Props) {
   // Sanity allows gallery entries with no uploaded asset: skip them
   const gallery = (project.gallery ?? []).filter((img) => img.asset?.url)
 
-  const types = Array.isArray(project.projectType)
-    ? project.projectType
-    : project.projectType
-    ? [project.projectType]
-    : []
-
   const statusCfg = STATUS_CONFIG[project.status ?? 'completed'] ?? STATUS_CONFIG.completed
 
   const formattedDate = project.date
@@ -144,25 +137,15 @@ export default function SingleProjectContent({ project }: Props) {
           <div className="max-w-3xl">
             {/* Badges */}
             <motion.ul variants={rise} className="mb-6 flex list-none flex-wrap gap-2 p-0">
-              {types
-                .filter((t) => TYPE_LABELS[t])
-                .map((t) => (
-                  <li
-                    key={t}
-                    className={`rounded-pill border px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${TYPE_BADGE[t]}`}
-                  >
-                    {TYPE_LABELS[t]}
-                  </li>
-                ))}
               <li
                 className={`inline-flex items-center gap-1.5 rounded-pill border px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${statusCfg.badge}`}
               >
                 <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} aria-hidden="true" />
                 {statusCfg.label}
               </li>
-              {project.featured && (
-                <li className="rounded-pill border border-gold/35 bg-gold/10 px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] text-gold">
-                  Featured
+              {project.role && (
+                <li className="rounded-pill border border-line/25 bg-white/[0.04] px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] text-muted">
+                  {project.role}
                 </li>
               )}
             </motion.ul>
