@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { sanity, PROJECT_BY_SLUG_QUERY, ALL_PROJECTS_SLUGS_QUERY } from '@/lib/sanity'
 import SingleProjectContent from '@/components/SingleProjectContent'
+import FinalCta from '@/components/FinalCta'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${project.title} | Felipe Cantu Jr`,
       description,
       url: `https://felipecantujr.com/project/${slug}`,
-      images: project.mainImage?.asset?.url ? [{ url: project.mainImage.asset.url }] : [],
+      images: project.image?.url ? [{ url: project.image.url, alt: project.image.alt }] : [],
     },
   }
 }
@@ -39,5 +40,10 @@ export default async function ProjectPage({ params }: Props) {
   const { slug } = await params
   const project = await sanity.fetch(PROJECT_BY_SLUG_QUERY, { slug })
   if (!project) notFound()
-  return <SingleProjectContent project={project} slug={slug} />
+  return (
+    <>
+      <SingleProjectContent project={project} slug={slug} />
+      <FinalCta />
+    </>
+  )
 }

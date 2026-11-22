@@ -50,6 +50,13 @@ export const POST_BY_SLUG_QUERY = `*[_type == "post" && slug.current == $slug][0
 // case-study pages and sitemap all filter on this, so hidden ones 404.
 const SHOWCASED = `_type == "project" && showcase == true && defined(slug.current)`
 
+// Flat image shape for next/image: real dimensions + a blur placeholder
+const IMAGE_FIELDS = `alt,
+    "url": asset->url,
+    "lqip": asset->metadata.lqip,
+    "width": asset->metadata.dimensions.width,
+    "height": asset->metadata.dimensions.height`
+
 export const SHOWCASE_PROJECTS_QUERY = `*[${SHOWCASED}] | order(order asc, date desc)[0...5] {
   _id,
   title,
@@ -61,13 +68,7 @@ export const SHOWCASE_PROJECTS_QUERY = `*[${SHOWCASED}] | order(order asc, date 
   date,
   place,
   "liveUrl": link,
-  "image": image {
-    alt,
-    "url": asset->url,
-    "lqip": asset->metadata.lqip,
-    "width": asset->metadata.dimensions.width,
-    "height": asset->metadata.dimensions.height
-  }
+  "image": image { ${IMAGE_FIELDS} }
 }`
 
 export const ALL_PROJECTS_SLUGS_QUERY = `*[${SHOWCASED}]{ "slug": slug.current, _updatedAt }`
@@ -85,9 +86,14 @@ export const PROJECT_BY_SLUG_QUERY = `*[${SHOWCASED} && slug.current == $slug][0
   "githubUrl": githubLink,
   "liveUrl": link,
   _updatedAt,
-  "mainImage": image { asset->{ _id, url }, alt },
+  "image": image { ${IMAGE_FIELDS} },
   body,
-  gallery[]{ asset->{ _id, url }, alt, caption }
+  "gallery": gallery[defined(asset)]{ caption, ${IMAGE_FIELDS} },
+  // The case that follows in showcase order, wrapping to the first after the last
+  "next": coalesce(
+    *[${SHOWCASED} && order > ^.order] | order(order asc)[0],
+    *[${SHOWCASED} && slug.current != $slug] | order(order asc)[0]
+  ){ title, "slug": slug.current, excerpt, role, status, "liveUrl": link, "image": image { ${IMAGE_FIELDS} } }
 }`
 
 export const TESTIMONIALS_QUERY = `*[_type == "testimonial" && featured == true] | order(order asc)[0...6] {

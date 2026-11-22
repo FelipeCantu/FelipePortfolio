@@ -167,6 +167,22 @@ p { text-wrap: pretty; }
   }
 }
 
+/* Card -> case-study morph (components/ui/TransitionLink.tsx, never started
+   under reduced motion). The shared project frame glides between pages while
+   the rest of the page cross-fades quickly underneath it. */
+::view-transition-group(*) {
+  animation-duration: 600ms;
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-group(root) { animation-duration: 280ms; }
+/* Card and hero frames have different aspect ratios: crop, never stretch */
+::view-transition-old(*),
+::view-transition-new(*) {
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
 /* ==========================================================================
    COMPONENT PRIMITIVES
    Small, reusable, token-driven. Page components compose these instead of
@@ -203,6 +219,18 @@ p { text-wrap: pretty; }
     @apply bg-gold text-gold-ink shadow-[0_8px_24px_-10px_rgb(var(--c-gold)/0.6)];
     @apply hover:-translate-y-0.5 hover:brightness-110;
   }
+  /* The house hover for primary CTAs: a lighter fill sweeps in from the left */
+  .btn-primary, .btn-gold { position: relative; isolation: isolate; overflow: hidden; }
+  .btn-primary::after, .btn-gold::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgb(255 255 255 / 0.2);
+    transform: translateX(-101%);
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
+  .btn-primary:hover::after, .btn-gold:hover::after { transform: translateX(0); }
   .btn-ghost { @apply px-4 text-muted hover:bg-white/[0.06] hover:text-fg; }
   .btn-sm { @apply min-h-[2.25rem] px-4 py-2 text-[0.85rem]; }
 

@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
-const NAV_LINKS = [
+// `also`: detail routes that live outside the section's own path but belong to it
+const NAV_LINKS: Array<{ href: string; label: string; also?: string }> = [
   { href: '/', label: 'Home' },
-  { href: '/blog', label: 'Blogs' },
-  { href: '/portfolio', label: 'Portfolio' },
+  { href: '/blog', label: 'Blogs', also: '/post' },
+  { href: '/portfolio', label: 'Portfolio', also: '/project' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
@@ -23,8 +24,10 @@ interface Props {
 export default function Sidebar({ open, onClose }: Props) {
   const pathname = usePathname()
 
-  // A link is current for its own path and any nested path beneath it
-  const isCurrent = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`))
+  // A link is current for its own path, any nested path beneath it, and its detail routes
+  const within = (base: string) => pathname === base || pathname.startsWith(`${base}/`)
+  const isCurrent = (href: string, also?: string) =>
+    href === '/' ? pathname === '/' : within(href) || (also !== undefined && within(also))
 
   return (
     <nav aria-label="Primary">
@@ -47,8 +50,8 @@ export default function Sidebar({ open, onClose }: Props) {
           <span className="font-display text-base font-bold tracking-tight text-fg">Felipe Cantu Jr</span>
         </li>
 
-        {NAV_LINKS.map(({ href, label }) => {
-          const current = isCurrent(href)
+        {NAV_LINKS.map(({ href, label, also }) => {
+          const current = isCurrent(href, also)
           return (
             <li key={href} className="max-lg:w-full">
               <Link

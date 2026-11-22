@@ -1,29 +1,17 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
-import { m as motion, type Variants } from 'framer-motion'
-import {
-  FiArrowLeft,
-  FiExternalLink,
-  FiCalendar,
-  FiMapPin,
-  FiZoomIn,
-  FiX,
-  FiArrowUpRight,
-} from 'react-icons/fi'
+import Image from 'next/image'
+import { AnimatePresence, m as motion, type Variants } from 'framer-motion'
+import { FiArrowLeft, FiZoomIn, FiX, FiArrowUpRight } from 'react-icons/fi'
 import { FaGithub } from 'react-icons/fa'
 import { PortableText } from '@portabletext/react'
 import { portableTextComponents } from '@/components/portableTextComponents'
-import { STATUS_CONFIG } from '@/components/projectMeta'
+import { STATUS_CONFIG, type ProjectImage } from '@/components/projectMeta'
+import ProjectFrame from '@/components/ProjectFrame'
 import Reveal from '@/components/ui/Reveal'
+import TransitionLink from '@/components/ui/TransitionLink'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-interface GalleryItem {
-  asset: { _id: string; url: string }
-  alt?: string
-  caption?: string
-}
 
 interface Project {
   _id: string
@@ -38,8 +26,17 @@ interface Project {
   techStack?: string[]
   githubUrl?: string
   liveUrl?: string
-  mainImage?: { asset: { _id: string; url: string }; alt?: string }
-  gallery?: GalleryItem[]
+  image?: ProjectImage
+  gallery?: Array<ProjectImage & { caption?: string }>
+  next?: {
+    title: string
+    slug: string
+    excerpt?: string
+    role?: string
+    status?: string
+    liveUrl?: string
+    image?: ProjectImage
+  } | null
 }
 
 interface Props {
@@ -62,20 +59,58 @@ const rise: Variants = {
 
 // ─── Small pieces ────────────────────────────────────────────────────────────
 
-function SectionHeading({ title, count }: { title: string; count: string }) {
+function ProjectLinks({ project, size = '' }: { project: Project; size?: string }) {
   return (
-    <div className="mb-6 flex items-baseline gap-4">
-      <h2 className="text-h3 text-fg">{title}</h2>
-      <span className="text-small text-subtle">{count}</span>
-    </div>
+    <>
+      {project.liveUrl && (
+        <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className={`btn btn-primary group ${size}`}>
+          Visit live site
+          <FiArrowUpRight
+            aria-hidden="true"
+            className="transition-transform duration-200 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+          />
+        </a>
+      )}
+      {project.githubUrl && (
+        <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className={`btn btn-secondary ${size}`}>
+          Source
+          <FaGithub aria-hidden="true" />
+        </a>
+      )}
+    </>
   )
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function SingleProjectContent({ project }: Props) {
+export default function SingleProjectContent({ project, slug }: Props) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null)
   const closeBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Mobile link bar: only once the hero buttons have scrolled away, and gone
+  // again at the end of the case study so it never covers what follows
+  const heroLinksRef = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLDivElement>(null)
+  const [pastHero, setPastHero] = useState(false)
+  const [atEnd, setAtEnd] = useState(false)
+
+  useEffect(() => {
+    const hero = heroLinksRef.current
+    const end = endRef.current
+    if (!hero || !end) return
+    const heroObserver = new IntersectionObserver(([e]) =>
+      setPastHero(!e.isIntersecting && e.boundingClientRect.top < 0),
+    )
+    const endObserver = new IntersectionObserver(([e]) =>
+      setAtEnd(e.isIntersecting || e.boundingClientRect.top < 0),
+    )
+    heroObserver.observe(hero)
+    endObserver.observe(end)
+    return () => {
+      heroObserver.disconnect()
+      endObserver.disconnect()
+    }
+  }, [])
 
   const openLightbox = (src: string, alt: string) => setLightbox({ src, alt })
   const closeLightbox = () => setLightbox(null)
@@ -104,125 +139,118 @@ export default function SingleProjectContent({ project }: Props) {
     }
   }, [lightbox])
 
-  // Sanity allows gallery entries with no uploaded asset: skip them
-  const gallery = (project.gallery ?? []).filter((img) => img.asset?.url)
-
-  const statusCfg = STATUS_CONFIG[project.status ?? 'completed'] ?? STATUS_CONFIG.completed
+  const gallery = project.gallery ?? []
+  const status = project.status ?? 'completed'
+  const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.completed
 
   const formattedDate = project.date
-    ? new Date(project.date + 'T12:00:00').toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      })
+    ? new Date(project.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
     : null
+
+  const facts = [
+    ['Role', project.role],
+    ['Date', formattedDate],
+    ['Context', project.place],
+  ].filter((f): f is [string, string] => Boolean(f[1]))
 
   const hasLinks = Boolean(project.liveUrl || project.githubUrl)
   const hasBody = Array.isArray(project.body) && project.body.length > 0
+  const showBar = hasLinks && pastHero && !atEnd
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <header className="container-page page-top pb-10 sm:pb-14">
-        <motion.div variants={heroStack} initial="hidden" animate="show">
-          <motion.div variants={rise}>
-            <Link href="/portfolio" className="btn btn-ghost btn-sm group -ml-4 mb-6">
+    // data-route: TransitionLink waits for it before finishing the card-to-hero morph
+    <div data-route={`/project/${slug}`}>
+      {/* ── Hero: same two-column header as the work index ── */}
+      <header className="container-page page-top">
+        <motion.div
+          variants={heroStack}
+          initial="hidden"
+          animate="show"
+          className="grid gap-5 md:grid-cols-12 md:items-end md:gap-8"
+        >
+          <motion.div variants={rise} className="md:col-span-12">
+            <TransitionLink href="/portfolio" className="btn btn-ghost btn-sm group -ml-4">
               <FiArrowLeft
                 aria-hidden="true"
                 className="transition-transform duration-200 group-hover:-translate-x-1"
               />
-              Portfolio
-            </Link>
+              All work
+            </TransitionLink>
           </motion.div>
 
-          <div className="max-w-3xl">
-            {/* Badges */}
-            <motion.ul variants={rise} className="mb-6 flex list-none flex-wrap gap-2 p-0">
-              <li
-                className={`inline-flex items-center gap-1.5 rounded-pill border px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] ${statusCfg.badge}`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} aria-hidden="true" />
-                {statusCfg.label}
-              </li>
-              {project.role && (
-                <li className="rounded-pill border border-line/25 bg-white/[0.04] px-3 py-1 font-mono text-[0.7rem] font-medium uppercase tracking-[0.1em] text-muted">
-                  {project.role}
-                </li>
-              )}
-            </motion.ul>
+          <motion.h1 variants={rise} className="m-0 text-h1 text-fg sm:text-display md:col-span-7">
+            {project.title}
+          </motion.h1>
 
-            <motion.h1 variants={rise} className="text-h1 text-fg sm:text-display">
-              {project.title}
-            </motion.h1>
-
-            {project.excerpt && (
-              <motion.p variants={rise} className="lead mt-5 max-w-2xl">
-                {project.excerpt}
-              </motion.p>
-            )}
-
+          <motion.div variants={rise} className="md:col-span-5">
+            {project.excerpt && <p className="lead m-0">{project.excerpt}</p>}
             {hasLinks && (
-              <motion.div variants={rise} className="mt-8 flex flex-wrap gap-3">
-                {project.liveUrl && (
-                  <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                    <FiArrowUpRight aria-hidden="true" />
-                    Live Demo
-                  </a>
-                )}
-                {project.githubUrl && (
-                  <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-                    <FaGithub aria-hidden="true" />
-                    GitHub
-                  </a>
-                )}
-              </motion.div>
+              <div ref={heroLinksRef} className="mt-6 flex flex-wrap gap-3">
+                <ProjectLinks project={project} />
+              </div>
             )}
-          </div>
-
-          {/* Project image */}
-          {project.mainImage?.asset?.url && (
-            <motion.figure
-              variants={rise}
-              className="mt-12 overflow-hidden rounded-card border border-line/15 shadow-lift"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={project.mainImage.asset.url}
-                alt={project.mainImage.alt ?? project.title}
-                className="w-full object-cover"
-              />
-            </motion.figure>
-          )}
+          </motion.div>
         </motion.div>
+
+        {/* Outside the stagger: it must be on screen at once to receive the card morph */}
+        <ProjectFrame
+          slug={slug}
+          title={project.title}
+          status={status}
+          liveUrl={project.liveUrl}
+          image={project.image}
+          priority
+          aspectClassName="aspect-[var(--ar)]"
+          sizes="(min-width: 72rem) 68rem, 100vw"
+          className="mt-10 md:mt-14"
+        />
       </header>
 
-      {/* ── Metadata strip ── */}
-      {(formattedDate || project.place) && (
-        <div className="border-y border-line/15 bg-white/[0.02]">
-          <dl className="container-page m-0 flex flex-wrap items-center gap-x-8 gap-y-2 py-4">
-            {formattedDate && (
-              <div className="flex items-center gap-2">
-                <dt className="sr-only">Date</dt>
-                <FiCalendar size={14} className="flex-shrink-0 text-accent-light" aria-hidden="true" />
-                <dd className="m-0 text-small font-medium text-muted">{formattedDate}</dd>
+      {/* ── Body + facts ── */}
+      <div className="container-page pb-section pt-14 md:pt-20">
+        <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+          <aside className="lg:sticky lg:order-2 lg:col-span-4" style={{ top: 'calc(var(--navbar-h) + 2rem)' }} aria-label="Project facts">
+            <dl className="m-0 grid grid-cols-2 gap-x-6 gap-y-5 border-y border-line/15 py-6 lg:grid-cols-1">
+              {facts.map(([label, value]) => (
+                <div key={label}>
+                  <dt className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-subtle">{label}</dt>
+                  <dd className="m-0 mt-1 text-small text-fg">{value}</dd>
+                </div>
+              ))}
+              <div>
+                <dt className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-subtle">Status</dt>
+                <dd className="m-0 mt-1 flex items-center gap-2 text-small text-fg">
+                  <span className={`h-1.5 w-1.5 rounded-full ${statusCfg.dot}`} aria-hidden="true" />
+                  {statusCfg.label}
+                </dd>
+              </div>
+              {project.techStack && project.techStack.length > 0 && (
+                <div className="col-span-2 lg:col-span-1">
+                  <dt className="font-mono text-[0.72rem] uppercase tracking-[0.12em] text-subtle">Stack</dt>
+                  <dd className="m-0 mt-2">
+                    <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
+                      {project.techStack.map((tag, i) => (
+                        <li
+                          key={`${tag}-${i}`}
+                          className="rounded-pill border border-line/20 px-2.5 py-1 font-mono text-[0.72rem] leading-none text-muted"
+                        >
+                          {tag}
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )}
+            </dl>
+            {hasLinks && (
+              <div className="mt-6 hidden flex-col gap-2.5 lg:flex">
+                <ProjectLinks project={project} size="btn-sm justify-between" />
               </div>
             )}
-            {project.place && (
-              <div className="flex items-center gap-2">
-                <dt className="sr-only">Context</dt>
-                <FiMapPin size={14} className="flex-shrink-0 text-accent-light" aria-hidden="true" />
-                <dd className="m-0 text-small font-medium text-muted">{project.place}</dd>
-              </div>
-            )}
-            <span className="eyebrow ml-auto hidden text-accent-light/70 md:block">Case study</span>
-          </dl>
-        </div>
-      )}
+          </aside>
 
-      {/* ── Body ── */}
-      <div className="container-page pb-28 pt-14 lg:pb-section">
-        <div className="flex flex-col items-start gap-12 lg:flex-row lg:gap-16">
-          <Reveal className="min-w-0 max-w-prose-lg flex-1">
-            <article className="prose-pt">
+          <Reveal className="min-w-0 lg:order-1 lg:col-span-8">
+            <article className="prose-pt max-w-prose-lg">
               {hasBody ? (
                 <PortableText value={project.body as never} components={portableTextComponents} />
               ) : project.description ? (
@@ -230,87 +258,43 @@ export default function SingleProjectContent({ project }: Props) {
               ) : null}
             </article>
           </Reveal>
-
-          {/* Desktop side column: sticky links */}
-          {hasLinks && (
-            <aside
-              className="hidden w-[15rem] flex-shrink-0 lg:sticky lg:block"
-              style={{ top: 'calc(var(--navbar-h) + 2rem)' }}
-              aria-label="Project links"
-            >
-              <div className="card overflow-hidden">
-                <div className="h-0.5 bg-gradient-to-r from-accent to-accent-light" aria-hidden="true" />
-                <div className="flex flex-col gap-2.5 p-4">
-                  <p className="eyebrow mb-1 !text-subtle">View project</p>
-                  {project.liveUrl && (
-                    <a
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-primary btn-sm justify-between"
-                    >
-                      Live Demo
-                      <FiExternalLink aria-hidden="true" />
-                    </a>
-                  )}
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-secondary btn-sm justify-between"
-                    >
-                      GitHub
-                      <FaGithub aria-hidden="true" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </aside>
-          )}
         </div>
-
-        {/* Tech stack */}
-        {project.techStack && project.techStack.length > 0 && (
-          <Reveal className="mt-16 border-t border-line/15 pt-12">
-            <SectionHeading title="Tech Stack" count={`${project.techStack.length} technologies`} />
-            <ul className="m-0 flex list-none flex-wrap gap-2.5 p-0">
-              {project.techStack.map((tag, i) => (
-                <li
-                  key={`${tag}-${i}`}
-                  className="rounded-control border border-accent/25 bg-accent/[0.07] px-3.5 py-1.5 font-mono text-[0.8rem] font-medium text-accent-light transition-colors duration-200 hover:border-accent-light/60 hover:bg-accent/15"
-                >
-                  {tag}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        )}
 
         {/* Gallery */}
         {gallery.length > 0 && (
-          <section className="mt-16 border-t border-line/15 pt-12" aria-label="Gallery">
-            <SectionHeading title="Gallery" count={`${gallery.length} image${gallery.length !== 1 ? 's' : ''}`} />
+          <section className="mt-16 border-t border-line/15 pt-12" aria-labelledby="gallery-heading">
+            <div className="mb-6 flex items-baseline gap-4">
+              <h2 id="gallery-heading" className="text-h3 text-fg">
+                Gallery
+              </h2>
+              <span className="text-small text-subtle">
+                {gallery.length} image{gallery.length !== 1 ? 's' : ''}
+              </span>
+            </div>
 
-            {/* 1 / 2 / 3 columns; every 4th tile spans two columns on sm+ for rhythm */}
-            <ul className="m-0 grid list-none auto-rows-[16rem] grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
+            {/* Screenshots are ~2:1, so tiles are too: 1 column on phones, 2 above (4 images make a 2x2) */}
+            <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:gap-4">
               {gallery.map((img, i) => {
                 const label = img.alt ?? `Gallery image ${i + 1}`
                 return (
-                  <li key={`${img.asset._id}-${i}`} className="sm:[&:nth-child(4n)]:col-span-2">
+                  <li key={`${img.url}-${i}`}>
                     <button
                       type="button"
-                      onClick={() => openLightbox(img.asset.url, label)}
+                      onClick={() => openLightbox(`${img.url}?w=2000&auto=format`, label)}
                       aria-label={`Open gallery image ${i + 1}${img.alt ? ': ' + img.alt : ''}`}
-                      className="group relative block h-full w-full cursor-zoom-in overflow-hidden rounded-card border border-line/15 bg-surface p-0 text-left"
+                      className="group relative block aspect-[2/1] w-full cursor-zoom-in overflow-hidden rounded-card border border-line/15 bg-surface p-0 text-left"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img.asset.url}
-                        alt={label}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.05]"
-                      />
+                      {img.url && (
+                        <Image
+                          src={img.url}
+                          alt={label}
+                          fill
+                          sizes="(min-width: 72rem) 34rem, (min-width: 640px) 50vw, 100vw"
+                          placeholder={img.lqip ? 'blur' : 'empty'}
+                          blurDataURL={img.lqip}
+                          className="object-cover object-left-top transition-transform duration-700 ease-out-expo group-hover:scale-[1.05]"
+                        />
+                      )}
                       <span
                         className="absolute inset-0 bg-gradient-to-t from-bg/85 via-bg/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
                         aria-hidden="true"
@@ -335,44 +319,86 @@ export default function SingleProjectContent({ project }: Props) {
             </ul>
           </section>
         )}
+
+        {/* The mobile link bar hides once this reaches the screen */}
+        <div ref={endRef} aria-hidden="true" />
       </div>
 
-      {/* ── Mobile floating CTA bar (sidebar links are hidden below lg) ── */}
-      {hasLinks && (
-        <motion.div
-          className="glass fixed inset-x-0 bottom-0 z-50 border-t border-line/20 lg:hidden"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.45, delay: 0.8, ease: EASE }}
-        >
-          <div className="mx-auto flex max-w-lg gap-2.5 px-4 py-3">
-            {project.liveUrl && (
-              <a
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary btn-sm flex-1"
-              >
-                <FiArrowUpRight aria-hidden="true" />
-                Live Demo
-              </a>
-            )}
-            {project.githubUrl && (
-              <a
-                href={project.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary btn-sm flex-1"
-              >
-                <FaGithub aria-hidden="true" />
-                GitHub
-              </a>
-            )}
+      {/* ── Next project: the same card language as the index, so it morphs too ── */}
+      {project.next && (
+        <section className="border-t border-line/15" aria-labelledby="next-project-label">
+          <div className="container-page section-y">
+            <p
+              id="next-project-label"
+              className="m-0 font-mono text-[0.75rem] uppercase tracking-[0.12em] text-subtle"
+            >
+              Next project
+            </p>
+            <article
+              className={[
+                'group relative mt-6 grid items-center gap-6 rounded-card md:grid-cols-12 md:gap-8',
+                'has-[.card-link:focus-visible]:outline has-[.card-link:focus-visible]:outline-2',
+                'has-[.card-link:focus-visible]:outline-offset-[6px] has-[.card-link:focus-visible]:outline-accent-light',
+              ].join(' ')}
+            >
+              <div className="md:order-2 md:col-span-7">
+                <ProjectFrame
+                  slug={project.next.slug}
+                  title={project.next.title}
+                  status={project.next.status}
+                  liveUrl={project.next.liveUrl}
+                  image={project.next.image}
+                  aspectClassName="aspect-[var(--ar)] md:aspect-[16/10]"
+                  sizes="(min-width: 768px) 40rem, 100vw"
+                  className="transition-[border-color,box-shadow] duration-[480ms] ease-out-expo group-hover:border-accent/45 group-hover:shadow-glow"
+                  imageClassName="transition-transform duration-[900ms] ease-out-expo group-hover:scale-[1.035]"
+                />
+              </div>
+              <div className="md:order-1 md:col-span-5">
+                {project.next.role && (
+                  <p className="m-0 font-mono text-[0.75rem] uppercase tracking-[0.1em] text-subtle">
+                    {project.next.role}
+                  </p>
+                )}
+                <h2 className="mt-2 text-h1 text-fg">
+                  <TransitionLink
+                    href={`/project/${project.next.slug}`}
+                    className="card-link inline-flex items-start gap-2 no-underline focus-visible:outline-none after:absolute after:inset-0 after:z-[1] after:rounded-card after:content-['']"
+                  >
+                    <span className="bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-[480ms] ease-out-expo group-hover:bg-[length:100%_2px]">
+                      {project.next.title}
+                    </span>
+                    <FiArrowUpRight
+                      aria-hidden="true"
+                      className="mt-[0.15em] h-[0.8em] w-[0.8em] flex-shrink-0 text-accent-light transition-transform duration-[480ms] ease-out-expo group-hover:-translate-y-1 group-hover:translate-x-1"
+                    />
+                  </TransitionLink>
+                </h2>
+                {project.next.excerpt && <p className="m-0 mt-3 max-w-[34rem] text-muted">{project.next.excerpt}</p>}
+              </div>
+            </article>
           </div>
-          {/* Safe-area inset for devices with a home indicator */}
-          <div className="h-[env(safe-area-inset-bottom)]" />
-        </motion.div>
+        </section>
       )}
+
+      {/* ── Mobile link bar (the facts column holds the links on lg+) ── */}
+      <AnimatePresence>
+        {showBar && (
+          <motion.div
+            className="glass fixed inset-x-0 bottom-0 z-50 border-t border-line/20 lg:hidden"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ duration: 0.4, ease: EASE }}
+          >
+            <div className="mx-auto flex max-w-lg gap-2.5 px-4 py-3 [&>a]:flex-1">
+              <ProjectLinks project={project} size="btn-sm" />
+            </div>
+            {/* Safe-area inset for devices with a home indicator */}
+            <div className="h-[env(safe-area-inset-bottom)]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Lightbox ── */}
       {lightbox && (
@@ -411,6 +437,6 @@ export default function SingleProjectContent({ project }: Props) {
           </p>
         </motion.div>
       )}
-    </>
+    </div>
   )
 }
